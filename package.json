@@ -1,0 +1,13 @@
+{
+    "name": "reload-music-player",
+    "version": "1.0.0",
+    "description": "Music player for your organized music collection",
+    "main": "electron/main.js",
+    "scripts": {
+      "start": "electron ."
+    },
+    "dependencies": {
+      "electron": "^28.1.0",
+      "music-metadata": "^7.13.4"
+    }
+  }

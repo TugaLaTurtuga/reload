@@ -1,0 +1,48 @@
+.slider {
+    width: 80%; /* Make slider full width of the card */
+    height: 8px;
+    border-radius: 10px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    --slider-value: 100%; /* Start with max value for visual feedback */
+    --slider-color: #06a21b; /* This will be dynamically updated */
+    --slider-thumb-color: #aaa; /* New variable for thumb color */
+    --slider-background-color: #333;
+    transform: translateY(0px);
+}
+
+/* WebKit browsers (Chrome, Safari) */
+.slider::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--slider-color) 0%, var(--slider-color) var(--slider-value), var(--slider-background-color) var(--slider-value), var(--slider-background-color) 100%);
+    height: 8px;
+    border-radius: 10px;
+}
+
+/* WebKit browsers: Thumb styling */
+.slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--slider-thumb-color); /* Use the new variable */
+    cursor: pointer;
+    margin-top: -4px;
+}
+
+/* Firefox browsers */
+.slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--slider-thumb-color); /* Use the new variable */
+    cursor: pointer;
+    border: none;
+}
+
+/* Firefox: Track with left part (before the thumb) colored dynamically */
+.slider::-moz-range-track {
+    background: linear-gradient(to right, var(--slider-color) 0%, var(--slider-color) var(--slider-value), var(--slider-background-color) var(--slider-value), var(--slider-background-color) 100%);
+    height: 8px;
+    border-radius: 10px;
+}

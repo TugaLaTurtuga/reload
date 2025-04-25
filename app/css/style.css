@@ -1,0 +1,454 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Rubik', sans-serif;
+}
+
+  
+body, html {
+    height: 100%;
+    background-color: #121212;
+    color: #f5f5f5;
+    overflow: hidden;
+}
+  
+#app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 1fr 100px;
+    height: 100vh;
+}
+  
+#sidebar {
+    position: absolute;
+    width: 80px;
+    margin: 10px;
+    border-radius: 10px;
+    grid-column: 1;
+    grid-row: 1;
+    background-color: #181818;
+    padding: 20px;
+    height: calc(100vh - 20px);
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    z-index: 20;
+}
+  
+nav ul {
+    list-style: none;
+}
+  
+.nav-item {
+    padding: 12px 15px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+  
+.nav-item:hover {
+    background-color: #333;
+}
+  
+.nav-item.active {
+    background-color: #1DB954;
+    color: #000;
+}
+  
+#now-playing-small {
+    position: absolute;
+    bottom: 10px;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    margin-left: -1px;
+}
+  
+#now-playing-art-small {
+    width: 60px;
+    height: 60px;
+    background-color: #333;
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+}
+
+#main-content {
+    grid-column: 2;
+    grid-row: 1;
+    overflow-y: auto;
+    padding: 20px;
+    position: absolute;
+    left: 95px;
+    margin-top: 4px;
+    width: calc(100vw - 100px);
+    height: calc(100vh - 100px);
+}
+  
+  #player-controls {
+    position: absolute;
+    grid-column: 1 / span 2;
+    grid-row: 2;
+    bottom: 0;
+    border-radius: 10px;
+    height: 80px;
+    left: 90px;
+    width: calc(100vw - 110px);
+    background-color: #181818;
+    border: 1px solid #333;
+    padding: 10px;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+  }
+  
+  #now-playing {
+    width: auto;
+    display: flex;
+    align-items: center;
+  }
+  
+  #now-playing-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  #now-playing-artist {
+    font-size: 0.9em;
+    color: #aaa;
+  }
+  
+  #controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+  
+  #controls button {
+    background: none;
+    border: none;
+    color: #f5f5f5;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 10px;
+    max-width: 150px;
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+  }
+  
+  #play-pause-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #1DB954;
+    color: #bbb !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+  }
+
+  #play-pause-button:hover {
+    color: #aaa;
+    transform: scale(1.2);
+  }
+
+  #play-pause-button:active {
+    transform: scale(1);
+  }
+
+  #prev-button {
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+  }
+
+  #prev-button:hover {
+    color: #bbb;
+    transform: scale(1.2);
+  }
+
+  #prev-button:active {
+    transform: scale(1);
+  }
+
+  #next-button {
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+  }
+
+  #next-button:hover {
+    color: #bbb;
+    transform: scale(1.2);
+  }
+
+  #next-button:active {
+    transform: scale(1);
+  }
+  
+  #progress {
+    flex: 10;
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+  }
+  
+  #current-time, #total-time {
+    font-size: 0.8em;
+    width: 40px;
+    text-align: center;
+  }
+  
+  #progress-bar {
+    flex: 1;
+    height: 5px;
+    background-color: #5a5a5a;
+    border-radius: 10px;
+    margin: 0 10px;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  #progress-filled {
+    height: 100%;
+    background-color: #1DB954;
+    border-radius: 10px;
+    width: 0;
+  }
+  
+  #volume-controls {
+    display: flex;
+    align-items: center;
+    width: 150px;
+  }
+  
+  #mute-button {
+    background: none;
+    border: none;
+    color: #f5f5f5;
+    cursor: pointer;
+    font-size: 1.2em;
+    margin-right: 10px;
+  }
+  
+  #volume-slider {
+    flex: 1;
+    height: 5px;
+    background-color: #5a5a5a;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  #volume-filled {
+    height: 100%;
+    background-color: #1DB954;
+    border-radius: 10px;
+    width: 70%;
+  }
+  
+  .album-card {
+    background-color: #181818;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 3), background-color 0.2s ease-in;
+    cursor: pointer;
+  }
+  
+  .album-card:hover {
+    background-color: #282828;
+    transform: translateY(-10px);
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  }
+  
+  .album-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    background-size: cover;
+    background-position: center;
+    background-color: #333;
+  }
+  
+  .album-info {
+    padding: 15px;
+  }
+  
+  .album-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .album-artist {
+    font-size: 0.9em;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  #albums-section, #singles-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-gap: 20px;
+  }
+  
+  .content-section.hidden {
+    display: none;
+  }
+  
+  #player-container {
+    height: calc(100%);
+  }
+  
+  #player-container.hidden {
+    display: none;
+  }
+  
+  #library-container.hidden {
+    display: none;
+  }
+  
+  #player-header {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0px 10px;
+    background-color: #181818;
+    border-radius: 10px;
+    border: 1px solid #333;
+    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 1em;
+    z-index: 10;
+  }
+
+  #player-header:hover {
+    color: #1DB954;
+    transform: scale(1.05);
+  }
+  
+  #back-button {
+    background: none;
+    border: none;
+    font-size: 1em;
+    padding: 5px 0;
+  }
+  
+  #album-details {
+    display: flex;
+    margin-bottom: 30px;
+  }
+  
+  #album-art-container {
+    width: 300px;
+    height: 300px;
+    margin-right: 30px;
+  }
+  
+  #album-art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+  }
+  
+  #album-info {
+    flex: 1;
+  }
+  
+  #album-title {
+    font-weight: 900;
+    font-size: 6em;
+    margin-bottom: 10px;
+  }
+  
+  #album-artist {
+    font-size: 1.5em;
+    color: #1DB954;
+    margin-bottom: 20px;
+  }
+  
+  #album-meta {
+    margin-bottom: 20px;
+    color: #aaa;
+  }
+  
+  #album-year, #album-genre {
+    margin-right: 15px;
+  }
+  
+  #album-description {
+    line-height: 1.6;
+    max-width: 600px;
+  }
+  
+  #track-list {
+    border: #333 solid 1px;
+    border-radius: 10px;
+    overflow-y: hidden;
+    width: 100%;
+  }
+
+  #buffer {
+    height: 14px;
+  }
+  
+  .track-item {
+    margin: 0px;
+    margin-top: 0;
+  
+    display: flex;
+    align-items: center;
+    background-color: #181818;
+    border-radius: 0px;
+    padding: 15px;
+  
+    transition: background-color 0.1s ease-in; /* this is used when hover ends */
+  }
+
+  .odd-color {
+    background-color: #1d1d1d;
+  }
+  
+  .track-item:hover {
+    background-color: #242424;
+    transition: none; /* instant change when hover starts */
+  }  
+  
+  .track-item.active {
+    color: #1DB954;
+  }
+  
+  .track-number {
+    width: 30px;
+    text-align: left;
+  }
+  
+  .track-title {
+    flex: 1;
+    padding: 0;
+  }
+  
+  .track-duration {
+    width: 50px;
+    text-align: right;
+    color: #aaa;
+  }
+  
+  #loading {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.2em;
+    color: #aaa;
+  }
+
+  #main-content {
+    height: calc(100vh - 90px);
+  }

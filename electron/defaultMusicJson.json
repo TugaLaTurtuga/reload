@@ -1,0 +1,32 @@
+{
+    "musicList": [
+        "GoodMorning",
+        "Stronger",
+        "Champion",
+        "I Wonder",
+        "Good Life",
+        "Can't Tell Me Nothing",
+        "Barry Bonds",
+        "Drunk and hot girls",
+        "Flashing Lights",
+        "Everything I Am",
+        "The Glory",
+        "Homecoming",
+        "Big Brother",
+        "Good night"
+    ],
+    "Description": {
+        "author": "Kanye West",
+        "label": "Roc-A-Fella Records",
+        "album": "Graduation",
+        "description": "Graduation is the third studio album by American rapper Kanye West, released on September 11, 2007, by Roc-A-Fella Records and Def Jam Recordings. It features guest appearances from several artists, including Jay-Z, T-Pain, and Lil Wayne.",
+        "release_year": 2007,
+        "genre": "Hip-Hop/Rap",
+        "color": {
+          "primary": "#000000",
+          "secondary": "#FFFFFF"
+        },
+        "rating": 9.3
+    }
+  }
+  

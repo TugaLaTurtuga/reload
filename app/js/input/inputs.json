@@ -1,0 +1,12 @@
+{
+    "keyboard": {
+        "whenPressed": { 
+            " ": "togglePlayPause",
+            "f10": "toggleMute"
+        },
+        "whenDown": { 
+            "f11": "togglePlayPause",
+            "f12": "toggleMute"
+        }
+    }
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Reload Music Player</title>
+  <link rel="stylesheet" href="css/font-renderer.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/slider.css">
+</head>
+<body>
+  <div id="app">
+    <div id="sidebar">
+      <div id="now-playing-small">
+        <div id="now-playing-art-small"></div>
+      </div>
+    </div>
+    
+    <div id="main-content">
+      <div id="library-container">
+        <div id="loading">Loading your music library...</div>
+        <div id="albums-section" class="content-section"></div>
+        <div id="singles-section" class="content-section hidden"></div>
+      </div>
+
+      <div id="player-container" class="hidden">
+        <button id="player-header">
+          <p id="back-button"><</p>
+        </button>
+        <div id="album-details">
+          <div id="album-art-container">
+            <img id="album-art" src="placeholder.png" alt="Album Art">
+          </div>
+          <div id="album-info">
+            <h2 id="album-title">Album Title</h2>
+            <h3 id="album-artist">Artist</h3>
+            <div id="album-meta">
+              <span id="album-year"></span>
+              <span id="album-genre"></span>
+            </div>
+            <p id="album-description"></p>
+          </div>
+        </div>
+        <div id="track-list"></div>
+        <div id="buffer"></div>
+      </div>
+    </div>
+
+    <div id="player-controls">
+      <div id="now-playing">
+        <div id="now-playing-info">
+          <div id="now-playing-title">Select a track</div>
+          <div id="now-playing-artist"></div>
+        </div>
+      </div>
+      
+      <div id="controls">
+        <button id="prev-button">⏮</button>
+        <button id="play-pause-button">▶</button>
+        <button id="next-button">⏭</button>
+      </div>
+      
+      <div id="progress">
+        <span id="current-time">0:00</span>
+        <input type="range" step="0.01" min="0" value="0" max="1" notscroll="true" id="progress-bar" class="slider" style="transform: translateY(-0.5px);"></input>
+        <span id="total-time">0:00</span>
+      </div>
+      
+      <div id="volume-controls">
+        <button id="mute-button">🔊</button>
+        <input type="range" step="0.01" min="0" value="0.5" max="1" id="volume-slider" class="slider" />
+      </div>
+    </div>
+  </div>
+
+  <audio id="audio-player"></audio>
+
+  <!-- classes + imports -->
+  <script src="js/imports.js"></script>
+  <script src="js/input/inputManagement.js"></script>
+  <script src="js/css/sliders.js"></script>
+
+  <!-- scripts -->  
+  <script src="js/renderer.js"></script>
+
+  <!-- input -->
+  <script src="js/input/inputs.js"></script>
+</body>
+</html>
