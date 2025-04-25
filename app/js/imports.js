@@ -11,7 +11,7 @@ function easeInOut(t) {
 function easeIn(t) {
     return t * t;
 }
-  
+
 function easeOut(t) {
     return t * (2 - t);
 }

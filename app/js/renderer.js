@@ -77,8 +77,8 @@ function renderLibrary() {
     albumCard.innerHTML = `
       <div class="album-cover" style="background-image: url('${album.cover}')"></div>
       <div class="album-info">
-        <div class="album-title">${album.name}</div>
-        <div class="album-artist">${album.author}</div>
+        <div class="album-title">${album.info.description.title || album.name}</div>
+        <div class="album-artist">${album.info.description.author}</div>
       </div>
     `;
     albumCard.addEventListener('click', () => openAlbum(album));
@@ -92,11 +92,11 @@ function openAlbum(album) {
   
   // Set album details
   albumArt.src = album.cover;
-  albumTitle.textContent = album.name;
-  albumArtist.textContent = album.author;
-  albumYear.textContent = album.year;
-  albumGenre.textContent = album.genre;
-  albumDescription.textContent = album.description;
+  albumTitle.textContent = album.info.description.title || album.name;
+  albumArtist.textContent = album.info.description.author;
+  albumYear.textContent = album.info.description.year;
+  albumGenre.textContent = album.info.description.genre;
+  albumDescription.textContent = album.info.description.description;
   
   // Background color from album
   if (album.color) {
@@ -193,7 +193,7 @@ function playTrack(index) {
   
   // Update now playing info
   nowPlayingTitle.textContent = track.title;
-  nowPlayingArtist.textContent = currentAlbum.author;
+  nowPlayingArtist.textContent = currentAlbum.info.description.author;
   
   if (currentAlbum.cover) {
     nowPlayingArtSmall.style.backgroundImage = `url('${currentAlbum.cover}')`;

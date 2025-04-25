@@ -38,6 +38,7 @@ app.on('activate', () => {
 // Get music library
 ipcMain.handle('get-library', async () => {
   const libraryPath = path.join(app.getPath('documents'), 'reload');
+  const appleLibraryPath = path.join(app.getPath('home'), 'Music', 'Music', 'Media', 'Music'); // Apple Music
 
   try {
     return await scanMusicFolder(libraryPath);
@@ -69,10 +70,6 @@ async function scanMusicFolder(rootPath) {
           tracks: [],
           cover: null,
           info: {},
-          author: '',
-          genre: '',
-          year: '',
-          color: '#333333'
         };
 
         // Optional metadata
@@ -134,7 +131,7 @@ async function scanMusicFolder(rootPath) {
         }
 
 
-        album.description['musicList'].forEach((track) => {
+        album.info['musicList'].forEach((track) => {
           ungarnizedTracks.forEach((ungarnizedTrack) => {
             let CheckTitle = ungarnizedTrack.title.trim(); // Remove file extension
             CheckTitle = CheckTitle.replace(/_/g, ' ').replace(/-/g, ' '); // Replace underscores and dashes with spaces
