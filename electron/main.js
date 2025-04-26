@@ -230,7 +230,27 @@ async function scanMusicFolder(rootPath) {
           path: folderPath,
           tracks: [],
           cover: null,
-          info: {},
+          info: {
+            musicList: audioFiles.map(file => ({
+              title: path.basename(file, path.extname(file))
+              .replace(/_/g, ' ')
+              .replace(/-/g, ' ')
+              .trim(),
+                  rating: 5
+                })),
+            description: {
+              author: path.basename(path.dirname(folderPath)), // Set author as the second to last folder
+              label: "none",
+              description: "",
+              year: 2000,
+              genre: "From Apple Music",
+              color: {
+                  primary: "#000000",
+                  secondary: "#FFFFFF"
+              },
+              rating: 5
+            }
+          },
         };
 
         // Optional metadata
@@ -242,8 +262,7 @@ async function scanMusicFolder(rootPath) {
         const musicConfPath = path.join(folderPath, 'music.json');
         if (!fs.existsSync(musicConfPath)) {
             try {
-                const defaultConfig = { description: null };
-                fs.writeFileSync(musicConfPath, JSON.stringify(defaultConfig, null, 2), 'utf8');
+                fs.writeFileSync(musicConfPath, JSON.stringify(album.info, null, 2), 'utf8');
                 console.log('music.json created at:', musicConfPath);
             } catch (err) {
                 console.error('Error creating music.json:', err);
@@ -294,17 +313,20 @@ async function scanMusicFolder(rootPath) {
 
         album.info['musicList'].forEach((track) => {
           ungarnizedTracks.forEach((ungarnizedTrack) => {
-            let CheckTitle = ungarnizedTrack.title.trim(); // Remove file extension
-            CheckTitle = CheckTitle.replace(/_/g, ' ').replace(/-/g, ' '); // Replace underscores and dashes with spaces
-            const title = CheckTitle;
+            const title = track.title
+            .replace(/^\d+\s+/, '')
+            .replace(/_/g, ' ')
+            .replace(/-/g, ' ')
+            .trim();
 
-            // remove featured artists from title
-            CheckTitle = CheckTitle.split('feat')[0];
-            CheckTitle = CheckTitle.split('ft')[0];
-            CheckTitle = CheckTitle.split('(')[0];
-            console.log(CheckTitle, track);
+            let CheckTitle = title
+            .toLowerCase()
+            .split('feat')[0]
+            .split('ft')[0]
+            .split('(')[0]
+            .trim()
 
-            if (track.title.toLowerCase().replace(' ', '').trim() === CheckTitle.toLowerCase().replace(' ', '').trim()) {
+            if (track.title.toLowerCase().replace(/^\d+\s+/, '').trim() === CheckTitle) {
               console.log('Track found:', ungarnizedTrack);
               album.tracks.push({
                 title: title,
