@@ -40,21 +40,19 @@ app.on('activate', () => {
 // Get music library
 ipcMain.handle('get-library', async () => {
   const libraryPath = path.join(app.getPath('documents'), 'reload');
-  const appleLibraryPath = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Apple Music'); // Apple Music
-  const appleLibraryPath_secondary = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Music'); // Apple Music lossless
+  const appleLibraryPath_1 = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Apple Music'); // Apple Music
+  const appleLibraryPath_2 = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Music'); // Apple Music lossless
 
   try {
     // First try the Apple Music library
-    const appleMusic = await scanMusicFolder(appleLibraryPath);
-    const appleMusic_secondary = await scanMusicFolder(appleLibraryPath_secondary);
+    const appleMusic_1 = await scanAppleMusicFolder(appleLibraryPath_1);
+    const appleMusic_2 = await scanAppleMusicFolder(appleLibraryPath_2);
     const reloadMusic = await scanMusicFolder(libraryPath);
 
     let library = [];
-
-    if (reloadMusic.length > 0)          library.push(...reloadMusic);
-    if (appleMusic.length > 0)           library.push(...appleMusic);
-    if (appleMusic_secondary.length > 0) library.push(...appleMusic_secondary); 
-
+    if (reloadMusic.length > 0)   library.push(...reloadMusic);
+    if (appleMusic_1.length > 0)  library.push(...appleMusic_1);
+    if (appleMusic_2.length > 0)  library.push(...appleMusic_2); 
     return library;
     
   } catch (error) {
@@ -63,7 +61,7 @@ ipcMain.handle('get-library', async () => {
   }
 });
 
-async function scanMusicFolder(rootPath) {
+async function scanAppleMusicFolder(rootPath) {
   const albums = [];
 
   async function processFolder(folderPath) {
@@ -206,6 +204,133 @@ async function scanMusicFolder(rootPath) {
     console.log(`Found ${albums.length} albums in ${rootPath}`);
   } else {
     console.log(`Music library path does not exist: ${rootPath}`);
+  }
+
+  return albums;
+}
+
+async function scanMusicFolder(rootPath) {
+  const albums = [];
+
+  async function processFolder(folderPath) {
+    try {
+      const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+      const files = entries.filter(entry => entry.isFile()).map(entry => entry.name);
+      const dirs = entries.filter(entry => entry.isDirectory());
+
+      // Look for audio files in this folder
+      const audioFiles = files.filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return ['.mp3', '.wav', '.aac', '.alac', '.flac', '.ogg', '.m4a'].includes(ext);
+      });
+
+      if (audioFiles.length > 0) {
+        const album = {
+          name: path.basename(folderPath),
+          path: folderPath,
+          tracks: [],
+          cover: null,
+          info: {},
+        };
+
+        // Optional metadata
+        const tryRead = (filename) => {
+          const filePath = path.join(folderPath, filename);
+          return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8').trim() : '';
+        };
+        
+        const musicConfPath = path.join(folderPath, 'music.json');
+        if (!fs.existsSync(musicConfPath)) {
+            try {
+                const defaultConfig = { description: null };
+                fs.writeFileSync(musicConfPath, JSON.stringify(defaultConfig, null, 2), 'utf8');
+                console.log('music.json created at:', musicConfPath);
+            } catch (err) {
+                console.error('Error creating music.json:', err);
+            }
+        }
+
+        try {
+            const data = fs.readFileSync(musicConfPath, 'utf8');
+            const parsedData = JSON.parse(data);
+            album.info = parsedData || null;
+            console.log('music.json:', parsedData);
+        } catch (err) {
+            console.error('Error reading or parsing music.json:', err);
+        }
+
+        // Look for cover image
+        const coverFile = files.find(file => {
+          const ext = path.extname(file).toLowerCase();
+          return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
+        });
+        if (coverFile) {
+          album.cover = path.join(folderPath, coverFile);
+        }
+
+        // Process tracks
+        const ungarnizedTracks = [];
+        for (const audioFile of audioFiles) {
+          const trackPath = path.join(folderPath, audioFile);
+          const title = path.basename(audioFile, path.extname(audioFile));
+          console.log('Track:', title);
+
+          try {
+            const metadata = await mm.parseFile(trackPath);
+            ungarnizedTracks.push({
+              title,
+              path: trackPath,
+              duration: metadata.format.duration || 0
+            });
+          } catch (err) {
+            ungarnizedTracks.push({
+              title,
+              path: trackPath,
+              duration: 0
+            });
+          }
+        }
+
+
+        album.info['musicList'].forEach((track) => {
+          ungarnizedTracks.forEach((ungarnizedTrack) => {
+            let CheckTitle = ungarnizedTrack.title.trim(); // Remove file extension
+            CheckTitle = CheckTitle.replace(/_/g, ' ').replace(/-/g, ' '); // Replace underscores and dashes with spaces
+            const title = CheckTitle;
+
+            // remove featured artists from title
+            CheckTitle = CheckTitle.split('feat')[0];
+            CheckTitle = CheckTitle.split('ft')[0];
+            CheckTitle = CheckTitle.split('(')[0];
+            console.log(CheckTitle, track);
+
+            if (track.title.toLowerCase().replace(' ', '').trim() === CheckTitle.toLowerCase().replace(' ', '').trim()) {
+              console.log('Track found:', ungarnizedTrack);
+              album.tracks.push({
+                title: title,
+                path: ungarnizedTrack.path,
+                duration: ungarnizedTrack.duration
+              });
+              console.log('Track found:', title);
+            }
+          });
+        });
+
+        albums.push(album);
+      }
+
+      // Recurse into subdirectories
+      for (const dir of dirs) {
+        await processFolder(path.join(folderPath, dir.name));
+      }
+
+    } catch (error) {
+      console.error(`Error processing folder ${folderPath}:`, error);
+    }
+  }
+
+  if (fs.existsSync(rootPath)) {
+    await processFolder(rootPath);
   }
 
   return albums;
