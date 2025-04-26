@@ -335,3 +335,4 @@ navItems.forEach(item => {
 // Initialize app
 loadLibrary();
 restoreLastPlayed();
+setVolume();

@@ -3,8 +3,6 @@ const { childProcess, spawn, exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const mm = require('music-metadata');
-const { json } = require('stream/consumers');
-const ffmpeg = require('fluent-ffmpeg');
 
 let mainWindow;
 
@@ -20,7 +18,7 @@ function createWindow() {
   });
 
   mainWindow.loadFile('app/index.html');
-  mainWindow.webContents.openDevTools(); // Remove this in production
+  //mainWindow.webContents.openDevTools(); // Remove this in production
 }
 
 app.whenReady().then(createWindow);
@@ -40,19 +38,16 @@ app.on('activate', () => {
 // Get music library
 ipcMain.handle('get-library', async () => {
   const libraryPath = path.join(app.getPath('documents'), 'reload');
-  const appleLibraryPath_1 = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Apple Music'); // Apple Music
-  const appleLibraryPath_2 = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized', 'Music'); // Apple Music lossless
+  const appleLibraryPath = path.join(app.getPath('home'), 'Music', 'Music', 'Media.localized'); // Apple Music
 
   try {
-    // First try the Apple Music library
-    const appleMusic_1 = await scanAppleMusicFolder(appleLibraryPath_1);
-    const appleMusic_2 = await scanAppleMusicFolder(appleLibraryPath_2);
+    // Try to get libraries
+    const appleMusic = await scanMusicFolder(appleLibraryPath, true);
     const reloadMusic = await scanMusicFolder(libraryPath);
 
     let library = [];
     if (reloadMusic.length > 0)   library.push(...reloadMusic);
-    if (appleMusic_1.length > 0)  library.push(...appleMusic_1);
-    if (appleMusic_2.length > 0)  library.push(...appleMusic_2); 
+    if (appleMusic.length > 0)  library.push(...appleMusic);
     return library;
     
   } catch (error) {
@@ -61,14 +56,13 @@ ipcMain.handle('get-library', async () => {
   }
 });
 
-async function scanAppleMusicFolder(rootPath) {
+async function scanMusicFolder(rootPath, fromExternalProvider = false) {
   const albums = [];
 
   async function processFolder(folderPath) {
     try {
       const entries = fs.readdirSync(folderPath, { withFileTypes: true });
       const files = entries.filter(entry => entry.isFile()).map(entry => entry.name);
-      console.log(files);
       const dirs = entries.filter(entry => entry.isDirectory());
 
       // Look for audio files in this folder
@@ -76,38 +70,69 @@ async function scanAppleMusicFolder(rootPath) {
         const ext = path.extname(file).toLowerCase();
         return ['.mp3', '.wav', '.aac', '.alac', '.flac', '.ogg', '.m4a', '.m4p', '.movpkg'].includes(ext);
       });
-      
-      console.log('Found audio files:', audioFiles.length);
 
       if (audioFiles.length > 0) {
-        console.log('Found audio files in folder:', folderPath);
+        
         const album = {
           name: path.basename(folderPath),
           path: folderPath,
           tracks: [],
           cover: null,
           info: {
-            musicList: audioFiles.map(file => ({
-              title: path.basename(file, path.extname(file))
-              .replace(/_/g, ' ')
-              .replace(/-/g, ' ')
-              .trim(),
-                  rating: 5
-                })),
+            musicList: [],
             description: {
               author: path.basename(path.dirname(folderPath)), // Set author as the second to last folder
               label: "none",
               description: "",
-              year: 2000,
-              genre: "From Apple Music",
+              year: "year",
+              genre: fromExternalProvider ? "from external provider." : "Genre",
               color: {
-                  primary: "#000000",
-                  secondary: "#FFFFFF"
+                primary: "#000000",
+                secondary: "#FFFFFF"
               },
               rating: 5
             }
           },
         };
+
+        // Check for existing music.json if not Apple Music
+        if (!fromExternalProvider) {
+          const musicConfPath = path.join(folderPath, 'music.json');
+          if (!fs.existsSync(musicConfPath)) {
+            // Initialize musicList for the new music.json
+            album.info.musicList = audioFiles.map(file => ({
+              title: path.basename(file, path.extname(file))
+                .replace(/_/g, ' ')
+                .replace(/-/g, ' ')
+                .trim(),
+              rating: 5
+            }));
+            
+            try {
+              fs.writeFileSync(musicConfPath, JSON.stringify(album.info, null, 2), 'utf8');
+            } catch (err) {
+              console.error('Error creating music.json:', err);
+            }
+          } else {
+            // Read existing music.json
+            try {
+              const data = fs.readFileSync(musicConfPath, 'utf8');
+              const parsedData = JSON.parse(data);
+              album.info = parsedData || album.info;
+            } catch (err) {
+              console.error('Error reading or parsing music.json:', err);
+            }
+          }
+        } else {
+          // For Apple Music, initialize musicList directly
+          album.info.musicList = audioFiles.map(file => ({
+            title: path.basename(file, path.extname(file))
+              .replace(/_/g, ' ')
+              .replace(/-/g, ' ')
+              .trim(),
+            rating: 5
+          }));
+        }
 
         // Look for cover image
         const coverFile = files.find(file => {
@@ -123,7 +148,8 @@ async function scanAppleMusicFolder(rootPath) {
           album.cover = path.join(folderPath, coverFile);
         }
 
-        // Process tracks first to build musicList
+        // Process tracks
+        const ungarnizedTracks = [];
         for (const audioFile of audioFiles) {
           const trackPath = path.join(folderPath, audioFile);
           const title = path.basename(audioFile, path.extname(audioFile))
@@ -131,27 +157,12 @@ async function scanAppleMusicFolder(rootPath) {
             .replace(/_/g, ' ')
             .replace(/-/g, ' ')
             .trim();
-          
-          console.log('Processing track:', title);
 
           try {
             const metadata = await mm.parseFile(trackPath);
             
-            // Add to musicList in album info
-            album.info.musicList.push({
-              title: title,
-              rating: 5
-            });
-            
-            // Add to tracks array with full details
-            album.tracks.push({
-              title: title,
-              path: trackPath,
-              duration: metadata.format.duration || 0
-            });
-            
-            // Try to update album metadata if we have it
-            if (metadata.common) {
+            // Try to update album metadata if we have it (For Apple Music)
+            if (fromExternalProvider && metadata.common) {
               if (metadata.common.artist) {
                 album.info.description.author = metadata.common.artist;
               }
@@ -166,22 +177,58 @@ async function scanAppleMusicFolder(rootPath) {
               }
             }
             
+            ungarnizedTracks.push({
+              title,
+              path: trackPath,
+              duration: metadata.format.duration || 0
+            });
           } catch (err) {
             console.error(`Error parsing metadata for ${title}:`, err);
-            
-            // Still add to musicList even if metadata parsing fails
-            album.info.musicList.push({
-              title: title,
-              rating: 5
-            });
-            
-            album.tracks.push({
-              title: title,
+            ungarnizedTracks.push({
+              title,
               path: trackPath,
               duration: 0
             });
           }
         }
+
+        // Match tracks with music list
+        album.info.musicList.forEach((track) => {
+          ungarnizedTracks.forEach((ungarnizedTrack) => {
+            const title = ungarnizedTrack.title.trim()
+              .replace(/^\d+\s+/, '')
+              .replace(/_/g, ' ')
+              .replace(/-/g, ' ')
+              .trim();
+
+            const checkTitle = title
+              .toLowerCase()
+              .replace(/ /g, '')
+              .split('feat')[0]
+              .split('ft')[0]
+              .split('(')[0]
+              .trim();
+
+            const trackTitleCheck = track.title
+              .toLowerCase()
+              .replace(/^\d+\s+/, '')
+              .replace(/_/g, ' ')
+              .replace(/-/g, ' ')
+              .replace(/ /g, '')
+              .split('feat')[0]
+              .split('ft')[0]
+              .split('(')[0]
+              .trim();
+
+            if (trackTitleCheck === checkTitle) {
+              album.tracks.push({
+                title: title,
+                path: ungarnizedTrack.path,
+                duration: ungarnizedTrack.duration
+              });
+            }
+          });
+        });
 
         // Only add albums that have tracks
         if (album.tracks.length > 0) {
@@ -201,158 +248,8 @@ async function scanAppleMusicFolder(rootPath) {
 
   if (fs.existsSync(rootPath)) {
     await processFolder(rootPath);
-    console.log(`Found ${albums.length} albums in ${rootPath}`);
   } else {
-    console.log(`Music library path does not exist: ${rootPath}`);
-  }
-
-  return albums;
-}
-
-async function scanMusicFolder(rootPath) {
-  const albums = [];
-
-  async function processFolder(folderPath) {
-    try {
-      const entries = fs.readdirSync(folderPath, { withFileTypes: true });
-      const files = entries.filter(entry => entry.isFile()).map(entry => entry.name);
-      const dirs = entries.filter(entry => entry.isDirectory());
-
-      // Look for audio files in this folder
-      const audioFiles = files.filter(file => {
-        const ext = path.extname(file).toLowerCase();
-        return ['.mp3', '.wav', '.aac', '.alac', '.flac', '.ogg', '.m4a'].includes(ext);
-      });
-
-      if (audioFiles.length > 0) {
-        const album = {
-          name: path.basename(folderPath),
-          path: folderPath,
-          tracks: [],
-          cover: null,
-          info: {
-            musicList: audioFiles.map(file => ({
-              title: path.basename(file, path.extname(file))
-              .replace(/_/g, ' ')
-              .replace(/-/g, ' ')
-              .trim(),
-                  rating: 5
-                })),
-            description: {
-              author: path.basename(path.dirname(folderPath)), // Set author as the second to last folder
-              label: "none",
-              description: "",
-              year: 2000,
-              genre: "From Apple Music",
-              color: {
-                  primary: "#000000",
-                  secondary: "#FFFFFF"
-              },
-              rating: 5
-            }
-          },
-        };
-
-        // Optional metadata
-        const tryRead = (filename) => {
-          const filePath = path.join(folderPath, filename);
-          return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8').trim() : '';
-        };
-        
-        const musicConfPath = path.join(folderPath, 'music.json');
-        if (!fs.existsSync(musicConfPath)) {
-            try {
-                fs.writeFileSync(musicConfPath, JSON.stringify(album.info, null, 2), 'utf8');
-                console.log('music.json created at:', musicConfPath);
-            } catch (err) {
-                console.error('Error creating music.json:', err);
-            }
-        }
-
-        try {
-            const data = fs.readFileSync(musicConfPath, 'utf8');
-            const parsedData = JSON.parse(data);
-            album.info = parsedData || null;
-            console.log('music.json:', parsedData);
-        } catch (err) {
-            console.error('Error reading or parsing music.json:', err);
-        }
-
-        // Look for cover image
-        const coverFile = files.find(file => {
-          const ext = path.extname(file).toLowerCase();
-          return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
-        });
-        if (coverFile) {
-          album.cover = path.join(folderPath, coverFile);
-        }
-
-        // Process tracks
-        const ungarnizedTracks = [];
-        for (const audioFile of audioFiles) {
-          const trackPath = path.join(folderPath, audioFile);
-          const title = path.basename(audioFile, path.extname(audioFile));
-          console.log('Track:', title);
-
-          try {
-            const metadata = await mm.parseFile(trackPath);
-            ungarnizedTracks.push({
-              title,
-              path: trackPath,
-              duration: metadata.format.duration || 0
-            });
-          } catch (err) {
-            ungarnizedTracks.push({
-              title,
-              path: trackPath,
-              duration: 0
-            });
-          }
-        }
-
-
-        album.info['musicList'].forEach((track) => {
-          ungarnizedTracks.forEach((ungarnizedTrack) => {
-            const title = track.title
-            .replace(/^\d+\s+/, '')
-            .replace(/_/g, ' ')
-            .replace(/-/g, ' ')
-            .trim();
-
-            let CheckTitle = title
-            .toLowerCase()
-            .split('feat')[0]
-            .split('ft')[0]
-            .split('(')[0]
-            .trim()
-
-            if (track.title.toLowerCase().replace(/^\d+\s+/, '').trim() === CheckTitle) {
-              console.log('Track found:', ungarnizedTrack);
-              album.tracks.push({
-                title: title,
-                path: ungarnizedTrack.path,
-                duration: ungarnizedTrack.duration
-              });
-              console.log('Track found:', title);
-            }
-          });
-        });
-
-        albums.push(album);
-      }
-
-      // Recurse into subdirectories
-      for (const dir of dirs) {
-        await processFolder(path.join(folderPath, dir.name));
-      }
-
-    } catch (error) {
-      console.error(`Error processing folder ${folderPath}:`, error);
-    }
-  }
-
-  if (fs.existsSync(rootPath)) {
-    await processFolder(rootPath);
+    console.error(`Music library path does not exist: ${rootPath}`);
   }
 
   return albums;
@@ -392,7 +289,6 @@ ipcMain.handle('decode-m4p', async (event, filePath) => {
   const tempOutputPath = path.join(app.getPath('temp'), `decoded-${Date.now()}.m4a`);
   
   return new Promise((resolve, reject) => {
-    console.log(`Attempting to extract audio and repackage to M4A: ${filePath}`);
     
     const process = spawn('ffmpeg', [
       '-i', filePath,
@@ -407,7 +303,6 @@ ipcMain.handle('decode-m4p', async (event, filePath) => {
 
     process.stderr.on('data', (data) => {
       stderr += data.toString();
-      console.log('FFmpeg stderr:', data.toString());
     });
 
     process.on('close', (code) => {

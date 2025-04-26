@@ -17,7 +17,7 @@
     
     <div id="main-content">
       <div id="library-container">
-        <div id="loading">Loading your music library...</div>
+        <div id="loading">Loading...</div>
         <div id="albums-section" class="content-section"></div>
         <div id="singles-section" class="content-section hidden"></div>
       </div>
@@ -61,13 +61,13 @@
       
       <div id="progress">
         <span id="current-time">0:00</span>
-        <input type="range" step="0.01" min="0" value="0" max="1" notscroll="true" id="progress-bar" class="slider" style="transform: translateY(-0.5px);"></input>
+        <input type="range" step="0.001" min="0" value="0" max="1" notscroll="true" id="progress-bar" class="slider" style="transform: translateY(-0.5px);"></input>
         <span id="total-time">0:00</span>
       </div>
       
       <div id="volume-controls">
         <button id="mute-button">🔊</button>
-        <input type="range" step="0.01" min="0" value="0.5" max="1" id="volume-slider" class="slider" />
+        <input type="range" step="0.01" min="0" value="0.8" max="1" id="volume-slider" class="slider" />
       </div>
     </div>
   </div>
