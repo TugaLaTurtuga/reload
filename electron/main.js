@@ -116,10 +116,9 @@ async function scanMusicFolder(rootPath) {
           const ext = path.extname(file).toLowerCase();
           try {
             return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
-          } catch (error) {
+          } catch (err) {
             return null;
           }
-          
         });
         
         if (coverFile) {
