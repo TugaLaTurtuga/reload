@@ -67,7 +67,14 @@ nav ul {
     align-items: center;
     margin-left: -1px;
 }
-  
+
+.img {
+  background-color: #333;
+  border: none;
+  background-size: cover;
+  background-position: center;
+}
+
 #now-playing-art-small {
     width: 60px;
     height: 60px;

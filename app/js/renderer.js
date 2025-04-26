@@ -1,6 +1,7 @@
 
 // DOM Elements
 const audioPlayer = document.getElementById('audio-player');
+const audioSource = document.getElementById('audio-source');
 const playPauseButton = document.getElementById('play-pause-button');
 const prevButton = document.getElementById('prev-button');
 const nextButton = document.getElementById('next-button');
@@ -13,7 +14,6 @@ const nowPlayingTitle = document.getElementById('now-playing-title');
 const nowPlayingArtist = document.getElementById('now-playing-artist');
 const nowPlayingArtSmall = document.getElementById('now-playing-art-small');
 const albumsSection = document.getElementById('albums-section');
-const singlesSection = document.getElementById('singles-section');
 const loading = document.getElementById('loading');
 const navItems = document.querySelectorAll('.nav-item');
 const libraryContainer = document.getElementById('library-container');
@@ -91,7 +91,14 @@ function openAlbum(album) {
   currentAlbum = album;
   
   // Set album details
-  albumArt.src = album.cover;
+  if (album.cover) {
+    albumArt.style.backgroundImage = `url('${currentAlbum.cover}')`;
+    console.log(albumArt.style.backgroundImage, `url('${currentAlbum.cover}')`);
+    if (albumArt.style.backgroundImage !== `url("${currentAlbum.cover}")`) albumArt.style.backgroundImage = 'none';
+  } else {
+    console.log('No cover found for album:', album.name);
+    albumArt.style.backgroundImage = 'none';
+  }
   albumTitle.textContent = album.info.description.title || album.name;
   albumArtist.textContent = album.info.description.author;
   albumYear.textContent = album.info.description.year;
@@ -110,7 +117,6 @@ function openAlbum(album) {
     trackItem.className = 'track-item';
     trackItem.dataset.index = index;
     if (index % 2 === 0) trackItem.classList.add('odd-color')
-    console.log(track);
     
     // Format track duration
     const durationStr = track.duration ? formatTime(track.duration) : '--:--';
@@ -173,7 +179,7 @@ function restoreLastPlayed() {
 }
 
 // Play track by index
-function playTrack(index) {
+async function playTrack(index) {
   if (!currentAlbum || !currentAlbum.tracks[index]) return;
   
   currentTrackIndex = index;
@@ -186,8 +192,50 @@ function playTrack(index) {
   document.querySelector(`.track-item[data-index="${index}"]`).classList.add('active');
   
   // Update audio source
-  audioPlayer.src = track.path.replace(/\\/g, '/');
-  audioPlayer.play();
+  const fileExtension = track.path.split('.').pop().toLowerCase();
+
+  if (fileExtension === 'mp3') {
+    console.log('MP3 format detected');
+    audioSource.type = 'audio/mpeg';
+  } else if (['m4a', 'aac'].includes(fileExtension)) {
+    console.log('AAC format detected');
+    audioSource.type = 'audio/mp4';
+  } else if (fileExtension === 'wav') {
+    console.log('WAV format detected');
+    audioSource.type = 'audio/wav';
+  } else if (fileExtension === 'ogg') {
+    console.log('OGG format detected');
+    audioSource.type = 'audio/ogg';
+  } else if (fileExtension === 'm4p') {
+    console.log('M4P format detected, decoding...');
+    await ipcRenderer.invoke('decode-m4p', track.path) // decodes to .acc
+      .then(decodedPath => {
+        audioSource.type = 'audio/mp4';
+        audioSource.src = decodedPath;
+        console.log('Decoded m4p file:', decodedPath, audioSource.src);
+      })
+      .catch(err => {
+        console.error('Error decoding m4p file:', err);
+      });
+  } else {
+    console.error('Unsupported audio format:', fileExtension);
+    return;
+  }
+
+  // audio source src in m4p was already set in the decode-m4p function
+  if (fileExtension !== 'm4p') audioSource.src = track.path.replace(/\\/g, '/');
+  console.log(audioSource.src, audioSource.type);
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+  audioPlayer.load();
+
+  audioPlayer.addEventListener('canplay', function handleCanPlay() {
+    audioPlayer.removeEventListener('canplay', handleCanPlay); // cleanup
+    audioPlayer.play().catch(err => {
+      console.error('Playback error:', err);
+    });
+  });
+
   isPlaying = true;
   playPauseButton.textContent = '⏸';
   
@@ -198,8 +246,7 @@ function playTrack(index) {
   if (currentAlbum.cover) {
     nowPlayingArtSmall.style.backgroundImage = `url('${currentAlbum.cover}')`;
   } else {
-    nowPlayingArt.style.backgroundImage = 'url("placeholder.png")';
-    nowPlayingArtSmall.style.backgroundImage = 'url("placeholder.png")';
+    nowPlayingArtSmall.style.backgroundImage = 'none';
   }
 
   totalTimeEl.textContent = formatTime(track.duration);

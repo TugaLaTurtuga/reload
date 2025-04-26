@@ -11,7 +11,7 @@
   <div id="app">
     <div id="sidebar">
       <div id="now-playing-small">
-        <div id="now-playing-art-small"></div>
+        <div id="now-playing-art-small" class="img"></div>
       </div>
     </div>
     
@@ -28,7 +28,7 @@
         </button>
         <div id="album-details">
           <div id="album-art-container">
-            <img id="album-art" src="placeholder.png" alt="Album Art">
+            <div id="album-art" class="img"></div>
           </div>
           <div id="album-info">
             <h2 id="album-title">Album Title</h2>
@@ -72,7 +72,8 @@
     </div>
   </div>
 
-  <audio id="audio-player"></audio>
+  <audio id="audio-player"> <source id="audio-source" type="audio/mpeg"></source> </audio>
+  <div id="special-player" style="display: none;"></div>
 
   <!-- classes + imports -->
   <script src="js/imports.js"></script>
