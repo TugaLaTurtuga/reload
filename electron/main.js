@@ -18,7 +18,7 @@ function createWindow() {
   });
 
   mainWindow.loadFile('app/index.html');
-  //mainWindow.webContents.openDevTools(); // Remove this in production
+  mainWindow.webContents.openDevTools(); // Remove this in production
 }
 
 app.whenReady().then(createWindow);
@@ -86,10 +86,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               description: "",
               year: "year",
               genre: fromExternalProvider ? "from external provider." : "Genre",
-              color: {
-                primary: "#000000",
-                secondary: "#FFFFFF"
-              },
+              color: "#FFFFFF",
               rating: 5
             }
           },

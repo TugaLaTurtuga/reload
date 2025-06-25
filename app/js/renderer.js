@@ -26,6 +26,7 @@ const albumYear = document.getElementById('album-year');
 const albumGenre = document.getElementById('album-genre');
 const albumDescription = document.getElementById('album-description');
 const trackList = document.getElementById('track-list');
+const background = document.getElementById('app')
 
 // App State
 let songs = [];
@@ -104,6 +105,7 @@ function openAlbum(album) {
   albumYear.textContent = album.info.description.year;
   albumGenre.textContent = album.info.description.genre;
   albumDescription.textContent = album.info.description.description;
+  changeBackgroundGradient(album.info.description.color)
   
   // Background color from album
   if (album.color) {
@@ -278,6 +280,10 @@ function playPrevious() {
 function playNext() {
   if (!currentAlbum || currentTrackIndex >= currentAlbum.tracks.length - 1) return;
   playTrack(currentTrackIndex + 1);
+}
+
+function changeBackgroundGradient(color) {
+  background.style.setProperty('--backgroundColor', color);
 }
 
 // Format time helper

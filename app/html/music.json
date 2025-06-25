@@ -1,0 +1,76 @@
+{
+  "musicList": [
+    {
+      "title": "01 Can u be",
+      "rating": 5
+    },
+    {
+      "title": "02 Pablo",
+      "rating": 5
+    },
+    {
+      "title": "03 Alien",
+      "rating": 5
+    },
+    {
+      "title": "04 God level",
+      "rating": 5
+    },
+    {
+      "title": "05 Beauty and the Beast",
+      "rating": 5
+    },
+    {
+      "title": "06 Preacher man",
+      "rating": 5
+    },
+    {
+      "title": "07 Don't kill the party",
+      "rating": 5
+    },
+    {
+      "title": "08 REAL",
+      "rating": 5
+    },
+    {
+      "title": "09 Security",
+      "rating": 5
+    },
+    {
+      "title": "10 Bianca",
+      "rating": 5
+    },
+    {
+      "title": "11 Flowers",
+      "rating": 5
+    },
+    {
+      "title": "12 Unlock",
+      "rating": 5
+    },
+    {
+      "title": "13 Highs and lows",
+      "rating": 5
+    },
+    {
+      "title": "14 Never see me again",
+      "rating": 5
+    },
+    {
+      "title": "15 Bittersweet Poetry",
+      "rating": 5
+    }
+  ],
+  "description": {
+    "author": "Kanye West",
+    "label": "Sigma Records",
+    "description": "",
+    "year": 2026,
+    "genre": "Hip-Hop/Rap",
+    "color": {
+      "primary": "#000000",
+      "secondary": "#FFFFFF"
+    },
+    "rating": 5
+  }
+}

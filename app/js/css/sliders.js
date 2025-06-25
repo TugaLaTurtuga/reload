@@ -7,7 +7,6 @@ class SliderController {
 
     updateSliders() {
         this.sliders = Array.from(document.querySelectorAll('.slider'));
-
         this.sliders.forEach((slider) => {
             // Find all <span> elements associated with this slider
             const spanElements = Array.from(
@@ -39,21 +38,36 @@ class SliderController {
 
     _updateSpans(slider, spans) {
         spans.forEach((span) => {
-            const modeString = span.getAttribute('mode'); // Read the mode attribute
+            // Album Rating: 
+            let addedInfo = '';
+            if (span.textContent.includes(':')) {
+                addedInfo = `${span.textContent.split(':')[0]}:`;
+            }
+
+            const modeString = span.getAttribute('mode') || ''; // Read the mode attribute
             let [mode, fixedValue] = modeString.split(';').map((item) => item.trim()); // Split and trim
             fixedValue = !isNaN(parseFloat(fixedValue)) ? parseFloat(fixedValue) : 1;
+            const value = slider.value;
 
             const maxValue = slider.max;
             const minValue = slider.min;
 
             if (mode === '%') { // Display as percentage
-                span.textContent = `${(((slider.value - minValue) / (maxValue - minValue)) * 100).toFixed(fixedValue)}%`;
+                span.textContent = `${addedInfo} ${(((value - minValue) / (maxValue - minValue)) * 100).toFixed(fixedValue)}%`;
             } else if (mode && !isNaN(parseFloat(mode))) { // Fixed multiplier
-                span.textContent = (((slider.value - minValue) / (maxValue - minValue)) * parseFloat(mode)).toFixed(fixedValue);
+                const totalDigits = String(parseInt(maxValue)).length;
+                const scaledValue = ((value - minValue) / (maxValue - minValue)) * parseFloat(mode);
+                
+                // Split integer and fractional parts
+                const [intPart, fracPartRaw] = scaledValue.toFixed(fixedValue).split('.');
+                const intPadded = intPart.padStart(totalDigits, '0');
+
+                // Combine padded integer with fractional
+                span.textContent = `${addedInfo} ${intPadded}.${fracPartRaw}`;
             } else if (mode === 'raw') { // Raw slider value
-                span.textContent = slider.value;
+                span.textContent = `${addedInfo} ${value}`;
             } else {
-                span.textContent = `${slider.value.toFixed(2)}`; // Default: Two decimal places
+                span.textContent = `${addedInfo} ${Math.round(value, 2)}`; // Default: Two decimal places
             }
         });
     }

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music JSON Editor</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/musicEditor.css">
+    <link rel="stylesheet" href="../css/slider.css">
+</head>
+<body>
+    <div class="notification" id="notification"></div>
+    
+    <div class="container">
+        <div class="header">
+            <button id="save-button">Save Changes</button>
+            <button id="load-button">Reload Data</button>
+        </div>
+        
+        <h2>Album Information</h2>
+        <div class="album-info">
+            <div class="field">
+                <label for="author">Artist</label>
+                <input type="text" id="author" placeholder="Artist name">
+            </div>
+            
+            <div class="field">
+                <label for="label">Label</label>
+                <input type="text" id="label" placeholder="Record label">
+            </div>
+            
+            <div class="field">
+                <label for="year">Year</label>
+                <input type="number" id="year" placeholder="Release year">
+            </div>
+            
+            <div class="field">
+                <label for="genre">Genre</label>
+                <input type="text" id="genre" placeholder="Music genre">
+            </div>
+            
+            <div class="field">
+                <span mode="10;1" data-slider="albumRating">Album Rating: </span>
+                <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="albumRating">
+            </div>
+            
+            <div class="field">
+                <label for="description">Description</label>
+                <input type="text" id="description" placeholder="Album description">
+            </div>
+            
+            <div class="field">
+                <label>Album Colors</label>
+                <div class="colors">
+                    <div class="color-picker">
+                        <label for="primaryColor">Primary</label>
+                        <input type="color" id="primaryColor">
+                    </div>
+                    <div class="color-picker">
+                        <label for="secondaryColor">Secondary</label>
+                        <input type="color" id="secondaryColor">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Track List</h2>
+        <div id="tracks-container" class="track-list">
+            <!-- Tracks will be added here dynamically -->
+        </div>
+        
+        <div class="actions">
+            <button id="add-track" class="add">Add New Track</button>
+            <button id="sort-tracks">Sort by Title</button>
+        </div>
+    </div>
+
+    <script src="../js/css/sliders.js"></script>
+    <script src="../js/css/notification.js"></script>
+    <script>
+        // Global variable to store the music data
+        let musicData = {
+            musicList: [],
+            description: {
+                author: '',
+                label: '',
+                description: '',
+                year: 2024,
+                genre: '',
+                color: {
+                    primary: '#000000',
+                    secondary: '#FFFFFF'
+                },
+                rating: 5
+            }
+        };
+        
+        // DOM elements
+        const authorInput = document.getElementById('author');
+        const labelInput = document.getElementById('label');
+        const yearInput = document.getElementById('year');
+        const genreInput = document.getElementById('genre');
+        const albumRatingSelect = document.getElementById('albumRating');
+        const descriptionInput = document.getElementById('description');
+        const primaryColorInput = document.getElementById('primaryColor');
+        const secondaryColorInput = document.getElementById('secondaryColor');
+        const tracksContainer = document.getElementById('tracks-container');
+        const addTrackButton = document.getElementById('add-track');
+        const sortTracksButton = document.getElementById('sort-tracks');
+        const saveButton = document.getElementById('save-button');
+        const loadButton = document.getElementById('load-button');
+        const notification = document.getElementById('notification');
+
+        // Function to load music data from server
+        async function loadMusicData() {
+            try {
+                const response = await fetch('music.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load music data');
+                }
+                
+                musicData = await response.json();
+                populateForm();
+                showNotification('Music data loaded successfully');
+            } catch (error) {
+                console.error('Error loading music data:', error);
+                showNotification('Error loading music data: ' + error.message, 'error');
+                
+                // For demonstration - load the sample data
+                // In a real application, you'd want to handle this differently
+                try {
+                    const sampleData = JSON.parse(document.querySelector('[index="1"] [source="music.json"] + [document_content]').textContent);
+                    musicData = sampleData;
+                    populateForm();
+                    showNotification('Loaded sample data instead', 'success');
+                } catch (e) {
+                    console.error('No sample data available');
+                }
+            }
+        }
+
+        // Function to populate the form with music data
+        function populateForm() {
+            const { description } = musicData;
+            
+            // Fill album information
+            authorInput.value = description.author || '';
+            labelInput.value = description.label || '';
+            yearInput.value = description.year || 2024;
+            genreInput.value = description.genre || '';
+            albumRatingSelect.value = description.rating || 5;
+            descriptionInput.value = description.description || '';
+            
+            // Colors
+            primaryColorInput.value = description.color?.primary || '#000000';
+            secondaryColorInput.value = description.color?.secondary || '#FFFFFF';
+            
+            // Clear existing tracks
+            tracksContainer.innerHTML = '';
+            
+            // Add tracks
+            musicData.musicList.forEach((track, index) => {
+                addTrackToDOM(track, index);
+            });
+            sController.updateSliders();
+        }
+
+        // Function to add a track to the DOM
+        function addTrackToDOM(track, index) {
+            const trackDiv = document.createElement('div');
+            trackDiv.className = 'track';
+            trackDiv.dataset.index = index;
+            
+            trackDiv.innerHTML = `
+                <input type="text" class="track-title" value="${track.title || ''}" placeholder="Track title">
+                <span mode="10;1" data-slider="track-rating ${index}"></span>
+                <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="track-rating ${index}">
+                <div class="track-actions">
+                    <button class="move-up">↑</button>
+                    <button class="move-down">↓</button>
+                    <button class="danger remove-track">Remove</button>
+                </div>
+            `;
+            
+            // Add event listeners to the track
+            trackDiv.querySelector('.track-title').addEventListener('input', updateTrackData);
+            trackDiv.querySelector('.slider').addEventListener('change', updateTrackData);
+            trackDiv.querySelector('.remove-track').addEventListener('click', () => removeTrack(trackDiv));
+            trackDiv.querySelector('.move-up').addEventListener('click', () => moveTrack(trackDiv, 'up'));
+            trackDiv.querySelector('.move-down').addEventListener('click', () => moveTrack(trackDiv, 'down'));
+            
+            tracksContainer.appendChild(trackDiv);
+        }
+
+        // Function to update track data in the musicData object
+        function updateTrackData() {
+            // Get all track elements
+            const trackElements = tracksContainer.querySelectorAll('.track');
+            
+            // Create a new array for the track list
+            const updatedTracks = [];
+            
+            // Loop through track elements and update data
+            trackElements.forEach(trackElement => {
+                const titleInput = trackElement.querySelector('.track-title');
+                const ratingSelect = trackElement.querySelector('.slider');
+                
+                updatedTracks.push({
+                    title: titleInput.value,
+                    rating: parseInt(ratingSelect.value, 10)
+                });
+            });
+            
+            // Update the music data
+            musicData.musicList = updatedTracks;
+        }
+
+        // Function to add a new track
+        function addNewTrack() {
+            const newTrack = {
+                title: `New Track ${musicData.musicList.length + 1}`,
+                rating: 5
+            };
+            
+            musicData.musicList.push(newTrack);
+            addTrackToDOM(newTrack, musicData.musicList.length - 1);
+            sController.updateSliders();
+        }
+
+        // Function to remove a track
+        function removeTrack(trackElement) {
+            if (confirm('Are you sure you want to remove this track?')) {
+                trackElement.remove();
+                updateTrackData();
+            }
+        }
+
+        // Function to move a track up or down
+        function moveTrack(trackElement, direction) {
+            const trackElements = Array.from(tracksContainer.querySelectorAll('.track'));
+            const currentIndex = trackElements.indexOf(trackElement);
+            
+            if (direction === 'up' && currentIndex > 0) {
+                tracksContainer.insertBefore(trackElement, trackElements[currentIndex - 1]);
+            } else if (direction === 'down' && currentIndex < trackElements.length - 1) {
+                tracksContainer.insertBefore(trackElements[currentIndex + 1], trackElement);
+            }
+            
+            updateTrackData();
+        }
+
+        // Function to sort tracks by title
+        function sortTracks() {
+            // Sort tracks in musicData
+            musicData.musicList.sort((a, b) => a.title.localeCompare(b.title));
+            
+            // Clear and repopulate track container
+            tracksContainer.innerHTML = '';
+            musicData.musicList.forEach((track, index) => {
+                addTrackToDOM(track, index);
+            });
+
+            sController.updateSliders();
+            showNotification('Tracks sorted by title');
+        }
+
+        // Function to update the album information
+        function updateAlbumInfo() {
+            musicData.description.author = authorInput.value;
+            musicData.description.label = labelInput.value;
+            musicData.description.year = parseInt(yearInput.value, 10);
+            musicData.description.genre = genreInput.value;
+            musicData.description.rating = parseInt(albumRatingSelect.value);
+            musicData.description.description = descriptionInput.value;
+            musicData.description.color.primary = primaryColorInput.value;
+            musicData.description.color.secondary = secondaryColorInput.value;
+        }
+
+        // Function to save music data
+        async function saveMusicData() {
+            try {
+                // In a real application, this would be a POST/PUT request to your backend
+                // For demonstration, we'll just show a notification
+                
+                saveButton.innerHTML = '<span class="spinner"></span> Saving...';
+                saveButton.disabled = true;
+                
+                // Simulate a network request
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // In a real app, you would do:
+                // const response = await fetch('/api/music', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(musicData)
+                // });
+                
+                // if (!response.ok) throw new Error('Failed to save data');
+                
+                showNotification('Music data saved successfully!');
+                console.log('Music data that would be sent to backend:', musicData);
+            } catch (error) {
+                console.error('Error saving music data:', error);
+                showNotification('Error saving music data: ' + error.message, 'error');
+            } finally {
+                saveButton.innerHTML = 'Save Changes';
+                saveButton.disabled = false;
+            }
+        }
+
+        // Add event listeners
+        authorInput.addEventListener('input', updateAlbumInfo);
+        labelInput.addEventListener('input', updateAlbumInfo);
+        yearInput.addEventListener('input', updateAlbumInfo);
+        genreInput.addEventListener('input', updateAlbumInfo);
+        albumRatingSelect.addEventListener('change', updateAlbumInfo);
+        descriptionInput.addEventListener('input', updateAlbumInfo);
+        primaryColorInput.addEventListener('input', updateAlbumInfo);
+        secondaryColorInput.addEventListener('input', updateAlbumInfo);
+        
+        addTrackButton.addEventListener('click', addNewTrack);
+        sortTracksButton.addEventListener('click', sortTracks);
+        saveButton.addEventListener('click', saveMusicData);
+        loadButton.addEventListener('click', loadMusicData);
+
+        // Load music data when the page loads
+        document.addEventListener('DOMContentLoaded', loadMusicData);
+    </script>
+</body>
+</html>
