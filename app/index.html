@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Reload Music Player</title>
   <link rel="stylesheet" href="css/font-renderer.css">
+  <link rel="stylesheet" href="css/themes.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/slider.css">
 </head>
@@ -14,18 +15,21 @@
         <div id="now-playing-art-small" class="img"></div>
       </div>
     </div>
-    
+   
     <div id="main-content">
       <div id="library-container">
         <div class="spinner" id="loading"></div>
         <div id="albums-section" class="content-section"></div>
         <div id="singles-section" class="content-section hidden"></div>
+        <div id="buffer"></div>
       </div>
 
       <div id="player-container" class="hidden">
-        <button id="player-header">
-          <p id="back-button"><</p>
-        </button>
+        <div id="player-header">
+          <button id="favourite-button">.</button>
+          <button id="edit-button">edit</button>
+          <button id="back-button"><</button>
+        </div>
         <div id="album-details">
           <div id="album-art-container">
             <div id="album-art" class="img"></div>
@@ -48,11 +52,15 @@
     <div id="player-controls">
       <div id="now-playing">
         <div id="now-playing-info">
-          <div id="now-playing-title">Select a track</div>
-          <div id="now-playing-artist"></div>
+          <div id="now-playing-title-wrapper">
+            <div id="now-playing-title">Select a track</div>
+          </div>
+          <div id="now-playing-artist-wrapper">
+            <div id="now-playing-artist"></div>
+          </div>
         </div>
       </div>
-      
+     
       <div id="controls">
         <button id="prev-button">⏮</button>
         <button id="play-pause-button">▶</button>
@@ -72,16 +80,24 @@
     </div>
   </div>
 
-  <audio id="audio-player"> <source id="audio-source" type="audio/mpeg"></source> </audio>
+  <audio id="audio-player">
+    <source class="audio-source" id="prev" type="audio/mpeg"></source>
+    <source class="audio-source" id="curr" type="audio/mpeg"></source>
+    <source class="audio-source" id="next" type="audio/mpeg"></source>
+  </audio>
   <div id="special-player" style="display: none;"></div>
 
   <!-- classes + imports -->
   <script src="js/imports.js"></script>
   <script src="js/input/inputManagement.js"></script>
+  <script src="js/css/gradientHelper.js"></script>
   <script src="js/css/sliders.js"></script>
 
   <!-- scripts -->  
-  <script src="js/renderer.js"></script>
+  <script src="js/renderLibraryAndAlbums.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/updatePlayerControls.js"></script>
+  <script src="js/starter.js"></script>
 
   <!-- input -->
   <script src="js/input/inputs.js"></script>

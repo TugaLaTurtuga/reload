@@ -3,166 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music JSON Editor</title>
+    <title>Editor</title>
 
+    <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/musicEditor.css">
     <link rel="stylesheet" href="../css/slider.css">
 </head>
 <body>
     <div class="notification" id="notification"></div>
-    
-    <div class="container">
-        <div class="header">
-            <button id="save-button">Save Changes</button>
-            <button id="load-button">Reload Data</button>
-        </div>
+
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <button id="save-button">Save Changes</button>
+                <button id="load-button">Reload Data</button>
+            </div>
         
-        <h2>Album Information</h2>
-        <div class="album-info">
-            <div class="field">
-                <label for="author">Artist</label>
-                <input type="text" id="author" placeholder="Artist name">
-            </div>
+            <h2>Album Information</h2>
+            <div class="album-info">
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Album name">
+                </div>
+
+                <div class="field">
+                    <label for="author">Artist</label>
+                    <input type="text" id="author" placeholder="Artist name">
+                </div>
             
-            <div class="field">
-                <label for="label">Label</label>
-                <input type="text" id="label" placeholder="Record label">
-            </div>
-            
-            <div class="field">
-                <label for="year">Year</label>
-                <input type="number" id="year" placeholder="Release year">
-            </div>
-            
-            <div class="field">
-                <label for="genre">Genre</label>
-                <input type="text" id="genre" placeholder="Music genre">
-            </div>
-            
-            <div class="field">
-                <span mode="10;1" data-slider="albumRating">Album Rating: </span>
-                <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="albumRating">
-            </div>
-            
-            <div class="field">
-                <label for="description">Description</label>
-                <input type="text" id="description" placeholder="Album description">
-            </div>
-            
-            <div class="field">
-                <label>Album Colors</label>
-                <div class="colors">
-                    <div class="color-picker">
-                        <label for="primaryColor">Primary</label>
-                        <input type="color" id="primaryColor">
-                    </div>
-                    <div class="color-picker">
-                        <label for="secondaryColor">Secondary</label>
-                        <input type="color" id="secondaryColor">
-                    </div>
+                <div class="field">
+                    <label for="label">Label</label>
+                    <input type="text" id="label" placeholder="Record label">
+                </div>
+                
+                <div class="field">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" placeholder="Release year">
+                </div>
+                
+                <div class="field">
+                    <label for="genre">Genre</label>
+                    <input type="text" id="genre" placeholder="Music genre">
+                </div>
+                
+                <div class="field">
+                    <span mode="10;1" data-slider="albumRating">Album Rating: </span>
+                    <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="albumRating">
+                </div>
+                
+                <div class="field">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="Album description">
+                </div>
+                
+                <div class="field">
+                    <label for="color">Album Color</label>
+                    <input type="color" id="color" value="#AAAAAA">
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="container">
-        <h2>Track List</h2>
-        <div id="tracks-container" class="track-list">
-            <!-- Tracks will be added here dynamically -->
-        </div>
-        
-        <div class="actions">
-            <button id="add-track" class="add">Add New Track</button>
-            <button id="sort-tracks">Sort by Title</button>
+
+        <div class="container">
+            <h2>Track List</h2>
+            <div id="tracks-container" class="track-list">
+                <!-- Tracks will be added here dynamically -->
+            </div>
+            
+            <div class="actions">
+                <button id="add-track" class="add">Add New Track</button>
+                <button id="sort-tracks">Sort by Title</button>
+            </div>
         </div>
     </div>
 
+    <script src="../js/imports.js"></script>
     <script src="../js/css/sliders.js"></script>
+    <script src="../js/css/gradientHelper.js"></script>
     <script src="../js/css/notification.js"></script>
     <script>
         // Global variable to store the music data
         let musicData = {
-            musicList: [],
+            trackList: [],
             description: {
+                name: '',
                 author: '',
                 label: '',
                 description: '',
                 year: 2024,
                 genre: '',
-                color: {
-                    primary: '#000000',
-                    secondary: '#FFFFFF'
-                },
+                color: '#AAAAAA',
                 rating: 5
             }
         };
-        
+      
         // DOM elements
+        const nameInput = document.getElementById('name');
         const authorInput = document.getElementById('author');
         const labelInput = document.getElementById('label');
         const yearInput = document.getElementById('year');
         const genreInput = document.getElementById('genre');
         const albumRatingSelect = document.getElementById('albumRating');
         const descriptionInput = document.getElementById('description');
-        const primaryColorInput = document.getElementById('primaryColor');
-        const secondaryColorInput = document.getElementById('secondaryColor');
+        const colorInput = document.getElementById('color');
         const tracksContainer = document.getElementById('tracks-container');
         const addTrackButton = document.getElementById('add-track');
         const sortTracksButton = document.getElementById('sort-tracks');
         const saveButton = document.getElementById('save-button');
         const loadButton = document.getElementById('load-button');
         const notification = document.getElementById('notification');
+        let jsonPath = null;
+
+        async function loadSettings() {
+            let settings = {theme: ''};
+            try {
+                let lastPlayedInfo = await ipcRenderer.invoke('load-settings') || {};
+
+                for (const key in settings) { // saver load
+                    if (lastPlayedInfo && lastPlayedInfo.hasOwnProperty(key)) {
+                        settings[key] = lastPlayedInfo[key];
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+
+            // Apply settings
+            document.body.setAttribute('theme', settings.theme)
+        }
 
         // Function to load music data from server
         async function loadMusicData() {
             try {
-                const response = await fetch('music.json');
+                loadSettings(); // for theme
+                jsonPath = await fetch('../saves/jsonToLoad.txt').then(res => res.text());
+                console.log('Loading music data from:', jsonPath);
+                const response = await fetch(jsonPath);
                 if (!response.ok) {
                     throw new Error('Failed to load music data');
                 }
                 
                 musicData = await response.json();
-                populateForm();
+                console.log(musicData.description.color);
+
+                await populateForm();
+                if (!musicData.description.name) {
+                    musicData.description.name = jsonPath ? jsonPath.split('/').slice(-2, -1)[0] : 'Unknown name';
+                    nameInput.value = musicData.description.name;
+                }
+                changeBackGroundColorFromNewAlbum(musicData.description.color)
+                
                 showNotification('Music data loaded successfully');
             } catch (error) {
                 console.error('Error loading music data:', error);
-                showNotification('Error loading music data: ' + error.message, 'error');
-                
-                // For demonstration - load the sample data
-                // In a real application, you'd want to handle this differently
-                try {
-                    const sampleData = JSON.parse(document.querySelector('[index="1"] [source="music.json"] + [document_content]').textContent);
-                    musicData = sampleData;
-                    populateForm();
-                    showNotification('Loaded sample data instead', 'success');
-                } catch (e) {
-                    console.error('No sample data available');
-                }
+                showNotification('Error loading music data: ' + error.message);
             }
         }
 
         // Function to populate the form with music data
         function populateForm() {
             const { description } = musicData;
-            
+          
             // Fill album information
+            nameInput.value = description.name || '';
             authorInput.value = description.author || '';
             labelInput.value = description.label || '';
-            yearInput.value = description.year || 2024;
+            yearInput.value = description.year == '' ? new Date().getFullYear() : description.year;
             genreInput.value = description.genre || '';
             albumRatingSelect.value = description.rating || 5;
             descriptionInput.value = description.description || '';
             
             // Colors
-            primaryColorInput.value = description.color?.primary || '#000000';
-            secondaryColorInput.value = description.color?.secondary || '#FFFFFF';
+            colorInput.value = description?.color || '#AAAAAA';
             
             // Clear existing tracks
             tracksContainer.innerHTML = '';
             
             // Add tracks
-            musicData.musicList.forEach((track, index) => {
+            musicData.trackList.forEach((track, index) => {
                 addTrackToDOM(track, index);
             });
             sController.updateSliders();
@@ -215,18 +233,18 @@
             });
             
             // Update the music data
-            musicData.musicList = updatedTracks;
+            musicData.trackList = updatedTracks;
         }
 
         // Function to add a new track
         function addNewTrack() {
             const newTrack = {
-                title: `New Track ${musicData.musicList.length + 1}`,
+                title: `New Track ${musicData.trackList.length + 1}`,
                 rating: 5
             };
             
-            musicData.musicList.push(newTrack);
-            addTrackToDOM(newTrack, musicData.musicList.length - 1);
+            musicData.trackList.push(newTrack);
+            addTrackToDOM(newTrack, musicData.trackList.length - 1);
             sController.updateSliders();
         }
 
@@ -255,11 +273,15 @@
         // Function to sort tracks by title
         function sortTracks() {
             // Sort tracks in musicData
-            musicData.musicList.sort((a, b) => a.title.localeCompare(b.title));
+            musicData.trackList.sort((a, b) => {
+                const numA = parseInt(a.match(/^\d+/)?.[0], 10) || Infinity;
+                const numB = parseInt(b.match(/^\d+/)?.[0], 10) || Infinity;
+                return numA - numB;
+            });
             
             // Clear and repopulate track container
             tracksContainer.innerHTML = '';
-            musicData.musicList.forEach((track, index) => {
+            musicData.trackList.forEach((track, index) => {
                 addTrackToDOM(track, index);
             });
 
@@ -269,36 +291,33 @@
 
         // Function to update the album information
         function updateAlbumInfo() {
+            musicData.description.name = nameInput.value;
             musicData.description.author = authorInput.value;
             musicData.description.label = labelInput.value;
             musicData.description.year = parseInt(yearInput.value, 10);
             musicData.description.genre = genreInput.value;
             musicData.description.rating = parseInt(albumRatingSelect.value);
             musicData.description.description = descriptionInput.value;
-            musicData.description.color.primary = primaryColorInput.value;
-            musicData.description.color.secondary = secondaryColorInput.value;
+            musicData.description.color = colorInput.value;
         }
 
         // Function to save music data
         async function saveMusicData() {
             try {
-                // In a real application, this would be a POST/PUT request to your backend
-                // For demonstration, we'll just show a notification
                 
                 saveButton.innerHTML = '<span class="spinner"></span> Saving...';
                 saveButton.disabled = true;
-                
-                // Simulate a network request
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // In a real app, you would do:
-                // const response = await fetch('/api/music', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(musicData)
-                // });
-                
-                // if (!response.ok) throw new Error('Failed to save data');
+
+                // Save the latest album and track info before sending
+                updateAlbumInfo();
+                updateTrackData();
+
+                // Send the updated musicData to the backend
+                try {
+                    fs.writeFileSync(jsonPath, JSON.stringify(musicData, null, 2), 'utf8');
+                } catch (err) {
+                    console.error('Error creating music.json:', err);
+                }
                 
                 showNotification('Music data saved successfully!');
                 console.log('Music data that would be sent to backend:', musicData);
@@ -311,6 +330,48 @@
             }
         }
 
+        function updateColor() {
+            let r, g, b;
+            if (colorInput.value.startsWith('#')) {
+                // Remove the hash and parse the hex
+                let hex = colorInput.value.replace('#', '');
+                if (hex.length === 3) {
+                    // Expand shorthand hex (e.g. #abc -> #aabbcc)
+                    hex = hex.split('').map(x => x + x).join('');
+                }
+                const intVal = parseInt(hex, 16);
+                const rVal = (intVal >> 16) & 255;
+                const gVal = (intVal >> 8) & 255;
+                const bVal = intVal & 255;
+                [r, b, g] = [rVal, gVal, bVal];
+            } else {
+                [r, b, g] = colorInput.value;
+            }
+
+            console.log(`\nConverting Hex to RGB to Hex: ${r},${g},${b} (Good cod), ${colorInput.value}`);
+            
+            // limit how bright the color can be (to avoid white colors)
+            const total = r + g + b;
+            const clamp = 0.9 * 765; // 765 = 255 * 3
+            if (total > clamp) {
+                const scale = clamp / total;
+                r = Math.round(r * scale);
+                g = Math.round(g * scale);
+                b = Math.round(b * scale);
+                console.log(`Clamped: ${r},${g},${b}`);
+            }
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b)); // always nice to clamp (bc me bad at js)
+
+            colorInput.value = 
+                `#${((1 << 24) + (r << 16) + (g << 8) + b)
+                .toString(16)
+                .slice(1)
+                .toUpperCase()}`;
+            updateAlbumInfo();
+        }
+
         // Add event listeners
         authorInput.addEventListener('input', updateAlbumInfo);
         labelInput.addEventListener('input', updateAlbumInfo);
@@ -318,8 +379,7 @@
         genreInput.addEventListener('input', updateAlbumInfo);
         albumRatingSelect.addEventListener('change', updateAlbumInfo);
         descriptionInput.addEventListener('input', updateAlbumInfo);
-        primaryColorInput.addEventListener('input', updateAlbumInfo);
-        secondaryColorInput.addEventListener('input', updateAlbumInfo);
+        colorInput.addEventListener('change', updateColor);
         
         addTrackButton.addEventListener('click', addNewTrack);
         sortTracksButton.addEventListener('click', sortTracks);

@@ -5,10 +5,10 @@
     outline: none;
     appearance: none;
     cursor: pointer;
-    --slider-value: 100%; /* Start with max value for visual feedback */
-    --slider-color: #06a21b; /* This will be dynamically updated */
-    --slider-thumb-color: #aaa; /* New variable for thumb color */
-    --slider-background-color: #333;
+    --slider-value: 100%;
+    --slider-color: var(--activeColor);
+    --slider-thumb-color: var(--textColor);
+    --slider-background-color: var(--slidersBGColor);
     transform: translateY(0px);
 }
 

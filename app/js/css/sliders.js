@@ -90,8 +90,7 @@ class SliderController {
             slider.addEventListener('input', () => this._updateSpans(slider, spans));
             this._updateSpans(slider, spans);
         }
-
-        console.log(slider.id);
+        
         slider.addEventListener('input', () => this._updateSliderBackground(slider));
         if (slider.id !== 'progress-bar') slider.addEventListener('wheel', (event) => this._handleSliderScroll(event, slider));
     }
