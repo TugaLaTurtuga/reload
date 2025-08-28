@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -6,114 +5,95 @@
     font-family: 'Rubik', sans-serif;
 }
 
-/* Dark mode */
+
+
+/* Root mode */
 :root {
-  --defaultSecondaryBackgroundColor: rgb(18, 18, 18);
-  --defaultBackgroundColor: rgb(51, 51, 51);
-  --defaultSubTitle: rgb(170, 170, 170);
-  --activeColor: rgb(29, 185, 84);
+  --activeColor: #66cf20;
+  --bg-1: #121212;
+  --bg-2: #333333;
+  --ControlsBtnsColor: rgb(187, 187, 187);
+  --notaficationBorderColor: rgb(102, 102, 102);
+  --notificationBgColor: rgb(85, 85, 85);
+  --notificationCorrectColor: rgb(29, 185, 84);
+  --notificationErrorColor: rgb(231, 76, 60);
+  --notificationWarningColor: rgb(222, 222, 24);
+  --sidebarColor: rgba(24, 24, 24, 0.7);
+  --sliderBgColor: rgb(90, 90, 90);
+  --spinnerBgColor: rgba(255, 255, 255, 0.302);
+  --spinnerColor: rgb(255, 255, 255);
   --textColor: rgb(245, 245, 245);
-  --defaultSidebarsColor: rgba(24, 24, 24, 0.7);
-  --itemOnHover: rgb(40, 40, 40);
+  --textSubColor: rgb(170, 170, 170);
   --trackItemColor: rgb(34, 34, 34);
   --trackItemOddColor: rgb(29, 29, 29);
-  --nowPlayingBtnsColor: rgb(187, 187, 187);
-
-  --spinnerBGColor: rgba(255, 255, 255, 0.302);
-  --spinnerColor: rgb(255, 255, 255);
-
-  --slidersBGColor: rgb(90, 90, 90);
-
-  --navItemActiveColor: rgb(0, 0, 0);
-
-  --notificationBGColor: rgb(85, 85, 85);
-  --notaficationBorderColor: rgb(102, 102, 102);
-
-  --correctColor: rgb(29, 185, 84);
-  --warningColor: rgb(222, 222, 24);
-  --errorColor: rgb(231, 76, 60);
+  --trackItemOnHover: rgb(40, 40, 40);
 }
 
-/* Light mode */
-[theme="light"] {
-  --defaultSecondaryBackgroundColor: #f5f5f5;
-  --defaultBackgroundColor: #ffffff;
-  --defaultSubTitle: #888888;
-  --activeColor: #1db954;
-  --textColor: #222222;
-  --defaultSidebarsColor: rgba(237, 237, 237, 0.7);
-  --itemOnHover: #e0e0e0;
-  --trackItemColor: #f3f3f3;
-  --trackItemOddColor: #eaeaea;
-  --nowPlayingBtnsColor: #333333;
 
-  --spinnerBGColor: rgba(0, 0, 0, 0.15);
-  --spinnerColor: #222222;
-
-  --slidersBGColor: #cccccc;
-
-  --navItemActiveColor: #ffffff;
-
-  --notificationBGColor: #e0e0e0;
-  --notaficationBorderColor: #cccccc;
-
-  --correctColor: #1db954;
-  --warningColor: #eedd18;
-  --errorColor: #e74c3c;
+/* Atom mode */
+[theme="atom"] {
+  --activeColor: #64b828;
+  --bg-1: #282c34;
+  --bg-2: #21252b;
+  --ControlsBtnsColor: #61afef;
+  --notaficationBorderColor: #61afef;
+  --notificationBgColor: #282c34;
+  --notificationCorrectColor: #98c379;
+  --notificationErrorColor: #e06c75;
+  --notificationWarningColor: #e5c07b;
+  --sidebarColor: rgb(33, 37, 43, 0.7);
+  --sliderBgColor: #5c6370;
+  --spinnerBgColor: rgba(97, 175, 239, 0.2);
+  --spinnerColor: #61afef;
+  --textColor: #d5e0f3;
+  --textSubColor: #3560b1;
+  --trackItemColor: #282c34;
+  --trackItemOddColor: #23272e;
+  --trackItemOnHover: #2c313a;
 }
+
 
 /* Dracula mode */
 [theme="dracula"] {
-  --defaultSecondaryBackgroundColor: #282a36;
-  --defaultBackgroundColor: #44475a;
-  --defaultSubTitle: #6272a4;
-  --activeColor: #50fa7b;
+  --activeColor: #32c814;
+  --bg-1: #282a36;
+  --bg-2: #44475a;
+  --ControlsBtnsColor: #bd93f9;
+  --notaficationBorderColor: #bd93f9;
+  --notificationBgColor: #44475a;
+  --notificationCorrectColor: #50fa7b;
+  --notificationErrorColor: #ff5555;
+  --notificationWarningColor: #f1fa8c;
+  --sidebarColor: rgb(40, 42, 54, 0.7);
+  --sliderBgColor: #6272a4;
+  --spinnerBgColor: rgba(189, 147, 249, 0.2);
+  --spinnerColor: #bd93f9;
   --textColor: #f8f8f2;
-  --defaultSidebarsColor: rgb(40, 42, 54, 0.7);
-  --itemOnHover: #3f4250;
+  --textSubColor: #6272a4;
   --trackItemColor: #44475a;
   --trackItemOddColor: #44475c;
-  --nowPlayingBtnsColor: #bd93f9;
-
-  --spinnerBGColor: rgba(189, 147, 249, 0.2);
-  --spinnerColor: #bd93f9;
-
-  --slidersBGColor: #6272a4;
-
-  --navItemActiveColor: #282a36;
-
-  --notificationBGColor: #44475a;
-  --notaficationBorderColor: #bd93f9;
-
-  --correctColor: #50fa7b;
-  --warningColor: #f1fa8c;
-  --errorColor: #ff5555;
+  --trackItemOnHover: #3f4250;
 }
 
-/* Atom One Dark mode */
-[theme="atom"] {
-  --defaultSecondaryBackgroundColor: #282c34;
-  --defaultBackgroundColor: #21252b;
-  --defaultSubTitle: #3560b1;
-  --activeColor: #98c379;
-  --textColor: #d5e0f3;
-  --defaultSidebarsColor: rgb(33, 37, 43, 0.7);
-  --itemOnHover: #2c313a;
-  --trackItemColor: #282c34;
-  --trackItemOddColor: #23272e;
-  --nowPlayingBtnsColor: #61afef;
 
-  --spinnerBGColor: rgba(97, 175, 239, 0.2);
-  --spinnerColor: #61afef;
-
-  --slidersBGColor: #5c6370;
-
-  --navItemActiveColor: #21252b;
-
-  --notificationBGColor: #282c34;
-  --notaficationBorderColor: #61afef;
-
-  --correctColor: #98c379;
-  --warningColor: #e5c07b;
-  --errorColor: #e06c75;
+/* Light mode */
+[theme="light"] {
+  --activeColor: #1db954;
+  --bg-1: #f5f5f5;
+  --bg-2: #ffffff;
+  --ControlsBtnsColor: #333333;
+  --notaficationBorderColor: #cccccc;
+  --notificationBgColor: #e0e0e0;
+  --notificationCorrectColor: #1db954;
+  --notificationErrorColor: #e74c3c;
+  --notificationWarningColor: #eedd18;
+  --sidebarColor: rgba(237, 237, 237, 0.7);
+  --sliderBgColor: #cccccc;
+  --spinnerBgColor: rgba(0, 0, 0, 0.15);
+  --spinnerColor: #222222;
+  --textColor: #222222;
+  --textSubColor: #888888;
+  --trackItemColor: #f3f3f3;
+  --trackItemOddColor: #eaeaea;
+  --trackItemOnHover: #e0e0e0;
 }

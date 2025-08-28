@@ -5,26 +5,13 @@
   initial-value: #333;
 }
 
-body, html {
-    padding: 0;
-    margin: 0;
-}
-
-
-/* Register the custom property so it can animate */
-@property --backgroundColor {
-  syntax: '<color>';
-  inherits: false;
-  initial-value: #333;
-}
-
 #app {
   display: block;
   height: 100vh;
   width: 100vw;
 
-  --backgroundColor: var(--defaultBackgroundColor);
-  background: linear-gradient(to bottom left, var(--backgroundColor), var(--defaultSecondaryBackgroundColor));
+  --backgroundColor: var(--bg-2);
+  background: linear-gradient(to bottom left, var(--backgroundColor), var(--bg-1));
   transition: --backgroundColor 0.15s ease-out;
 
   overflow-y: scroll;
@@ -43,6 +30,7 @@ body, html {
 .header {
     justify-content: center;
     align-items: center;
+    text-align-last: center;
     margin-bottom: 20px;
 }
 .album-info {
@@ -64,7 +52,7 @@ input, select {
     width: 100%;
     padding: 10px;
     margin: 5px;
-    background-color: var(--defaultSecondaryBackgroundColor);
+    background-color: var(--bg-1);
     color: #ddd;
     border: none;
     border-radius: 4px;
@@ -78,7 +66,7 @@ input, select {
     display: flex;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid var(--defaultBackgroundColor);
+    border-bottom: 1px solid var(--bg-2);
 }
 .track:last-child {
     border-bottom: none;
@@ -102,23 +90,23 @@ button {
     padding: 8px 12px;
     cursor: pointer;
     font-size: 14px;
-    background-color: var(--defaultSecondaryBackgroundColor);
-    color: var(--defaultSubTitle);
+    background-color: var(--bg-1);
+    color: var(--textSubColor);
     transition: background-color 0.2s;
 }
 button.danger {
-    background-color: var(--errorColor);
+    background-color: var(--notificationErrorColor);
     color: var(--trackItemOddColor);
 }
 button.danger:hover {
-    background-color: var(--errorColor);
+    background-color: var(--notificationErrorColor);
 }
 button.add {
-    background-color: var(--correctColor);
+    background-color: var(--notificationCorrectColor);
     color: var(--trackItemOddColor);
 }
 button.add:hover {
-    background-color: var(--correctColor);
+    background-color: var(--notificationCorrectColor);
 }
 .actions {
     margin-top: 20px;
@@ -132,6 +120,6 @@ button.add:hover {
     cursor: pointer;
     margin-right: 10px;
     padding: 2px 5px;
-    background: var(--defaultSecondaryBackgroundColor);
+    background: var(--bg-1);
     border-radius: 3px;
 }

@@ -1,25 +1,29 @@
-async function loadSettings() {
+async function loadSettings(onlyNonMusic = false) {
   try {
-    let lastPlayedInfo = await ipcRenderer.invoke('load-settings') || {};
+    let updatedSettings = await ipcRenderer.invoke('load-settings') || {};
+    if (!updatedSettings) return;
 
-    for (const key in settings) { // saver load
-      if (lastPlayedInfo && lastPlayedInfo.hasOwnProperty(key)) {
-        settings[key] = lastPlayedInfo[key];
+    for (const key in settings) { // saver load then just putting
+      if (updatedSettings.hasOwnProperty(key)) {
+        if (onlyNonMusic) {
+          if (nonMusicSettings.hasOwnProperty(key)) {
+            settings[key] = updatedSettings[key];
+          }
+        } else {
+          settings[key] = updatedSettings[key];
+        }
       }
     }
   } catch (error) {
     console.error('Error loading settings:', error);
   }
+  console.log('Settings loaded:', settings);
 
-  // Apply settings
   volumeSlider.value = settings.volume;
   updateTheme();
-
-  console.log('Settings loaded:', settings);
 }
 
 function updateTheme() {
-  settings.theme = '';
   document.body.setAttribute('theme', settings.theme)
 }
 
@@ -30,8 +34,17 @@ async function saveSettings() {
     settings.tracksTimer = audioPlayer.currentTime;
   }
 
-  await ipcRenderer.invoke('save-settings', settings);
+  let saveSettings = settings;
+  console.log(saveSettings.volume);
+  saveSettings.theme = undefined;
+
+  await ipcRenderer.invoke('save-settings', saveSettings);
 };
+
+function updateSettings() {
+  updateTheme();
+  updateLibrary();
+}
 
 // Setup file watchers for JSON files
 function setupJsonWatchers() {
@@ -78,7 +91,22 @@ function cleanupWatchers() {
 
 // Listen for app close event
 window.addEventListener('beforeunload', cleanupWatchers); // cleanup watchers on exit
-window.addEventListener('beforeunload', saveSettings);   // save on exit
+window.addEventListener('beforeunload', async () => {
+  await loadSettings(true);
+  saveSettings();
+}); // this saves correctly on exit. Don't ask.
+
+ipcRenderer.on('settings-updated', (event, updatedSettings) => {
+  if (updatedSettings) {
+    for (const key in settings) { // saver load
+      if (updatedSettings.hasOwnProperty(key)) {
+        settings[key] = updatedSettings[key];
+      }
+    }
+  }
+  updateSettings();
+});
+
 
 audioPlayer.addEventListener('timeupdate', updateProgress);
 audioPlayer.addEventListener('ended', playNext);
@@ -112,6 +140,6 @@ window.addEventListener('resize', () => {
 });
 
 async function openExternalHtml(relativePathFromHtml) {
-  await ipcRenderer.invoke('save-settings', settings); // this is for the theme to be in all the windows
+  await saveSettings()
   ipcRenderer.invoke('open-external', path.join(__dirname, relativePathFromHtml));
 }

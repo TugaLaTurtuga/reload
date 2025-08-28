@@ -1,13 +1,14 @@
 
-function playLoadedAudioFromSettings() {
+async function playLoadedAudioFromSettings() {
   if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
-    playTrack(settings.currentTrackIndex, settings.currentPlayingAlbum, { pushPrev: null, playFromStart: settings.playFromStart });
+    const opts = { pushPrev: null, playFromStart: settings.playFromStart, firstLoad: true }
+    await playTrack(settings.currentTrackIndex, settings.currentPlayingAlbum, opts);
   }
 }
 
 // Play track by index
 function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
-  const { pushPrev = true, playFromStart = true } = opts;
+  const { pushPrev = true, playFromStart = true, firstLoad = false } = opts;
 
   if (!album || !album.tracks || !album.tracks[index]) return;
 
@@ -39,6 +40,11 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
           break;
         case 1: {
           audioPlayer.currentTime = 0;
+          audioPlayer.play().catch(err => {
+            console.error('Playback error:', err);
+          });
+          playPauseButton.textContent = '⏸';
+          settings.isPlayingMusic = true;
           return; // no need to update anything (as coded for now)
         }
         case 2: {
@@ -78,22 +84,22 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   settings.currentTrackIndex = index;
  
   // Update track highlight (works when the album view is the one currently open)
-  if (currentAlbum !== null) {
-    if (currentAlbum.path === settings.currentPlayingAlbum.path) {
+  if (settings.currentAlbum !== null) {
+    if (settings.currentAlbum.path === settings.currentPlayingAlbum.path) {
       document.querySelectorAll('.track-item').forEach(item => item.classList.remove('active'));
       const activeEl = document.querySelector(`.track-item[data-index="${index}"]`);
       if (activeEl) activeEl.classList.add('active');
     } else {
       document.querySelectorAll('.track-item').forEach(item => item.classList.remove('active'));
     }
-  } // no need to remove any track-item active mode if currentAlbum is null  
+  } // no need to remove any track-item active mode if settings.currentAlbum is null  
   const currTrack = album.tracks[index];
   let alreadyLoadedTrack = false;
 
   for (let i = 0; i < sources.length; ++i) {
     if (sources[i] === 1) {
       if (!sourcesToUpdate[i]) {
-        loadTrack(currTrack, playFromStart);
+        loadTrack(currTrack, playFromStart, firstLoad);
         alreadyLoadedTrack = true;
       } else {
         break;
@@ -134,7 +140,7 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
     if (track !== null) { // load track to audioSource
       loadTrackToAudioSource(track, albumPathAndIndex, audioSources[i])
       if (track === currTrack && !alreadyLoadedTrack) {
-        loadTrack(currTrack, playFromStart);
+        loadTrack(currTrack, playFromStart, firstLoad);
       }
     }
   }
@@ -142,7 +148,7 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   getAudioSource();
 }
 
-function loadTrack(currTrack, playFromStart) {
+function loadTrack(currTrack, playFromStart, firstLoad) {
   audioSource = audioPlayer.querySelector('#curr');
   audioPlayer.src = audioSource.src;
 
@@ -158,13 +164,17 @@ function loadTrack(currTrack, playFromStart) {
 
   audioPlayer.addEventListener('canplay', function handleCanPlay() {
     audioPlayer.removeEventListener('canplay', handleCanPlay); // cleanup
-    audioPlayer.play().catch(err => {
-      console.error('Playback error:', err);
-    });
+    if (!settings.isPlayingMusic && firstLoad) {
+      audioPlayer.pause()
+      playPauseButton.textContent = '▶';
+    } else {
+      audioPlayer.play().catch(err => {
+        console.error('Playback error:', err);
+      });
+      settings.isPlayingMusic = true;
+      playPauseButton.textContent = '⏸';
+    }
   });
-
-  isPlaying = true;
-  playPauseButton.textContent = '⏸';
  
   // Update now playing info
   nowPlayingTitle.textContent = currTrack.title;
@@ -179,7 +189,6 @@ function loadTrack(currTrack, playFromStart) {
   }
 
   totalTimeEl.textContent = currTrack.duration ? formatTime(currTrack.duration) : '--:--';
-  saveSettings();
 }
 
 async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
@@ -220,20 +229,20 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
 }
 
 // Toggle play/pause
-function togglePlayPause() { 
-  if (isPlaying) {
+function togglePlayPause() {
+  if (settings.isPlayingMusic) {
     audioPlayer.pause();
     playPauseButton.textContent = '▶';
   } else {
     if (settings.currentTrackIndex === -1) {
       playRandomSong();
-      isPlaying = !isPlaying; // this makes sense... (that how you know it wasn't AI generated)
+      settings.isPlayingMusic = !settings.isPlayingMusic; // this makes sense... (that how you know it wasn't AI generated)
     }
     audioPlayer.play();
     playPauseButton.textContent = '⏸';
   }
  
-  isPlaying = !isPlaying;
+  settings.isPlayingMusic = !settings.isPlayingMusic;
 }
 
 // Play previous track (uses history stack)
@@ -287,11 +296,11 @@ let hasReachedEndOfProgressBar = false;
 function seek() {
     if (audioPlayer.src) {
         try {
-            if (progressBar.value === 1 && isPlaying) {
+            if (progressBar.value >= 0.95 && settings.isPlayingMusic) {
                 togglePlayPause()
                 hasReachedEndOfProgressBar = true;
-            } else if (hasReachedEndOfProgressBar) {
-                isPlaying = false;
+            } else if (hasReachedEndOfProgressBar && progressBar.value < 0.95) {
+                settings.isPlayingMusic = false;
                 hasReachedEndOfProgressBar = false;
                 togglePlayPause()
             }
@@ -307,7 +316,7 @@ function seek() {
 
 function unseek() {
     if (hasReachedEndOfProgressBar) {
-        isPlaying = false;
+        settings.isPlayingMusic = false;
         hasReachedEndOfProgressBar = false;
         togglePlayPause()
     }

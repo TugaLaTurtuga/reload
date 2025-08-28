@@ -1,3 +1,18 @@
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--spinnerBgColor);
+    border-radius: 50%;
+    border-top-color: var(--spinnerColor);
+    animation: spin 1s ease-in-out infinite;
+    cursor: pointer;
+    transform: rotate(45deg);
+}
+@keyframes spin {
+    to { transform: rotate(405deg); }
+}
+
 .slider {
     width: 80%; /* Make slider full width of the card */
     height: 8px;
@@ -8,7 +23,7 @@
     --slider-value: 100%;
     --slider-color: var(--activeColor);
     --slider-thumb-color: var(--textColor);
-    --slider-background-color: var(--slidersBGColor);
+    --slider-background-color: var(--sliderBgColor);
     transform: translateY(0px);
 }
 

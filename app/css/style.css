@@ -1,20 +1,6 @@
-.spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid var(--spinnerBGColor);
-  border-radius: 50%;
-  border-top-color: var(--spinnerColor);
-  animation: spin 0.5s ease-in-out infinite;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-  
 body, html {
     height: 100%;
-    background-color: var(--defaultSecondaryBackgroundColor);
+    background-color: var(--bg-1);
     color: var(--textColor);
     overflow: hidden;
 }
@@ -23,8 +9,8 @@ body, html {
     position: absolute;
     font-family: 'Rubik', sans-serif;
     font-weight: 700;
-    bottom: 15px;
-    left: 10px;
+    bottom: 100px;
+    left: 105px;
     height: 40px;
     width: 40px;
     text-align: right;
@@ -44,8 +30,8 @@ body, html {
   grid-template-rows: 1fr 100px;
   height: 100vh;
 
-  --backgroundColor: var(--defaultBackgroundColor);
-  background: linear-gradient(to bottom left, var(--backgroundColor), var(--defaultSecondaryBackgroundColor));
+  --backgroundColor: var(--bg-2);
+  background: linear-gradient(to bottom left, var(--backgroundColor), var(--bg-1));
   transition: --backgroundColor 0.15s ease-out;
 }
 
@@ -56,11 +42,11 @@ body, html {
     border-radius: 10px;
     grid-column: 1;
     grid-row: 1;
-    background-color: var(--defaultSidebarsColor);
+    background-color: var(--sidebarColor);
     backdrop-filter: blur(10px);
     padding: 20px;
     height: calc(100vh - 20px);
-    border: 1px solid var(--defaultBackgroundColor);
+    border: 1px solid var(--bg-2);
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -70,23 +56,6 @@ body, html {
 
 nav ul {
     list-style: none;
-}
-  
-.nav-item {
-    padding: 12px 15px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.2s;
-}
-  
-.nav-item:hover {
-    background-color: var(--defaultBackgroundColor);
-}
-  
-.nav-item.active {
-    background-color: var(--activeColor);
-    color: var(--navItemActiveColor);
 }
  
 #now-playing-small {
@@ -99,7 +68,7 @@ nav ul {
 }
 
 .img {
-  background-color: var(--defaultBackgroundColor);
+  background-color: var(--bg-2);
   border: none;
   background-size: cover;
   background-position: center;
@@ -108,7 +77,7 @@ nav ul {
 #now-playing-art-small {
     width: 60px;
     height: 60px;
-    background-color: var(--defaultBackgroundColor);
+    background-color: var(--bg-2);
     background-size: cover;
     background-position: center;
     border-radius: 4px;
@@ -134,9 +103,9 @@ nav ul {
     height: 80px;
     left: 90px;
     width: calc(100vw - 110px);
-    background-color: var(--defaultSidebarsColor);
+    background-color: var(--sidebarColor);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--defaultBackgroundColor);
+    border: 1px solid var(--bg-2);
     padding: 10px;
     margin: 10px;
     display: flex;
@@ -183,7 +152,7 @@ nav ul {
    display: inline-block;
     white-space: nowrap;
     font-size: 0.9em;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
 }
 
 #controls {
@@ -210,7 +179,7 @@ nav ul {
     height: 40px;
     border-radius: 50%;
     background-color: var(--activeColor);
-    color: var(--nowPlayingBtnsColor) !important;
+    color: var(--ControlsBtnsColor) !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,7 +187,7 @@ nav ul {
 }
 
 #play-pause-button:hover {
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
     transform: scale(1.2);
 }
 
@@ -228,10 +197,11 @@ nav ul {
 
 #prev-button {
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    color: var(--textColor);
 }
 
 #prev-button:hover {
-    color: var(--nowPlayingBtnsColor);
+    color: var(--ControlsBtnsColor);
     transform: scale(1.2);
 }
 
@@ -241,10 +211,11 @@ nav ul {
 
 #next-button {
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    color: var(--textColor);
 }
 
 #next-button:hover {
-    color: var(--nowPlayingBtnsColor);
+    color: var(--ControlsBtnsColor);
     transform: scale(1.2);
 }
 
@@ -257,7 +228,6 @@ nav ul {
     display: flex;
     align-items: center;
     margin: 0 20px;
-
     -webkit-app-region: no-drag;
 }
   
@@ -270,7 +240,7 @@ nav ul {
 #progress-bar {
     flex: 1;
     height: 5px;
-    background-color: var(--slidersBGColor);
+    background-color: var(--sliderBgColor);
     border-radius: 10px;
     min-width: 6vw;
     margin: 0 10px;
@@ -305,7 +275,7 @@ nav ul {
 #volume-slider {
     flex: 1;
     height: 5px;
-    background-color: var(--slidersBGColor);
+    background-color: var(--sliderBgColor);
     border-radius: 10px;
     cursor: pointer;
     position: relative;
@@ -319,7 +289,7 @@ nav ul {
 }
  
 .album-card {
-    background-color: var(--defaultSidebarsColor);
+    background-color: var(--sidebarColor);
     backdrop-filter: blur(10px);
     border-radius: 8px;
     overflow: hidden;
@@ -328,7 +298,7 @@ nav ul {
 }
  
 .album-card:hover {
-    background-color: var(--itemOnHover);
+    background-color: var(--trackItemOnHover);
     transform: translateY(-10px);
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
@@ -338,7 +308,7 @@ nav ul {
     aspect-ratio: 1;
     background-size: cover;
     background-position: center;
-    background-color: var(--defaultBackgroundColor);
+    background-color: var(--bg-2);
   }
   
   .album-info {
@@ -355,7 +325,7 @@ nav ul {
  
   .album-artist {
     font-size: 0.9em;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -394,9 +364,9 @@ nav ul {
     top: 10px;
     right: 10px;
     padding: 0px 10px;
-    background-color: var(--defaultSidebarsColor);
+    background-color: var(--sidebarColor);
     border-radius: 10px;
-    border: 1px solid var(--defaultBackgroundColor);
+    border: 1px solid var(--bg-2);
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
     font-size: 1em;
     z-index: 10;
@@ -414,7 +384,7 @@ nav ul {
     border: none;
     font-size: 1em;
     padding: 5px;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
   }
@@ -429,7 +399,7 @@ nav ul {
     border: none;
     font-size: 1em;
     padding: 5px;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
   }
@@ -444,7 +414,7 @@ nav ul {
     border: none;
     font-size: 1em;
     padding: 5px;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
   }
@@ -490,7 +460,7 @@ nav ul {
   
   #album-meta {
     margin-bottom: 20px;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
   }
   
   #album-year, #album-genre {
@@ -503,7 +473,7 @@ nav ul {
   }
   
   #track-list {
-    border: var(--defaultBackgroundColor) solid 1px;
+    border: var(--bg-2) solid 1px;
     border-radius: 10px;
     overflow-y: hidden;
     width: 100%;
@@ -531,7 +501,7 @@ nav ul {
   }
   
   .track-item:hover {
-    background-color: var(--itemOnHover);
+    background-color: var(--trackItemOnHover);
     transition: none; /* instant change when hover starts */
   }  
  
@@ -552,7 +522,7 @@ nav ul {
   .track-duration {
     width: 50px;
     text-align: right;
-    color: var(--defaultSubTitle);
+    color: var(--textSubColor);
   }
 
 .notification {
@@ -560,7 +530,7 @@ nav ul {
     top: 20px;
     right: 20px;
     padding: 15px 20px;
-    background: var(--notificationBGColor);
+    background: var(--notificationBgColor);
     border: 4px solid var(--notaficationBorderColor);
     color: white;
     border-radius: 4px;
@@ -589,11 +559,11 @@ nav ul {
 }
 
 .success {
-    background: var(--correctColor);
+    background: var(--notificationCorrectColor);
 }
 .warning {
-    background: var(--warningColor);
+    background: var(--notificationWarningColor);
 }
 .error {
-    background: var(--errorColor);
+    background: var(--notificationErrorColor);
 }

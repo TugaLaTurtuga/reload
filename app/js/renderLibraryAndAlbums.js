@@ -1,6 +1,7 @@
 
 // Update helper
 function updateTracks(trackList) {
+  if (!trackList) return;
   if (Array.isArray(trackList)) {
     const updatedTrackList = [];
     for (const track of trackList) {
@@ -32,15 +33,14 @@ async function updateLibrary() {
     //                  Update tracks                  //
     settings.nextTracks       = updateTracks(settings.nextTracks);
     settings.previousTracks   = updateTracks(settings.previousTracks);
-    const currentAlbumUpdated = updateTracks(currentAlbum);
+    console.log(settings.currentAlbum, settings.currentPlayingAlbum);
+    const currentAlbumUpdated = updateTracks(settings.currentAlbum);
     const playingAlbumUpdated = updateTracks(settings.currentPlayingAlbum);
-
-    console.log(currentAlbumUpdated)
 
     // Handle UI updates
     if (currentAlbumUpdated) {
       openAlbum(currentAlbumUpdated); // update Values
-      currentAlbum = currentAlbumUpdated;
+      settings.currentAlbum = currentAlbumUpdated;
     } else {
       backToLibrary(); // Current album no longer exists
     }
@@ -86,11 +86,15 @@ function renderLibrary() {
     albumCard.addEventListener('click', () => openAlbum(album));
     albumsSection.appendChild(albumCard);
   });
+
+  if (settings.currentAlbum) {
+    openAlbum(settings.currentAlbum);
+  }
 }
 
 // Open album view
 function openAlbum(album) {
-  currentAlbum = album;
+  settings.currentAlbum = album;
 
   const savePath = path.join(__dirname, 'saves', 'jsonToLoad.txt');
   try {
@@ -101,9 +105,9 @@ function openAlbum(album) {
   
   // Set album details
   if (album.cover) {
-    albumArt.style.backgroundImage = `url('${currentAlbum.cover}')`;
-    console.log(albumArt.style.backgroundImage, `url('${currentAlbum.cover}')`);
-    if (albumArt.style.backgroundImage !== `url("${currentAlbum.cover}")`) albumArt.style.backgroundImage = 'none';
+    albumArt.style.backgroundImage = `url('${settings.currentAlbum.cover}')`;
+    console.log(albumArt.style.backgroundImage, `url('${settings.currentAlbum.cover}')`);
+    if (albumArt.style.backgroundImage !== `url("${settings.currentAlbum.cover}")`) albumArt.style.backgroundImage = 'none';
   } else {
     console.log('No cover found for album:', album.name);
     albumArt.style.backgroundImage = 'none';
@@ -147,7 +151,7 @@ function openAlbum(album) {
 
 
   if (settings.currentPlayingAlbum !== null) { // on first load the currentPlayingAlbum might be null, so this prevents a error
-    if (currentAlbum.path === settings.currentPlayingAlbum.path) {
+    if (settings.currentAlbum.path === settings.currentPlayingAlbum.path) {
       document.querySelectorAll('.track-item').forEach(item => item.classList.remove('active'));
       const activeEl = document.querySelector(`.track-item[data-index="${settings.currentTrackIndex}"]`);
       if (activeEl) activeEl.classList.add('active');
@@ -165,6 +169,6 @@ function backToLibrary() {
   playerContainer.classList.add('hidden');
   libraryContainer.classList.remove('hidden');
   mainContent.scrollTo(0, 0);
-  changeBackgroundGradient(background.style.getPropertyPriority('--defaultBackgroundColor'))
-  //mainContent.style.marginTop = '0px';
+  changeBackgroundGradient(background.style.getPropertyPriority('--bg-2'))
+  settings.currentAlbum = null;
 }

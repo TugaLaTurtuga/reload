@@ -35,8 +35,8 @@ function getCSSVarRGB(varName) {
 }
 
 function isLightBackground() {
-  const rgb1 = getCSSVarRGB("--defaultBackgroundColor");
-  const rgb2 = getCSSVarRGB("--defaultSecondaryBackgroundColor");
+  const rgb1 = getCSSVarRGB("--bg-1");
+  const rgb2 = getCSSVarRGB("--bg-2");
   console.log(rgb1, rgb2);
   const total = rgb1[0] + rgb1[1] + rgb1[2] + rgb2[0] + rgb2[1] + rgb2[2];
   const threshold = 255 * 6 * 0.85;

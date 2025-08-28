@@ -12,8 +12,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    minWidth: 580,
-    minHeight: 0,
+    minWidth: 570,
+    minHeight: 100,
     titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: true,
@@ -271,10 +271,31 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
 // Handle saving last played track info
 ipcMain.handle('save-settings', (event, unsavedSettings) => {
   try {
-    fs.writeFileSync(lastPlayedFilePath, JSON.stringify(unsavedSettings), 'utf8');
+    let settings = {};
+
+    if (fs.existsSync(lastPlayedFilePath)) {
+      const data = fs.readFileSync(lastPlayedFilePath, 'utf8');
+      settings = JSON.parse(data);
+    }
+
+    // Merge: overwrite existing keys, keep old if not in unsavedSettings
+    for (const key of Object.keys(unsavedSettings)) {
+      if (unsavedSettings[key] !== undefined && unsavedSettings[key] !== "") {
+        settings[key] = unsavedSettings[key];
+      }
+    }
+
+    fs.writeFileSync(lastPlayedFilePath, JSON.stringify(settings, null, 2), 'utf8');
+    console.log("✅ Settings saved:", settings);
+
+    // Broadcast to all windows that settings have been updated
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.webContents.send('settings-updated', settings);
+    });
+
     return true;
   } catch (error) {
-    console.error('Error saving last played info:', error);
+    console.error('❌ Error saving last played info:', error);
     return false;
   }
 });
@@ -286,7 +307,7 @@ ipcMain.handle('load-settings', () => {
       const data = fs.readFileSync(lastPlayedFilePath, 'utf8');
       return JSON.parse(data);
     } else { // create default settings if none exist
-      fs.writeFileSync(lastPlayedFilePath, JSON.stringify({}), 'utf8');
+      fs.writeFileSync(lastPlayedFilePath, JSON.stringify({}, null, 2), 'utf8');
       return {};
     }
   } catch (error) {
@@ -341,6 +362,24 @@ ipcMain.handle('open-external', (event, absolutePath) => {
 
   // Load the local HTML file
   win.loadFile(absolutePath);
+});
+
+ipcMain.handle('save-file', async (event, absolutePath, data) => {
+  try {
+    fs.writeFileSync(absolutePath, data, 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error saving file:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('reload-main-page', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.reload();
+    return true; // let renderer know it succeeded
+  }
+  return false; // failed
 });
 
 function rbgToHex(rgb) {

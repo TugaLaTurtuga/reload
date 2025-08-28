@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor</title>
+    <title>reload - Editor</title>
 
+    <link rel="stylesheet" href="../css/font-renderer.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/musicEditor.css">
@@ -15,11 +16,6 @@
 
     <div id="app">
         <div class="container">
-            <div class="header">
-                <button id="save-button">Save Changes</button>
-                <button id="load-button">Reload Data</button>
-            </div>
-        
             <h2>Album Information</h2>
             <div class="album-info">
                 <div class="field">
@@ -46,7 +42,7 @@
                     <label for="genre">Genre</label>
                     <input type="text" id="genre" placeholder="Music genre">
                 </div>
-                
+               
                 <div class="field">
                     <span mode="10;1" data-slider="albumRating">Album Rating: </span>
                     <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="albumRating">
@@ -61,6 +57,10 @@
                     <label for="color">Album Color</label>
                     <input type="color" id="color" value="#AAAAAA">
                 </div>
+            </div>
+            <div class="header">
+                <button id="save-button">Save Changes</button>
+                <button id="load-button">Reload Data</button>
             </div>
         </div>
 
@@ -115,13 +115,13 @@
         let jsonPath = null;
 
         async function loadSettings() {
-            let settings = {theme: ''};
+            let settingsNonRelatedToMusic = {theme: ''};
             try {
                 let lastPlayedInfo = await ipcRenderer.invoke('load-settings') || {};
 
-                for (const key in settings) { // saver load
+                for (const key in settingsNonRelatedToMusic) { // saver load
                     if (lastPlayedInfo && lastPlayedInfo.hasOwnProperty(key)) {
-                        settings[key] = lastPlayedInfo[key];
+                        settingsNonRelatedToMusic[key] = lastPlayedInfo[key];
                     }
                 }
             } catch (error) {
@@ -144,11 +144,10 @@
                 }
                 
                 musicData = await response.json();
-                console.log(musicData.description.color);
 
                 await populateForm();
                 if (!musicData.description.name) {
-                    musicData.description.name = jsonPath ? jsonPath.split('/').slice(-2, -1)[0] : 'Unknown name';
+                    musicData.description.name = musicData.name; // this is the folder's name
                     nameInput.value = musicData.description.name;
                 }
                 changeBackGroundColorFromNewAlbum(musicData.description.color)

@@ -15,10 +15,9 @@
         <div id="now-playing-art-small" class="img"></div>
       </div>
     </div>
-   
+  
     <div id="main-content">
       <div id="library-container">
-        <div class="spinner" id="loading"></div>
         <div id="albums-section" class="content-section"></div>
         <div id="singles-section" class="content-section hidden"></div>
         <div id="buffer"></div>
@@ -60,7 +59,7 @@
           </div>
         </div>
       </div>
-     
+   
       <div id="controls">
         <button id="prev-button">⏮</button>
         <button id="play-pause-button">▶</button>
@@ -79,6 +78,7 @@
       </div>
     </div>
   </div>
+  <div class="spinner" id="loading"></div>
 
   <audio id="audio-player">
     <source class="audio-source" id="prev" type="audio/mpeg"></source>
@@ -89,6 +89,7 @@
 
   <!-- classes + imports -->
   <script src="js/imports.js"></script>
+  <script src="js/settingsVARS.js"></script>
   <script src="js/input/inputManagement.js"></script>
   <script src="js/css/gradientHelper.js"></script>
   <script src="js/css/sliders.js"></script>

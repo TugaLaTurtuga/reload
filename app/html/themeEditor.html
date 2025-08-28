@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>reload - Themes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="../css/font-renderer.css" />
+
+  <!-- Minimal UI styling (uses your CSS variables so the editor previews themes) -->
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Rubik', sans-serif;
+        transition: background 0.3s ease, border 0.3s ease;
+    }
+    html, body { height: 100%; }
+
+    /* Root mode */
+    :root {
+      --activeColor: rgb(29, 185, 84);
+      --notificationCorrectColor: rgb(29, 185, 84);
+      --bg-2: rgb(51, 51, 51);
+      --bg-1: rgb(18, 18, 18);
+      --sidebarColor: rgba(24, 24, 24, 0.7);
+      --textSubColor: rgb(170, 170, 170);
+      --notificationErrorColor: rgb(231, 76, 60);
+      --trackItemOnHover: rgb(40, 40, 40);
+      --navItemActiveColor: rgb(0, 0, 0);
+      --notaficationBorderColor: rgb(102, 102, 102);
+      --notificationBgColor: rgb(85, 85, 85);
+      --ControlsBtnsColor: rgb(187, 187, 187);
+      --sliderBgColor: rgb(90, 90, 90);
+      --spinnerBgColor: rgba(255, 255, 255, 0.302);
+      --spinnerColor: rgb(255, 255, 255);
+      --textColor: rgb(245, 245, 245);
+      --trackItemColor: rgb(34, 34, 34);
+      --trackItemOddColor: rgb(29, 29, 29);
+      --notificationWarningColor: rgb(222, 222, 24);
+    }
+
+    body {
+      color: var(--textColor);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      margin: 0;
+      background: linear-gradient(to bottom left, var(--bg-2), var(--bg-1));
+    }
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto auto;
+      gap: .5rem;
+      align-items: center;
+      padding: .75rem 1rem;
+      background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky; top: 0; z-index: 5;
+    }
+    header h1 { font-size: 1rem; margin: 0; opacity: .9; font-weight: 600; }
+    .badge { opacity: .8; font-size: .85rem; }
+    .row {
+      display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+    }
+    button, select, textarea {
+      background: var(--trackItemColor);
+      color: var(--textColor);
+      border: 1px solid var(--sliderBgColor);
+      border-radius: 10px;
+      padding: .55rem .7rem;
+      font: inherit;
+    }
+
+    #color, #text, #number {
+      background: var(--trackItemColor);
+      color: var(--textColor);
+      border: 1px solid var(--sliderBgColor);
+      border-radius: 10px;
+      padding: .55rem .7rem;
+      font: inherit;
+      height: 100% !important;
+      width: 80% !important;
+    }
+
+    #color {
+      height: 50% !important;
+    }
+
+    button { cursor: pointer; }
+    button:hover, select:hover, input:hover, textarea:hover { background: var(--trackItemOnHover); }
+    button.primary { background: var(--activeColor); color: var(--navItemActiveColor, #000); border: none; }
+    button.danger { background: var(--notificationErrorColor); border: none; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+      background: transparent;
+    }
+    aside {
+      background: var(--sidebarColor);
+      border: 1px solid var(--sliderBgColor);
+      border-radius: 1rem;
+      padding: .75rem;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: .75rem;
+    }
+    .themes-list {
+      overflow-x: hidden; overflow-y: scroll;
+      display: block;
+    }
+    .theme-item {
+      display: grid; grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: .5rem .6rem;
+      border-radius: .6rem;
+      margin: 5px;
+      background: var(--trackItemOddColor);
+      border: 1px solid var(--sliderBgColor);
+      cursor: pointer; user-select: none;
+      transition: all 0.4s ease-out;
+    }
+    .theme-item:hover {
+      background: var(--trackItemOnHover);
+      transition: none;
+    }
+    .theme-item.active { border: 2px solid var(--activeColor); }
+    .theme-item small { opacity: .7; }
+    section.editor {
+      background: transparent;
+      border: 1px solid var(--sliderBgColor);
+      display: grid;
+      overflow: hidden;
+      border-radius: 10px;
+      grid-template-rows: auto 1fr auto;
+      gap: 0rem;
+    }
+    .vars {
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .95rem;
+    }
+    tbody td { padding: .35rem .3rem; vertical-align: middle; }
+    tbody tr {
+      height: 60px !important;
+    }
+    tbody tr:nth-child(odd) { background: var(--trackItemOddColor); transition: all 0.4s ease-out;}
+    tbody tr:nth-child(even) { background: var(--trackItemColor); transition: all 0.4s ease-out;}
+    tbody tr:hover { background: var(--trackItemOnHover); transition: none; z-index: 20;}
+    .names {
+      font-weight: 600;
+      padding: .5rem .4rem;
+      position: relative;
+      top: 0;
+      background: var(--bg-2);
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      align-items: center;
+    }
+    .var-name { width: 80%; }
+    .var-value { width: 20%; }
+    .actions { width: 14%; text-align: right; }
+    .preview .chip {
+      display: inline-block; padding: .25rem .5rem; border-radius: .5rem;
+      background: var(--bg-1);
+      border: 2px solid var(--sliderBgColor);
+      margin-right: .35rem; font-size: .85rem;
+      cursor: pointer;
+    }
+    .preview {
+      margin: 0;
+      padding: .8rem 1rem;
+      background: var(--sidebarColor);
+      width: 100%;
+      display: grid; gap: .4rem;
+      cursor: auto;
+    }
+    code.inline {
+      background: var(--trackItemColor); padding: .15rem .35rem; border-radius: 10px;
+      border: 1px solid var(--sliderBgColor);
+    }
+    .status { opacity: .8; font-size: .9rem; }
+  </style>
+  <link rel="stylesheet" href="../css/slider.css" />
+</head>
+<body>
+  <header>
+    <div class="row">
+      <button id="saveBtn" class="primary" title="Download updated CSS">Save</button>
+      <button id="downloadBtn" title="Download updated CSS">Export CSS</button>
+    </div>
+
+    <div class="row">
+      <label class="status" id="status">Loading…</label>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <div class="row" style="justify-content: space-between;">
+        <strong>Themes</strong>
+        <div>
+          <button id="addThemeBtn">+ Add</button>
+          <!-- New button: add custom CSS block / paste -->
+          <button id="addCustomCssThemeBtn" title="Create theme by pasting a CSS block or variable list">+ Custom CSS</button>
+        </div>
+      </div>
+      <div id="themesList" class="themes-list" role="listbox" aria-label="Themes"></div>
+      <div class="row">
+        <button onclick="playSoundAffect('warning', volume = 1);" id="deleteThemeBtn" class="danger" disabled>Delete Selected</button>
+      </div>
+    </aside>
+
+    <section class="editor">
+      <div class="names">
+        <div class="var-name">Variable</div>
+        <div class="var-value">Value</div>
+      </div>
+      <div class="vars">
+        <table>
+          <tbody id="varsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="preview">
+        <div><strong>Live preview</strong></div>
+        <div>
+          <span  onclick="playSoundAffect('click', volume = 0.1);" class="chip">text</span>
+          <span  onclick="playSoundAffect('click', volume = 0.2);" class="chip" style="background: var(--bg-1); color: var(--textSubColor);">sub text</span>
+          <span  onclick="playSoundAffect('click', volume = 0.3);" class="chip" style="background: var(--activeColor); color: var(--navItemActiveColor);">active</span>
+          <span  onclick="playSoundAffect('click', volume = 0.4);" class="chip" style="background: var(--notificationBgColor); border: solid 2px var(--notaficationBorderColor);">notification</span>
+          <span  onclick="playSoundAffect('click', volume = 0.5);" class="chip" style="background: var(--notificationCorrectColor); color: var(--navItemActiveColor);">correct (success)</span>
+          <span  onclick="playSoundAffect('click', volume = 0.6);" class="chip" style="background: var(--notificationWarningColor); color: var(--navItemActiveColor);">warn</span>
+          <span  onclick="playSoundAffect('click', volume = 0.7);" class="chip" style="background: var(--notificationErrorColor); color: var(--navItemActiveColor);">error</span>
+          <span  onclick="playSoundAffect('click', volume = 0.8);" class="chip" style="background: transparent; color: var(--textColor); transform: scale(.9);">⏮</span>
+          <span  onclick="playSoundAffect('click', volume = 0.9);" class="chip" style="background: transparent; color: var(--ControlsBtnsColor);">▶</span>
+          <span  onclick="playSoundAffect('click', volume = 1.0);" class="chip" style="background: transparent; color: var(--textColor); transform: scale(.9);">⏭</span>
+          <div   onclick="playSoundAffect('click');" class="spinner"></div>
+          <input oninput="playSoundAffect('click', volume = 0.35);" type="range" class="slider" step=".0000001" min="0" value="5" max="10">
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="../js/css/sliders.js"></script>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const path = require('path');
+    const fs = require('fs');
+
+    // ---------- Utilities ----------
+    const CSS_URL = '../css/themes.css';
+    const $ = (sel, ctx=document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+    const statusEl = $('#status');
+
+    // Data model: Map<name, Map<var, val>>
+    let themes = new Map();
+    let preface = '';
+    let selected = 'root';
+    let fileHandle = null;
+    let stylesheetReadyPromise = null;
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+    function sanitizeName(n) { 
+      n = String(n||'').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '');
+      let nn = n;
+      let suffix = 1;
+      while (themes.has(nn)) {
+        nn = n + '-' + suffix;
+        suffix++;
+      } return nn;
+    }
+
+    // ---------- Parsing & Serialization ----------
+    let firstParsed = true;
+    function parseThemesCSS(cssText) {
+      const oldPreface = preface;
+      const re = /(?:\/\*\s*(?<comment>[^\*]+?)\s*\*\/\s*)?(?<selector>:root|\[theme="([^"]+)"\])\s*\{(?<body>[^}]+)\}/gms;
+      let m, firstIndex = -1, blocks = [];
+      while ((m = re.exec(cssText)) !== null) {
+          if (firstIndex === -1) firstIndex = m.index;
+          blocks.push(m);
+      }
+      
+      if (firstParsed) {
+          preface = firstIndex > 0 ? cssText.slice(0, firstIndex).trimEnd() : '';
+          firstParsed = !firstParsed;
+      }
+      
+
+      for (const match of blocks) {
+        const sel = match.groups.selector;
+        if (oldPreface === preface && sel === ':root') continue;
+        const body = match.groups.body;
+        let name = sanitizeName(sel === ':root' ? 'root' : (sel.match(/\[theme="([^"]+)"\]/)[1]));
+
+        const map = new Map();
+        const varRe = /--([\w-]+)\s*:\s*([^;]+);/g;
+        let vm;
+        while ((vm = varRe.exec(body)) !== null) {
+          map.set(`--${vm[1]}`, vm[2].trim());
+        }
+
+        // Ensure all root vars exist in every theme
+        if (name !== 'root' && themes.has('root')) {
+          const rootVars = themes.get('root');
+          for (const [rootKey, rootVal] of rootVars.entries()) {
+            if (!map.has(rootKey)) {
+              map.set(rootKey, rootVal);
+            }
+          }
+        }
+        themes.set(name, map);
+      }
+    }
+
+    function serializeThemesCSS(allThemesToSerialize = themes) {
+      const order = ['root', ...Array.from(allThemesToSerialize.keys()).filter(k => k !== 'root').sort((a,b)=>a.localeCompare(b))];
+      const parts = [];
+      if (preface && preface.trim()) parts.push(preface.trimEnd() + '\n\n');
+
+      for (let key of order) {
+        const map = allThemesToSerialize.get(key) || new Map();
+        const sel = key === 'root' ? ':root' : `[theme="${key.replace(/ /g, '-')}"]`;
+        let vars = Array.from(map.entries())
+        for (let i = vars.length; i > 0; --i) {
+          try {
+            let [key, value] = vars[i]
+          
+            if (key === undefined || !key.startsWith('--')) { // impossible key
+              vars.splice(i, 1); // delete var
+            } else if (value === undefined) { // impossible value
+              vars[i].value = ''; // reset value
+            }
+          } catch(err) { // a very broken var
+            vars.splice(i, 1); // delete var
+          }
+        }
+        const cssVars = vars // turns vars to css
+          .sort((a,b)=>a[0].localeCompare(b[0]))
+          .map(([k,v]) => `  ${k}: ${v};`)
+          .join('\n');
+       
+        // Capitalize the first character of the selector for the comment
+        const selComment = key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
+        parts.push(`/* ${selComment} mode */\n${sel} {\n${cssVars}\n}\n`);
+      }
+      return parts.join('\n\n').trim() + '\n';
+    }
+
+    // ---------- Rendering ----------
+    function renderThemesList() {
+      const container = $('#themesList');
+      container.innerHTML = '';
+      for (const [name] of themes) {
+        const item = document.createElement('div');
+        item.className = 'theme-item' + (name === selected ? ' active' : '');
+        item.setAttribute('role', 'option');
+        item.dataset.name = name;
+        item.innerHTML = `
+          <div>
+            ${`<strong>${name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ')}</strong>`}
+          </div>
+          <div style="opacity:.7; font-size:.85rem;">${(themes.get(name)||new Map()).size} vars</div>
+        `;
+        item.addEventListener('click', () => {
+          selected = name;
+          playSoundAffect('click', volume = 0.15);
+          renderThemesList();
+          renderVarsTable();
+          refreshButtons();
+          // apply theme but do not block UI
+          applyTheme().catch(()=>{});
+        });
+        container.appendChild(item);
+      }
+    }
+
+    function renderVarsTable() {
+      const body = $('#varsBody');
+      body.innerHTML = '';
+      const vars = themes.get(selected) || new Map();
+      console.log(selected, vars);
+
+      for (let [key, val] of vars) {
+        const tr = document.createElement('tr');
+
+        let type = 'text';
+        let alpha = 1;
+
+        // Detect color
+        if (isColor(val)) {
+          type = 'color';
+          [val, alpha] = toHex(val) || [val, 1];
+        } else if (!isNaN(Number(val))) {
+          type = 'number';
+        }
+
+        // Prettify variable name
+        const name = key
+          .slice(2)
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/-/g, ' ')
+          .replace(/^./, c => c.toUpperCase())
+          .replace(/ (.)/g, (m, c) => ' ' + c.toLowerCase());
+
+        // Build inputs
+        let inputHTML = `<input type="${type}" value="${val}" spellcheck="false" class="var-input" id="${type}"/>`;
+
+        // If it's a color, add alpha slider (0–1 step 0.01)
+        if (type === 'color') {
+          const hslaMatch = val.match(/^hsla?\([^,]+,\s*([^,]+),\s*([^,]+),\s*([\d.]+)\)/i);
+          if (hslaMatch) alpha = parseFloat(hslaMatch[3]);
+
+          inputHTML += `
+            <input type="range" min="0" max="1" step="0.01" value="${alpha}" class="slider" title="Alpha">
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="var-name">${name}</td>
+          <td class="var-value">${inputHTML}</td>
+        `;
+
+        // Wire up events
+        const colorInput = tr.querySelector('input[type=color]');
+        const genericInput = tr.querySelector('.var-input');
+        const alphaSlider = tr.querySelector('.slider');
+        const alphaLabel  = tr.querySelector('.alpha-label');
+
+        // Generic text/number handler
+        if (genericInput && type !== 'color') {
+          genericInput.addEventListener('input', () => {
+            themes.get(selected).set(key, genericInput.value);
+            applyTheme();
+            updateCSS();
+          });
+        }
+
+        // Color + alpha handler
+        if (colorInput) {
+          const updateTheme = () => {
+            const hex = colorInput.value;
+            const a = alphaSlider ? parseFloat(alphaSlider.value) : 1;
+
+            const newVal = (a < 1)
+              ? hexToRgba(hex, a)
+              : hex;
+
+            playSoundAffect('click', volume = 0.35);
+            themes.get(selected).set(key, newVal);
+            if (alphaLabel) alphaLabel.textContent = a.toFixed(2);
+            applyTheme();
+            updateCSS();
+          };
+
+          colorInput.addEventListener('input', updateTheme);
+          if (alphaSlider) alphaSlider.addEventListener('input', updateTheme);
+        }
+
+        body.appendChild(tr);
+      }
+
+      // --- helpers ---
+      function isColor(str) {
+        return /^#/.test(str) || /^rgb/i.test(str) || /^hsl/i.test(str);
+      }
+
+      function toHex(colorStr) {
+        // Handle hex with alpha
+        if (colorStr.startsWith('#')) {
+          if (colorStr.length === 9) { // #RRGGBBAA
+            const hex = colorStr.slice(0, 7);
+            const alphaHex = colorStr.slice(7, 9);
+            const alpha = parseInt(alphaHex, 16) / 255;
+            return [hex, alpha];
+          } else if (colorStr.length === 5) { // #RGBA
+            const hex = '#' +
+              colorStr[1] + colorStr[1] +
+              colorStr[2] + colorStr[2] +
+              colorStr[3] + colorStr[3];
+            const alphaHex = colorStr[4] + colorStr[4];
+            const alpha = parseInt(alphaHex, 16) / 255;
+            return [hex, alpha];
+          } else {
+            // No alpha, just return hex and alpha 1
+            return [colorStr, 1];
+          }
+        } else if (colorStr.startsWith('rgb')) {
+          return rgbToHex(colorStr);
+        } else { // fallback
+          try {
+            const ctx = document.createElement('canvas').getContext('2d');
+            ctx.fillStyle = colorStr;
+            return rgbToHex(ctx.fillStyle);
+          } catch (e) {
+            return null;
+          }
+        }
+      }
+
+      function rgbToHex(rgbStr) {
+        const m = rgbStr.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/i);
+        if (!m) return [null, null];
+        const r = parseInt(m[1], 10).toString(16).padStart(2, '0');
+        const g = parseInt(m[2], 10).toString(16).padStart(2, '0');
+        const b = parseInt(m[3], 10).toString(16).padStart(2, '0');
+        const hex = `#${r}${g}${b}`;
+        const alpha = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        return [hex, alpha];
+      }
+
+      function hexToRgba(hex, alpha = 1) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      sController.updateSliders();
+    }
+
+
+
+    function refreshButtons() {
+      $('#deleteThemeBtn').disabled = (selected === 'root');
+    }
+
+    function normalizeVarName(v) {
+      v = String(v).trim();
+      if (!v) return '';
+      if (!v.startsWith('--')) v = '--' + v.replace(/^[-]+/, '');
+      return v.replace(/[^\w-]/g, '-');
+    }
+
+    function updateCSS() {
+      const css = serializeThemesCSS();
+      setStatus('Edited (not saved)');
+    }
+
+    // ---------- Loading / Saving ----------
+    async function loadFromURL(url = CSS_URL) {
+      setStatus(`Fetching ${url}…`);
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        parseThemesCSS(text);
+
+        // Do not force selected here; settings will set the selected theme.
+        renderThemesList();
+        renderVarsTable();
+        refreshButtons();
+        setStatus('Loaded from: ' + url);
+      } catch (err) {
+        console.error(err);
+        setStatus('Fetch failed.');
+      }
+    }
+
+    function downloadCSS() {
+      const blob = new Blob([serializeThemesCSS()], { type: 'text/css' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'themes.css';
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+      setStatus('Exported CSS downloaded');
+    }
+
+    async function saveToDisk() {
+      const css = serializeThemesCSS();
+      try {
+      // Save to CSS_URL using Electron's IPC if available
+      if (ipcRenderer && ipcRenderer.invoke) {
+        if (await ipcRenderer.invoke('save-file', path.join(__dirname, CSS_URL), css)) {
+          setStatus('Saved to program');
+          settings.theme = selected; // puts the selected theme as the theme for the whole app
+          ipcRenderer.invoke('save-settings', settings);
+          ipcRenderer.invoke('reload-main-page');
+        } else {
+          setStatus('Saved to downloads');
+          downloadCSS();
+        }
+      } else {
+        setStatus('Saved to downloads');
+        downloadCSS();
+      }
+      } catch (e) {
+        console.error(e);
+        setStatus('Save failed');
+      }
+    }
+
+    // ---------- Theme operations ----------
+    function deleteSelectedTheme() {
+      if (selected === 'root') return;
+      const ok = confirm(`Delete theme "${selected}"? This cannot be undone.`);
+      if (!ok) return;
+      themes.delete(selected);
+      selected = 'root';
+      updateCSS();
+      renderThemesList();
+      renderVarsTable();
+      refreshButtons();
+      setStatus('Theme deleted');
+    }
+
+    async function addTheme() {
+      await promptUser('Add new theme', 'Theme name', 'custom-theme', 'addTheme');
+    }
+
+    async function addCustomCssTheme() {
+      await promptUser('Add Custom CSS Theme', 'CSS Here', 'css', 'addCustomCssTheme');
+    }
+
+    async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
+      return new Promise(async (resolve) => {
+        let confirmOverwrite = false;
+        // Helper to clean up DOM and listeners
+        const cleanup = () => {
+          document.removeEventListener('keydown', onKeyDown);
+          if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        };
+
+        // Keyboard handlers (Esc = cancel, Ctrl/Meta+Enter = submit)
+        const onKeyDown = (e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cleanup();
+            resolve(null);
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            createHandler();
+          }
+        };
+
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.style.cssText = [
+          'position:fixed','inset:0','z-index:99999',
+          'display:flex','align-items:center','justify-content:center',
+          'background:rgba(0,0,0,0.45)','backdrop-filter:blur(2px)'
+        ].join(';');
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = [
+          'width:720px','max-width:94vw','max-height:86vh','overflow:auto',
+          'background:var(--bg-2, #222)','color:var(--textColor, #fff)',
+          'border-radius:12px','padding:18px','box-shadow:0 10px 30px rgba(0,0,0,0.4)',
+          'font-family:inherit'
+        ].join(';');
+
+        // Title
+        const title = document.createElement('h3');
+        title.textContent = TitleTXT;
+        title.style.margin = '0 0 12px 0';
+        modal.appendChild(title);
+
+        // Name label + input
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = LabelTXT;
+        nameLabel.style.display = 'block';
+        nameLabel.style.fontSize = '.9rem';
+        nameLabel.style.opacity = '0.9';
+        modal.appendChild(nameLabel);
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.placeholder = placeholderTXT;
+        nameInput.value = '';
+        nameInput.style.cssText = 'width:100%;padding:.5rem;margin:.35rem 0 1rem 0;border-radius:.5rem;border:1px solid rgba(255,255,255,.08);background:var(--trackItemColor);color:var(--textColor);';
+        modal.appendChild(nameInput);
+
+        // Actions container
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;gap:.5rem;justify-content:flex-end;align-items:center;margin-top:6px;';
+        modal.appendChild(actions);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = 'padding:.45rem .8rem;border-radius:.5rem;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--textColor);cursor:pointer;';
+        actions.appendChild(cancelBtn);
+
+        const createBtn = document.createElement('button');
+        createBtn.textContent = 'Create';
+        createBtn.style.cssText = 'padding:.45rem .9rem;border-radius:.5rem;background:var(--activeColor);color:var(--navItemActiveColor, #000);border:none;cursor:pointer;';
+        actions.appendChild(createBtn);
+
+        // Append and focus
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        nameInput.focus();
+        document.addEventListener('keydown', onKeyDown);
+
+        // Utility to display inline errors/warnings
+        function showMessage(text, isError = false) {
+          msg.textContent = text;
+          msg.style.color = isError ? 'var(--notificationErrorColor, #e74c3c)' : 'var(--textColor)';
+        }
+
+        // Handler: clean create button and confirm overwrite flow
+        async function createHandler() {
+          switch (handleCase) {
+            case 0:
+            case 'addCustomCssTheme':
+              parseThemesCSS(nameInput.value);
+              updateCSS();
+              renderThemesList();
+              renderVarsTable();
+              refreshButtons();
+              setStatus(`Custom themes created`);
+              break;
+            case 1:
+            case 'addTheme':
+              if (nameInput.value === '') nameInput.value = placeholderTXT // fallback
+              const name = sanitizeName(nameInput.value);
+              themes.set(name, themes.get(selected));
+              selected = name;
+              updateCSS();
+              renderThemesList();
+              renderVarsTable();
+              refreshButtons();
+              setStatus(`Theme "${name}" added`);
+              applyTheme();
+              break;
+          }
+           
+          cleanup();
+          resolve(name);
+        }
+
+        // Wire up buttons
+        cancelBtn.addEventListener('click', () => { cleanup(); resolve(null); });
+        createBtn.addEventListener('click', createHandler);
+
+        // allow clicking overlay background to cancel
+        overlay.addEventListener('click', (ev) => {
+          if (ev.target === overlay) { cleanup(); resolve(null); }
+        });
+      });
+    }
+
+    // Apply the currently-selected theme
+    async function applyTheme() {
+      // Ensure we’re working with an array of entries
+      let theme = Array.from(themes.get(selected));
+
+      for (let i = theme.length - 1; i >= 0; i--) {
+        try {
+          let [key, value] = theme[i];
+
+          // Skip invalid keys
+          if (!key || !key.startsWith("--")) {
+            console.warn("Skipping invalid key:", key);
+            continue;
+          }
+
+          // Only set property if it ins't invalid
+          if (value !== undefined) {
+            document.documentElement.style.setProperty(key, value);
+          }
+          
+        } catch (err) {
+          console.error("Error applying theme var:", theme[i], err);
+        }
+      }
+      console.log('Applied theme:', selected);
+    }
+
+
+    // ---------- Settings loader (Electron) ----------
+    let settings = { theme: '', volume: 1 };
+    async function loadSettings() {
+      try {
+        if (ipcRenderer && ipcRenderer.invoke) {
+          const lastPlayedInfo = await ipcRenderer.invoke('load-settings') || {};
+          for (const key in settings) {
+            if (lastPlayedInfo && Object.prototype.hasOwnProperty.call(lastPlayedInfo, key)) {
+              settings[key] = lastPlayedInfo[key];
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+
+      // default to root if empty or invalid
+      if (!settings.theme || settings.theme === '') settings.theme = 'root';
+      if (!themes.has(settings.theme)) {
+        // If the saved theme doesn't exist yet, fall back to root but keep user preference for later
+        selected = 'root';
+      } else {
+        selected = settings.theme;
+      }
+
+      renderThemesList();
+      renderVarsTable();
+      refreshButtons();
+
+      applyTheme();
+    }
+
+    // ---------- Wire up ----------
+    $('#saveBtn').addEventListener('click', saveToDisk);
+    $('#downloadBtn').addEventListener('click', downloadCSS);
+
+    $('#addThemeBtn').addEventListener('click', addTheme);
+    $('#addCustomCssThemeBtn').addEventListener('click', addCustomCssTheme);
+    $('#deleteThemeBtn').addEventListener('click', deleteSelectedTheme);
+
+    // Make load sequence deterministic: wait for CSS fetch/parsing, then load settings, then apply theme.
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await loadFromURL();
+      } catch (e) {
+        console.warn('loadFromURL error', e);
+      }
+      // now load saved settings and apply theme (robust)
+      try {
+        await loadSettings();
+      } catch (e) {
+        console.warn('loadSettings error', e);
+      }
+    });
+  </script>
+
+  <script src="../js/sound/sfx.js"></script>
+</body>
+</html>
