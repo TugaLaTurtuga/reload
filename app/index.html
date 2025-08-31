@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Reload Music Player</title>
+  <title>Reload</title>
   <link rel="stylesheet" href="css/font-renderer.css">
-  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/themes.css" id="themes-stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/slider.css">
 </head>
@@ -15,7 +15,7 @@
         <div id="now-playing-art-small" class="img"></div>
       </div>
     </div>
-  
+
     <div id="main-content">
       <div id="library-container">
         <div id="albums-section" class="content-section"></div>
@@ -30,7 +30,7 @@
           <button id="back-button"><</button>
         </div>
         <div id="album-details">
-          <div id="album-art-container">
+          <div id="album-art-container" title="play album">
             <div id="album-art" class="img"></div>
           </div>
           <div id="album-info">
@@ -59,19 +59,19 @@
           </div>
         </div>
       </div>
-   
+
       <div id="controls">
         <button id="prev-button">⏮</button>
         <button id="play-pause-button">▶</button>
         <button id="next-button">⏭</button>
       </div>
-      
+
       <div id="progress">
         <span id="current-time">0:00</span>
         <input type="range" step="0.001" min="0" value="0" max="1" notscroll="true" id="progress-bar" class="slider" style="transform: translateY(-0.5px);"></input>
         <span id="total-time">0:00</span>
       </div>
-      
+
       <div id="volume-controls">
         <button id="mute-button">🔊</button>
         <input type="range" step="0.01" min="0" value="0.8" max="1" id="volume-slider" class="slider" />
@@ -89,12 +89,11 @@
 
   <!-- classes + imports -->
   <script src="js/imports.js"></script>
-  <script src="js/settingsVARS.js"></script>
   <script src="js/input/inputManagement.js"></script>
   <script src="js/css/gradientHelper.js"></script>
   <script src="js/css/sliders.js"></script>
 
-  <!-- scripts -->  
+  <!-- scripts -->
   <script src="js/renderLibraryAndAlbums.js"></script>
   <script src="js/player.js"></script>
   <script src="js/updatePlayerControls.js"></script>

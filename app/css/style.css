@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     height: 100%;
     background-color: var(--bg-1);
     color: var(--textColor);
@@ -7,7 +8,7 @@ body, html {
 
 #loading {
     position: absolute;
-    font-family: 'Rubik', sans-serif;
+    font-family: "Rubik", sans-serif;
     font-weight: 700;
     bottom: 100px;
     left: 105px;
@@ -19,20 +20,24 @@ body, html {
 
 /* Register the custom property so it can animate */
 @property --backgroundColor {
-  syntax: '<color>';
-  inherits: false;
-  initial-value: #333;
+    syntax: "<color>";
+    inherits: false;
+    initial-value: #333;
 }
 
 #app {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  grid-template-rows: 1fr 100px;
-  height: 100vh;
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 1fr 100px;
+    height: 100vh;
 
-  --backgroundColor: var(--bg-2);
-  background: linear-gradient(to bottom left, var(--backgroundColor), var(--bg-1));
-  transition: --backgroundColor 0.15s ease-out;
+    --backgroundColor: var(--bg-2);
+    background: linear-gradient(
+        to bottom left,
+        var(--backgroundColor),
+        var(--bg-1)
+    );
+    transition: --backgroundColor 0.15s ease-out;
 }
 
 #sidebar {
@@ -43,10 +48,10 @@ body, html {
     grid-column: 1;
     grid-row: 1;
     background-color: var(--sidebarColor);
-    backdrop-filter: blur(10px);
     padding: 20px;
     height: calc(100vh - 20px);
-    border: 1px solid var(--bg-2);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--bg-2);
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -57,7 +62,7 @@ body, html {
 nav ul {
     list-style: none;
 }
- 
+
 #now-playing-small {
     position: absolute;
     bottom: 10px;
@@ -68,10 +73,10 @@ nav ul {
 }
 
 .img {
-  background-color: var(--bg-2);
-  border: none;
-  background-size: cover;
-  background-position: center;
+    background-color: var(--bg-2);
+    border: none;
+    background-size: cover;
+    background-position: center;
 }
 
 #now-playing-art-small {
@@ -93,7 +98,7 @@ nav ul {
     width: calc(100vw - 100px);
     height: 100vh;
 }
-  
+
 #player-controls {
     position: absolute;
     grid-column: 1 / span 2;
@@ -105,7 +110,7 @@ nav ul {
     width: calc(100vw - 110px);
     background-color: var(--sidebarColor);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--bg-2);
+    border: 2px solid var(--bg-2);
     padding: 10px;
     margin: 10px;
     display: flex;
@@ -114,7 +119,7 @@ nav ul {
     -webkit-app-region: drag;
     z-index: 20;
 }
-  
+
 #now-playing {
     width: 30vw;
     display: flex;
@@ -122,34 +127,34 @@ nav ul {
 }
 
 #now-playing-title-wrapper {
-  max-width: 30vw;
-  overflow: hidden;   /* viewport */
-  white-space: nowrap;
-  position: relative;
-  margin-bottom: 5px;
+    max-width: 30vw;
+    overflow: hidden; /* viewport */
+    white-space: nowrap;
+    position: relative;
+    margin-bottom: 5px;
 }
 
 #now-playing-title {
-  display: inline-block;
-  font-weight: bold;
-  white-space: nowrap;
+    display: inline-block;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 #now-playing-title span {
-  display: inline-block;
-  padding-right: 20px; /* spacing between repeats */
+    display: inline-block;
+    padding-right: 20px; /* spacing between repeats */
 }
 
 #now-playing-artist-wrapper {
-  max-width: 30vw;
-  overflow: hidden;   /* viewport */
-  white-space: nowrap;
-  position: relative;
-  margin-bottom: 5px;
+    max-width: 30vw;
+    overflow: hidden; /* viewport */
+    white-space: nowrap;
+    position: relative;
+    margin-bottom: 5px;
 }
 
 #now-playing-artist {
-   display: inline-block;
+    display: inline-block;
     white-space: nowrap;
     font-size: 0.9em;
     color: var(--textSubColor);
@@ -162,7 +167,7 @@ nav ul {
     flex: 1;
     -webkit-app-region: no-drag;
 }
-  
+
 #controls button {
     background: none;
     border: none;
@@ -171,9 +176,11 @@ nav ul {
     cursor: pointer;
     padding: 10px;
     max-width: 150px;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
 }
-  
+
 #play-pause-button {
     width: 40px;
     height: 40px;
@@ -183,7 +190,9 @@ nav ul {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
 }
 
 #play-pause-button:hover {
@@ -196,7 +205,9 @@ nav ul {
 }
 
 #prev-button {
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
     color: var(--textColor);
 }
 
@@ -210,7 +221,9 @@ nav ul {
 }
 
 #next-button {
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
     color: var(--textColor);
 }
 
@@ -222,7 +235,7 @@ nav ul {
 #next-button:active {
     transform: scale(1);
 }
-  
+
 #progress {
     flex: 10;
     display: flex;
@@ -230,13 +243,14 @@ nav ul {
     margin: 0 20px;
     -webkit-app-region: no-drag;
 }
-  
-#current-time, #total-time {
+
+#current-time,
+#total-time {
     font-size: 0.8em;
     width: 40px;
     text-align: center;
 }
-  
+
 #progress-bar {
     flex: 1;
     height: 5px;
@@ -247,14 +261,14 @@ nav ul {
     cursor: pointer;
     position: relative;
 }
- 
+
 #progress-filled {
     height: 100%;
     background-color: var(--activeColor);
     border-radius: 10px;
     width: 0;
 }
-  
+
 #volume-controls {
     display: flex;
     align-items: center;
@@ -262,7 +276,7 @@ nav ul {
     max-width: 150px !important;
     -webkit-app-region: no-drag;
 }
-  
+
 #mute-button {
     background: none;
     border: none;
@@ -271,7 +285,7 @@ nav ul {
     font-size: 1.2em;
     margin-right: 10px;
 }
-  
+
 #volume-slider {
     flex: 1;
     height: 5px;
@@ -280,86 +294,89 @@ nav ul {
     cursor: pointer;
     position: relative;
 }
-  
+
 #volume-filled {
     height: 100%;
     background-color: var(--activeColor);
     border-radius: 10px;
     width: 70%;
 }
- 
+
 .album-card {
     background-color: var(--sidebarColor);
     backdrop-filter: blur(10px);
     border-radius: 8px;
     overflow: hidden;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 3), background-color 0.2s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 3),
+        background-color 0.2s ease-in;
     cursor: pointer;
 }
- 
+
 .album-card:hover {
     background-color: var(--trackItemOnHover);
     transform: translateY(-10px);
     transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
-  
-  .album-cover {
+
+.album-cover {
     width: 100%;
     aspect-ratio: 1;
     background-size: cover;
     background-position: center;
     background-color: var(--bg-2);
-  }
-  
-  .album-info {
+}
+
+.album-info {
     padding: 15px;
-  }
-  
-  .album-title {
+}
+
+.album-title {
     font-weight: 600;
     margin-bottom: 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
- 
-  .album-artist {
+}
+
+.album-artist {
     font-size: 0.9em;
     color: var(--textSubColor);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  
-  #albums-section, #singles-section {
+}
+
+#albums-section,
+#singles-section {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     grid-gap: 20px;
-  }
-  
-  .content-section.hidden {
-    display: none;
-  }
-  
-  #player-container {
-    height: 100%;
-    -webkit-app-region: no-drag;
-  }
-  
-  #player-container.hidden {
-    display: none;
-  }
+}
 
-  #library-container {
+.content-section.hidden {
+    display: none;
+}
+
+#player-container {
     height: 100%;
     -webkit-app-region: no-drag;
-  }
- 
-  #library-container.hidden {
+}
+
+#player-container.hidden {
     display: none;
-  }
-  
-  #player-header {
+}
+
+#library-container {
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+#library-container.hidden {
+    display: none;
+}
+
+#player-header {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -367,163 +384,174 @@ nav ul {
     background-color: var(--sidebarColor);
     border-radius: 10px;
     border: 1px solid var(--bg-2);
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
     font-size: 1em;
     z-index: 10;
     display: flex;
     flex-direction: row;
     align-items: center;
-  }
+}
 
-  #player-header:hover {
+#player-header:hover {
     transform: scale(1.05);
-  }
+}
 
-  #back-button {
+#back-button {
     background: none;
     border: none;
     font-size: 1em;
     padding: 5px;
     color: var(--textSubColor);
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
-  }
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
+}
 
-  #back-button:hover {
+#back-button:hover {
     color: var(--activeColor);
     transform: scale(1.05);
-  }
+}
 
-  #edit-button {
+#edit-button {
     background: none;
     border: none;
     font-size: 1em;
     padding: 5px;
     color: var(--textSubColor);
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
-  }
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
+}
 
-  #edit-button:hover {
+#edit-button:hover {
     color: var(--activeColor);
     transform: scale(1.05);
-  }
+}
 
-  #favourite-button {
+#favourite-button {
     background: none;
     border: none;
     font-size: 1em;
     padding: 5px;
     color: var(--textSubColor);
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2), color 0.1s ease-in;
-  }
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
+}
 
-  #favourite-button:hover {
+#favourite-button:hover {
     color: var(--activeColor);
     transform: scale(1.05);
-  }
-  
-  #album-details {
+}
+
+#album-details {
     display: flex;
     margin-bottom: 30px;
-  }
-  
-  #album-art-container {
+}
+
+#album-art-container {
     width: 300px;
     height: 300px;
     margin-right: 30px;
-  }
-  
-  #album-art {
+    cursor: pointer;
+}
+
+#album-art {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 5px;
-  }
-  
-  #album-info {
+    pointer-events: all;
+}
+
+#album-info {
     flex: 1;
-  }
-  
-  #album-title {
+}
+
+#album-title {
     font-weight: 900;
     font-size: 6em;
     margin-bottom: 10px;
-  }
-  
-  #album-artist {
+}
+
+#album-artist {
     font-size: 1.5em;
     color: var(--activeColor);
     margin-bottom: 20px;
-  }
-  
-  #album-meta {
+}
+
+#album-meta {
     margin-bottom: 20px;
     color: var(--textSubColor);
-  }
-  
-  #album-year, #album-genre {
+}
+
+#album-year,
+#album-genre {
     margin-right: 15px;
-  }
-  
-  #album-description {
+}
+
+#album-description {
     line-height: 1.6;
     max-width: 600px;
-  }
-  
-  #track-list {
+}
+
+#track-list {
     border: var(--bg-2) solid 1px;
     border-radius: 10px;
     overflow-y: hidden;
     width: 100%;
-  }
+}
 
-  #buffer {
+#buffer {
     height: 105px; /* gives 15px of buffer */
-  }
+}
 
-  .track-item {
+.track-item {
     margin: 0px;
     margin-top: 0;
-  
+
     display: flex;
     align-items: center;
     background-color: var(--trackItemColor);
     border-radius: 0px;
     padding: 15px;
-  
-    transition: background-color 0.1s ease-in; /* this is used when hover ends */
-  }
 
-  .odd-color {
+    transition: background-color 0.1s ease-in; /* this is used when hover ends */
+}
+
+.odd-color {
     background-color: var(--trackItemOddColor);
-  }
-  
-  .track-item:hover {
+}
+
+.track-item:hover {
     background-color: var(--trackItemOnHover);
     transition: none; /* instant change when hover starts */
-  }  
- 
-  .track-item.active {
+}
+
+.track-item.active {
     color: var(--activeColor);
-  }
-  
-  .track-number {
+}
+
+.track-number {
     width: 30px;
     text-align: left;
-  }
-  
-  .track-title {
+}
+
+.track-title {
     flex: 1;
     padding: 0;
-  }
-  
-  .track-duration {
+}
+
+.track-duration {
     width: 50px;
     text-align: right;
     color: var(--textSubColor);
-  }
+}
 
 .notification {
     position: fixed;
@@ -532,7 +560,7 @@ nav ul {
     padding: 15px 20px;
     background: var(--notificationBgColor);
     border: 4px solid var(--notaficationBorderColor);
-    color: white;
+    color: var(--textColor);
     border-radius: 4px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     display: none;
@@ -541,21 +569,33 @@ nav ul {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateX(250px); }
-  to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(250px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(250px); }
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(250px);
+    }
 }
 
 .fade-in {
-  animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.2s ease;
 }
 
 .fade-out {
-  animation: fadeOut 0.2s ease;
+    animation: fadeOut 0.2s ease;
 }
 
 .success {

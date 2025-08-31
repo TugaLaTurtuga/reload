@@ -53,7 +53,8 @@ input, select {
     padding: 10px;
     margin: 5px;
     background-color: var(--bg-1);
-    color: #ddd;
+    color: var(--textColor);
+    border: 1px solid var(--sliderBgColor);
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -91,7 +92,7 @@ button {
     cursor: pointer;
     font-size: 14px;
     background-color: var(--bg-1);
-    color: var(--textSubColor);
+    color: var(--textColor);
     transition: background-color 0.2s;
 }
 button.danger {

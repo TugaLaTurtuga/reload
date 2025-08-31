@@ -1,15 +1,15 @@
 function updateOverflowsOnNowPlaying() {
-  let keyframes = ''
-  const minDuration = [0.5, 2]
+  let keyframes = "";
+  const minDuration = [0.5, 2];
 
   function addOverflowFromTitle() {
     // If not already duplicated, wrap in spans
     if (nowPlayingTitle.children.length === 0) {
       const text = nowPlayingTitle.textContent;
-      nowPlayingTitle.textContent = ''; // clear
+      nowPlayingTitle.textContent = ""; // clear
 
-      const firstSpan = document.createElement('span');
-      const secondSpan = document.createElement('span');
+      const firstSpan = document.createElement("span");
+      const secondSpan = document.createElement("span");
 
       firstSpan.textContent = text;
       secondSpan.textContent = text;
@@ -20,7 +20,8 @@ function updateOverflowsOnNowPlaying() {
 
     const scrollWidth = nowPlayingTitle.scrollWidth || 1; // prevent division by zero
     const distance = nowPlayingTitleWrapper.clientWidth - scrollWidth; // negative value
-    const duration = Math.pow(Math.abs((distance / scrollWidth) * 4), 2.2) + minDuration[0]
+    const duration =
+      Math.pow(Math.abs((distance / scrollWidth) * 4), 2) + minDuration[0];
 
     // Create a dynamic keyframes string
     const scrollFrames = `
@@ -52,7 +53,8 @@ function updateOverflowsOnNowPlaying() {
   function addOverflowFromArtist() {
     const scrollWidth = nowPlayingArtist.scrollWidth || 1; // prevent division by zero
     const distance = nowPlayingArtistWrapper.clientWidth - scrollWidth; // negative value
-    const duration = Math.pow(Math.abs((distance / scrollWidth) * 6.5), 2.1) + minDuration[1];
+    const duration =
+      Math.pow(Math.abs((distance / scrollWidth) * 6.5), 2) + minDuration[1];
 
     // Create a dynamic keyframes string
     const scrollFrames = `
@@ -78,9 +80,13 @@ function updateOverflowsOnNowPlaying() {
   // track title
   if (nowPlayingTitle.scrollWidth > nowPlayingTitleWrapper.clientWidth) {
     if (nowPlayingTitle.children[0]) {
-      if (nowPlayingTitle.children[0].scrollWidth - 20 <= nowPlayingTitleWrapper.clientWidth) {
+      if (
+        nowPlayingTitle.children[0].scrollWidth - 20 <=
+        nowPlayingTitleWrapper.clientWidth
+      ) {
         removeOverflowFromTitle();
-      } else { // yes.
+      } else {
+        // yes.
         addOverflowFromTitle();
       }
     } else {
@@ -92,9 +98,9 @@ function updateOverflowsOnNowPlaying() {
 
   // track artist
   if (nowPlayingArtist.scrollWidth > nowPlayingArtistWrapper.clientWidth) {
-      addOverflowFromArtist();
+    addOverflowFromArtist();
   } else {
-      removeOverflowFromArtist();
+    removeOverflowFromArtist();
   }
 
   // Remove any previous dynamic style tag
@@ -110,25 +116,33 @@ function updateOverflowsOnNowPlaying() {
 
 // Format time helper
 function formatTime(time) {
-    const days = Math.floor(time / 86400).toString().padStart(2, '0');
-    const hours = Math.floor((time % 86400) / 3600).toString().padStart(2, '0');
-    const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
-    const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+  const days = Math.floor(time / 86400)
+    .toString()
+    .padStart(2, "0");
+  const hours = Math.floor((time % 86400) / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((time % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.floor(time % 60)
+    .toString()
+    .padStart(2, "0");
 
-    if (days > 0) {
-        return `${days}:${hours}:${minutes}:${seconds}`;
-    } else if (hours > 0) {
-        return `${hours}:${minutes}:${seconds}`;
-    } else {
-        return `${minutes}:${seconds}`;
-    }
+  if (days > 0) {
+    return `${days}:${hours}:${minutes}:${seconds}`;
+  } else if (hours > 0) {
+    return `${hours}:${minutes}:${seconds}`;
+  } else {
+    return `${minutes}:${seconds}`;
+  }
 }
 
 // Update progress bar as audio plays
 function updateProgress() {
   if (!isNaN(audioPlayer.duration)) {
     progressBar.value = audioPlayer.currentTime / audioPlayer.duration;
-    sController._updateSliderBackground(progressBar);  // Update the background with the new value
+    sController._updateSliderBackground(progressBar); // Update the background with the new value
     currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
   }
 }

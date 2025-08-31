@@ -23,14 +23,10 @@ const audioBuffers = {};
 
 async function loadSound(eventType) {
     const fileName = sfx[eventType]?.[0];
-    if (!fileName) {
-        console.warn(`Unknown eventType: "${eventType}"`);
-        return null;
-    }
+    if (!fileName) return null;
 
     if (!audioBuffers[eventType]) {
         const filePath = path.join(__dirname, sfxAudioPath, fileName);
-        console.log("Loading sound:", filePath);
 
         const fileData = await fs.promises.readFile(filePath);
         const arrayBuffer = fileData.buffer.slice(
@@ -103,6 +99,7 @@ async function playSoundAffect(eventType, distortion = 0, volume = 0) {
     gainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + duration);
 
     source.start();
+    source.volume = volume;
     source.stop(audioCtx.currentTime + duration);
 
     currentNoteIndex = (currentNoteIndex + 1) % notes.length;

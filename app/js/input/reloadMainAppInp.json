@@ -1,0 +1,22 @@
+{
+  "keyboard": {
+    "whenPressed": {
+      " ": "togglePlayPause()",
+      "b": "openAlbum(settings.currentPlayingAlbum)",
+      "f10": "toggleMute()",
+      "v": "playPrevious()",
+      "n": "playNext()",
+      "home": "backToLibrary()"
+    },
+    "whenDown": {
+      "f11": "addVolume(-.02)",
+      "f12": "addVolume(.02)",
+      "g": "addVolume(-.02)",
+      "h": "addVolume(.02)",
+      "c": "addProgress(-2)",
+      "m": "addProgress(2)",
+      "<": "addProgress(-2)",
+      ">": "addProgress(2)"
+    }
+  }
+}
