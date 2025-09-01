@@ -1,0 +1,289 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font);
+    transition:
+        background 0.3s ease,
+        border 0.3s ease;
+}
+html,
+body {
+    height: 100%;
+}
+
+/* Root mode */
+:root {
+    --activeColor: rgb(29, 185, 84);
+    --notificationCorrectColor: rgb(29, 185, 84);
+    --bg-2: rgb(51, 51, 51);
+    --bg-1: rgb(18, 18, 18);
+    --sidebarColor: rgba(24, 24, 24, 0.7);
+    --textSubColor: rgb(170, 170, 170);
+    --notificationErrorColor: rgb(231, 76, 60);
+    --trackItemOnHover: rgb(40, 40, 40);
+    --notaficationBorderColor: rgb(102, 102, 102);
+    --notificationBgColor: rgb(85, 85, 85);
+    --ControlsBtnsColor: rgb(187, 187, 187);
+    --sliderBgColor: rgb(90, 90, 90);
+    --spinnerBgColor: rgba(255, 255, 255, 0.302);
+    --spinnerColor: rgb(255, 255, 255);
+    --textColor: rgb(245, 245, 245);
+    --trackItemColor: rgb(34, 34, 34);
+    --trackItemOddColor: rgb(29, 29, 29);
+    --notificationWarningColor: rgb(222, 222, 24);
+    --font: Rubik, sans-serif;
+}
+
+body {
+    color: var(--textColor);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    margin: 0;
+    background: linear-gradient(to bottom left, var(--bg-2), var(--bg-1));
+}
+header {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    height: 60px !important;
+}
+header h1 {
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.9;
+    font-weight: 600;
+}
+.badge {
+    opacity: 0.8;
+    font-size: 0.85rem;
+}
+.row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+button,
+select,
+textarea {
+    background: var(--trackItemColor);
+    color: var(--textColor);
+    border: 1px solid var(--sliderBgColor);
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+}
+
+#color,
+#text,
+#number {
+    background: var(--trackItemColor);
+    color: var(--textColor);
+    border: 1px solid var(--sliderBgColor);
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+    height: 100% !important;
+    width: 80% !important;
+}
+
+#color {
+    height: 50% !important;
+}
+
+button {
+    cursor: pointer;
+}
+button:hover,
+select:hover,
+input:hover,
+textarea:hover {
+    background: var(--trackItemOnHover);
+}
+button.primary {
+    background: var(--activeColor);
+    color: var(--sidebarColor);
+    border: none;
+}
+button.danger {
+    background: var(--notificationErrorColor);
+    border: none;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    overflow: hidden;
+    background: transparent;
+}
+aside {
+    background: var(--sidebarColor);
+    border: 1px solid var(--sliderBgColor);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    max-height: calc(100vh - 95px);
+    gap: 0.75rem;
+}
+.themes-list {
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+    display: block;
+}
+.theme-item {
+    --bg: var(--trackItemOddColor);
+    --border: var(--sliderBgColor);
+    --color: var(--textColor);
+    --btn-font: var(--font);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.6rem;
+    margin: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: var(--btn-font);
+    color: var(--color);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.4s ease-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theme-item:hover {
+    --hover: var(--trackItemOnHover);
+    background: var(--hover);
+    transition: none;
+}
+.theme-item.active {
+    border: 2px solid var(--activeColor);
+    background: var(--trackItemColor);
+}
+.theme-item span {
+    display: inline-block;
+    padding-right: 20px; /* spacing between repeats */
+}
+
+.theme-item-title {
+    font-weight: 800;
+    font-family: var(--font-btn);
+}
+
+section.editor {
+    background: transparent;
+    border: 1px solid var(--sliderBgColor);
+    display: grid;
+    overflow: hidden;
+    border-radius: 10px;
+    grid-template-rows: auto 1fr auto;
+    gap: 0rem;
+}
+.vars {
+    overflow: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+tbody td {
+    padding: 0.35rem 0.3rem;
+    vertical-align: middle;
+}
+tbody tr {
+    height: 60px !important;
+}
+tbody tr:nth-child(odd) {
+    background: var(--trackItemOddColor);
+    transition: all 0.4s ease-out;
+}
+tbody tr:nth-child(even) {
+    background: var(--trackItemColor);
+    transition: all 0.4s ease-out;
+}
+tbody tr:hover {
+    background: var(--trackItemOnHover);
+    transition: none;
+    z-index: 20;
+}
+.names {
+    font-weight: 600;
+    padding: 0.5rem 0.4rem;
+    position: relative;
+    top: 0;
+    background: var(--bg-2);
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+}
+.var-name {
+    width: 80%;
+}
+.var-value {
+    width: 20%;
+}
+.actions {
+    width: 14%;
+    text-align: right;
+}
+.preview .chip {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    background: var(--bg-1);
+    border: 2px solid var(--sliderBgColor);
+    margin-right: 0.35rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.preview {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    background: var(--sidebarColor);
+    width: 100%;
+    display: grid;
+    gap: 0.4rem;
+    cursor: auto;
+}
+code.inline {
+    background: var(--trackItemColor);
+    padding: 0.15rem 0.35rem;
+    border-radius: 10px;
+    border: 1px solid var(--sliderBgColor);
+}
+.status {
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+#darkBtn.active {
+    background: var(--notaficationBorderColor);
+    color: var(--sidebarColor);
+}
+#lightBtn.active {
+    background: var(--notaficationBorderColor);
+    color: var(--sidebarColor);
+}
+#systemThemeBtn.active {
+    background: var(--activeColor);
+    color: var(--sidebarColor);
+}

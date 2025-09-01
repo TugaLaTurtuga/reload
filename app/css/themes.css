@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Rubik", sans-serif;
+    font-family: var(--font);
 }
 
 
@@ -13,6 +13,7 @@
   --bg-1: #121212;
   --bg-2: #333333;
   --ControlsBtnsColor: rgb(187, 187, 187);
+  --font: Rubik, system-ui;
   --notaficationBorderColor: rgb(102, 102, 102);
   --notificationBgColor: rgb(85, 85, 85);
   --notificationCorrectColor: rgb(29, 185, 84);
@@ -36,6 +37,7 @@
   --bg-1: #0c111b;
   --bg-2: #152238;
   --ControlsBtnsColor: #7fdbff;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #7fdbff;
   --notificationBgColor: #152238;
   --notificationCorrectColor: #5af78e;
@@ -59,6 +61,7 @@
   --bg-1: #282c34;
   --bg-2: #21252b;
   --ControlsBtnsColor: #61afef;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #61afef;
   --notificationBgColor: #282c34;
   --notificationCorrectColor: #98c379;
@@ -82,6 +85,7 @@
   --bg-1: #1c0f2e;
   --bg-2: #27123d;
   --ControlsBtnsColor: #c084fc;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #c084fc;
   --notificationBgColor: #27123d;
   --notificationCorrectColor: #7cf29a;
@@ -105,6 +109,7 @@
   --bg-1: #303446;
   --bg-2: #414559;
   --ControlsBtnsColor: #af8cca;
+  --font: 'Fira Code', sans-serif;
   --notaficationBorderColor: #8caaee;
   --notificationBgColor: #414559;
   --notificationCorrectColor: #a6d189;
@@ -128,6 +133,7 @@
   --bg-1: #eff1f5;
   --bg-2: #e6e9ef;
   --ControlsBtnsColor: #1e66f5;
+  --font: 'Fira Code', sans-serif;
   --notaficationBorderColor: #8c8fa1;
   --notificationBgColor: #e6e9ef;
   --notificationCorrectColor: #40a02b;
@@ -151,6 +157,7 @@
   --bg-1: #24273a;
   --bg-2: #363a4f;
   --ControlsBtnsColor: #8aadf4;
+  --font: 'Fira Code', sans-serif;
   --notaficationBorderColor: #8aadf4;
   --notificationBgColor: #363a4f;
   --notificationCorrectColor: #a6da95;
@@ -174,6 +181,7 @@
   --bg-1: #1e1e2e;
   --bg-2: #313244;
   --ControlsBtnsColor: #89b4fa;
+  --font: 'Fira Code', sans-serif;
   --notaficationBorderColor: #89b4fa;
   --notificationBgColor: #313244;
   --notificationCorrectColor: #a6e3a1;
@@ -197,6 +205,7 @@
   --bg-1: #1f0d17;
   --bg-2: #2a1320;
   --ControlsBtnsColor: #ff6b9a;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #ff6b9a;
   --notificationBgColor: #2a1320;
   --notificationCorrectColor: #81e6d9;
@@ -220,6 +229,7 @@
   --bg-1: #122738;
   --bg-2: #193549;
   --ControlsBtnsColor: #ffc600;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #ffc600;
   --notificationBgColor: #193549;
   --notificationCorrectColor: #3ad900;
@@ -243,6 +253,7 @@
   --bg-1: #1b130e;
   --bg-2: #2a1c14;
   --ControlsBtnsColor: #d2b48c;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #d2b48c;
   --notificationBgColor: #2a1c14;
   --notificationCorrectColor: #86efac;
@@ -266,6 +277,7 @@
   --bg-1: #0b0e14;
   --bg-2: #11151c;
   --ControlsBtnsColor: #f72585;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #f72585;
   --notificationBgColor: #11151c;
   --notificationCorrectColor: #2ef05e;
@@ -289,6 +301,7 @@
   --bg-1: #2b2114;
   --bg-2: #3a2b1a;
   --ControlsBtnsColor: #e0a96d;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #e0a96d;
   --notificationBgColor: #3a2b1a;
   --notificationCorrectColor: #a3be8c;
@@ -312,6 +325,7 @@
   --bg-1: #282a36;
   --bg-2: #44475a;
   --ControlsBtnsColor: #bd93f9;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #bd93f9;
   --notificationBgColor: #44475a;
   --notificationCorrectColor: #50fa7b;
@@ -335,6 +349,7 @@
   --bg-1: #201a2b;
   --bg-2: #2a213b;
   --ControlsBtnsColor: #9d7fea;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #9d7fea;
   --notificationBgColor: #2a213b;
   --notificationCorrectColor: #8eea9d;
@@ -358,6 +373,7 @@
   --bg-1: #f7fbfa;
   --bg-2: #ffffff;
   --ControlsBtnsColor: #0e7490;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #94a3b8;
   --notificationBgColor: #e6f4f1;
   --notificationCorrectColor: #16a34a;
@@ -381,6 +397,7 @@
   --bg-1: #0f1e17;
   --bg-2: #12261c;
   --ControlsBtnsColor: #10b981;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #10b981;
   --notificationBgColor: #12261c;
   --notificationCorrectColor: #22c55e;
@@ -404,6 +421,7 @@
   --bg-1: #121212;
   --bg-2: #1f1f1f;
   --ControlsBtnsColor: #bdbdbd;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #bdbdbd;
   --notificationBgColor: #1f1f1f;
   --notificationCorrectColor: #8bc34a;
@@ -427,6 +445,7 @@
   --bg-1: #282828;
   --bg-2: #3c3836;
   --ControlsBtnsColor: #fe8019;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #fe8019;
   --notificationBgColor: #3c3836;
   --notificationCorrectColor: #b8bb26;
@@ -450,6 +469,7 @@
   --bg-1: #fbf1c7;
   --bg-2: #ebdbb2;
   --ControlsBtnsColor: #3c3836;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #7c6f64;
   --notificationBgColor: #ebdbb2;
   --notificationCorrectColor: #98971a;
@@ -473,6 +493,7 @@
   --bg-1: #000000;
   --bg-2: #111111;
   --ControlsBtnsColor: #ffffff;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #ffffff;
   --notificationBgColor: #111111;
   --notificationCorrectColor: #00ff00;
@@ -496,6 +517,7 @@
   --bg-1: #ffffff;
   --bg-2: #ffffff;
   --ControlsBtnsColor: #000000;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #000000;
   --notificationBgColor: #f5f5f5;
   --notificationCorrectColor: #008000;
@@ -519,6 +541,7 @@
   --bg-1: #1b1525;
   --bg-2: #241b32;
   --ControlsBtnsColor: #a78bfa;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #a78bfa;
   --notificationBgColor: #241b32;
   --notificationCorrectColor: #86efac;
@@ -542,6 +565,7 @@
   --bg-1: #f5f5f5;
   --bg-2: #ffffff;
   --ControlsBtnsColor: #333333;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #cccccc;
   --notificationBgColor: #e0e0e0;
   --notificationCorrectColor: #1db954;
@@ -565,6 +589,7 @@
   --bg-1: #1e1e1e;
   --bg-2: #2c2c2c;
   --ControlsBtnsColor: #80cbc4;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #80cbc4;
   --notificationBgColor: #2c2c2c;
   --notificationCorrectColor: #69f0ae;
@@ -588,6 +613,7 @@
   --bg-1: #fafafa;
   --bg-2: #ffffff;
   --ControlsBtnsColor: #455a64;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #b0bec5;
   --notificationBgColor: #eceff1;
   --notificationCorrectColor: #00c853;
@@ -611,6 +637,7 @@
   --bg-1: #141820;
   --bg-2: #1d2430;
   --ControlsBtnsColor: #60a5fa;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #60a5fa;
   --notificationBgColor: #1d2430;
   --notificationCorrectColor: #22c55e;
@@ -634,6 +661,7 @@
   --bg-1: #0d1f1e;
   --bg-2: #11302e;
   --ControlsBtnsColor: #2dd4bf;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #2dd4bf;
   --notificationBgColor: #11302e;
   --notificationCorrectColor: #10b981;
@@ -657,6 +685,7 @@
   --bg-1: #272822;
   --bg-2: #3e3d32;
   --ControlsBtnsColor: #f92672;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #f92672;
   --notificationBgColor: #3e3d32;
   --notificationCorrectColor: #a6e22e;
@@ -680,6 +709,7 @@
   --bg-1: #011627;
   --bg-2: #0b2942;
   --ControlsBtnsColor: #82aaff;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #82aaff;
   --notificationBgColor: #0b2942;
   --notificationCorrectColor: #22da6e;
@@ -703,6 +733,7 @@
   --bg-1: #2e3440;
   --bg-2: #3b4252;
   --ControlsBtnsColor: #81a1c1;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #81a1c1;
   --notificationBgColor: #3b4252;
   --notificationCorrectColor: #a3be8c;
@@ -726,6 +757,7 @@
   --bg-1: #001f3f;
   --bg-2: #003b73;
   --ControlsBtnsColor: #1abc9c;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #1abc9c;
   --notificationBgColor: #003b73;
   --notificationCorrectColor: #2ecc71;
@@ -749,6 +781,7 @@
   --bg-1: #1b2b34;
   --bg-2: #343d46;
   --ControlsBtnsColor: #5fb3b3;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #5fb3b3;
   --notificationBgColor: #343d46;
   --notificationCorrectColor: #99c794;
@@ -772,6 +805,7 @@
   --bg-1: #282c34;
   --bg-2: #21252b;
   --ControlsBtnsColor: #61afef;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #61afef;
   --notificationBgColor: #21252b;
   --notificationCorrectColor: #98c379;
@@ -795,6 +829,7 @@
   --bg-1: #fafafa;
   --bg-2: #ffffff;
   --ControlsBtnsColor: #383a42;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #e5e5e5;
   --notificationBgColor: #f0f0f0;
   --notificationCorrectColor: #50a14f;
@@ -818,6 +853,7 @@
   --bg-1: #ffffff;
   --bg-2: #fafafa;
   --ControlsBtnsColor: #424242;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #bdbdbd;
   --notificationBgColor: #eeeeee;
   --notificationCorrectColor: #2e7d32;
@@ -841,6 +877,7 @@
   --bg-1: #1a1207;
   --bg-2: #2a1d0a;
   --ControlsBtnsColor: #ff7f50;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #ff7f50;
   --notificationBgColor: #2a1d0a;
   --notificationCorrectColor: #7cfc00;
@@ -864,6 +901,7 @@
   --bg-1: #1a001a;
   --bg-2: #2a0033;
   --ControlsBtnsColor: #00e5ff;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #00e5ff;
   --notificationBgColor: #2a0033;
   --notificationCorrectColor: #7cffb2;
@@ -887,6 +925,7 @@
   --bg-1: #191724;
   --bg-2: #26233a;
   --ControlsBtnsColor: #eb6f92;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #eb6f92;
   --notificationBgColor: #26233a;
   --notificationCorrectColor: #9ccfd8;
@@ -910,6 +949,7 @@
   --bg-1: #232136;
   --bg-2: #2a273f;
   --ControlsBtnsColor: #ea9a97;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #ea9a97;
   --notificationBgColor: #2a273f;
   --notificationCorrectColor: #a6d0c8;
@@ -933,6 +973,7 @@
   --bg-1: #0a1426;
   --bg-2: #10213a;
   --ControlsBtnsColor: #38bdf8;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #38bdf8;
   --notificationBgColor: #10213a;
   --notificationCorrectColor: #22d3ee;
@@ -956,6 +997,7 @@
   --bg-1: #0f172a;
   --bg-2: #1e293b;
   --ControlsBtnsColor: #64748b;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #64748b;
   --notificationBgColor: #1e293b;
   --notificationCorrectColor: #22c55e;
@@ -979,6 +1021,7 @@
   --bg-1: #002b36;
   --bg-2: #073642;
   --ControlsBtnsColor: #268bd2;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #268bd2;
   --notificationBgColor: #073642;
   --notificationCorrectColor: #2aa198;
@@ -1002,6 +1045,7 @@
   --bg-1: #fdf6e3;
   --bg-2: #eee8d5;
   --ControlsBtnsColor: #073642;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #93a1a1;
   --notificationBgColor: #eee8d5;
   --notificationCorrectColor: #859900;
@@ -1025,6 +1069,7 @@
   --bg-1: #1a1b26;
   --bg-2: #24283b;
   --ControlsBtnsColor: #7aa2f7;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #7aa2f7;
   --notificationBgColor: #24283b;
   --notificationCorrectColor: #9ece6a;
@@ -1048,6 +1093,7 @@
   --bg-1: #141414;
   --bg-2: #222222;
   --ControlsBtnsColor: #a277ff;
+  --font: Rubik, sans-serif;
   --notaficationBorderColor: #a277ff;
   --notificationBgColor: #222222;
   --notificationCorrectColor: #7ee787;

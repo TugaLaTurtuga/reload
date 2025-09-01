@@ -1,0 +1,264 @@
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid var(--notificationBorderColor);
+    background: var(--sidebarColor);
+    width: 40vw;
+    min-width: 120px;
+    aspect-ratio: 4/1 !important;
+    border-radius: 10px;
+    transition:
+        background 0.15s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+.input-wrapper:hover {
+    background: var(--trackItemColorOnHover);
+    transform: scale(1.05);
+}
+
+input {
+    height: 100%;
+    width: 100%;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    gap: 10px;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--notificationBgColor);
+    border: 1px solid var(--notificationBorderColor);
+    color: transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    margin: 10px;
+    transition: all 0.07s ease-out;
+}
+
+/* Change the background color when checkbox is checked */
+input[type="checkbox"]:checked {
+    background-color: var(--activeColor);
+}
+
+/* Add a check mark when checked */
+input[type="checkbox"]:checked::after {
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 12px;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+
+input[type="text"] {
+    margin-right: 10px;
+    border-radius: 10px;
+    background: var(--sidebarColor);
+    color: var(--textColor);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    color: var(--textColor);
+}
+
+.slider {
+    width: auto;
+    max-width: none;
+    min-width: none;
+}
+
+button {
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    background: var(--sidebarColor);
+    border: 1px solid var(--notificationBorderColor);
+    color: var(--textColor);
+    cursor: pointer;
+    transition:
+        background 0.15s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+button:hover {
+    transform: scale(1.1);
+}
+
+button:active {
+    transform: scale(1);
+}
+
+.save-btn {
+    width: 40vw;
+    min-width: 120px;
+    aspect-ratio: 8/1;
+    font-size: 1.2rem;
+}
+
+.save-btn:hover {
+    background: var(--activeColor);
+    color: var(--sidebarColor);
+}
+
+#version {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 10px;
+    color: var(--textColor);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+#change-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 10px;
+    border-radius: 0 0 10px;
+    color: var(--textColor);
+    background: var(--sidebarColor);
+}
+
+.container-change-btn {
+    background: var(--notificationBgColor);
+    margin: 0 5px 0 5px;
+}
+
+.container-change-btn:hover {
+    transform: scale(1.1);
+}
+
+.active {
+    background: var(--activeColor);
+    color: var(--sidebarColor);
+}
+
+.modal {
+    aspect-ratio: 1/1;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+    background: var(--sidebarColor);
+}
+
+.change-logs-container {
+    width: 20% !important;
+    overflow-y: auto;
+    height: auto;
+    margin: 0;
+    border-radius: 0 10px 0 0;
+}
+
+.change-logs-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    text-align-last: center;
+    padding: 0.5rem 0.6rem;
+    background: var(--trackItemOddColor);
+    color: var(--textColor);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.4s ease-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 800;
+    height: 40px;
+}
+
+.change-logs-item:hover {
+    background: var(--trackItemOnHover);
+    transition: none;
+}
+.change-logs-item.active {
+    background: var(--activeColor);
+    color: var(--sidebarColor);
+}
+.change-logs-item span {
+    display: inline-block;
+    padding-right: 20px; /* spacing between repeats */
+}
+
+.change-log {
+    width: 80% !important;
+}
+
+.change-log-header {
+    width: 100%;
+    height: 10%;
+    min-height: 100px;
+}
+
+.change-log-title {
+    font-weight: 800;
+    text-align-last: center;
+    height: 60%;
+    font-size: 3rem;
+    color: var(--activeColor);
+}
+
+.change-log-date {
+    font-weight: 400;
+    text-align-last: center;
+    height: 40%;
+    font-size: 1rem;
+}
+
+.change-log-content {
+    width: 100%;
+    height: 90%;
+    min-height: 100px;
+    border-radius: 10px 0 0 0;
+    padding: 10px;
+    padding-left: 15px;
+    border-left: 2px solid var(--sliderBgColor);
+    border-top: 2px solid var(--sliderBgColor);
+    background: var(--bg-2);
+    overflow-y: scroll;
+}
+
+.change-log-content .spacer {
+    height: 0.5rem;
+}
+
+#library-paths-container .remove-btn {
+    margin-left: 20px;
+}
+
+#library-paths-container .library-path {
+    margin: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    transition:
+        all 0.1s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+#library-paths-container .library-path:hover {
+    background: var(--sliderBgColor);
+    transform: scale(1.15);
+}

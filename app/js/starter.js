@@ -18,6 +18,7 @@ async function loadSettings(onlyNewchanges = false) {
   console.log("Settings loaded");
 
   volumeSlider.value = settings.volume;
+  setVolume();
   sController.updateSliders();
   updateTheme();
   ipcRenderer.invoke("clean-new-settings");

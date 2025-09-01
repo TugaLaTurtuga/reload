@@ -1,13 +1,21 @@
-const { app, BrowserWindow, ipcMain, Menu, nativeTheme } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  nativeTheme,
+  dialog,
+} = require("electron");
 const { childProcess, spawn, exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const mm = require("music-metadata");
 const ColorThief = require("colorthief");
-const { get } = require("https");
+const { getFonts } = require("font-list");
+
 const settingsFilePath = path.join(app.getPath("userData"), "settings.json");
 const libraryFilePath = path.join(app.getPath("userData"), "library.json");
-const defaultLibraryPaths = [path.join(app.getPath("documents"), "reload")];
+let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const openedWindows = new Map();
 
@@ -124,9 +132,9 @@ app.on("activate", () => {
 ipcMain.handle("get-library", async () => {
   try {
     // Try to get libraries
-    await loadLibraryPaths();
+    libraryPaths = await loadLibraryPaths();
     let songs = [];
-    for (const path of defaultLibraryPaths) {
+    for (const path of libraryPaths) {
       const music = await scanMusicFolder(path);
       if (music.length > 0) songs.push(...music);
     }
@@ -146,16 +154,20 @@ function loadLibraryPaths() {
       // create default settings if none exist
       fs.writeFileSync(
         libraryFilePath,
-        JSON.stringify(defaultLibraryPaths, null, 2),
+        JSON.stringify(libraryPaths, null, 2),
         "utf8",
       );
-      return defaultLibraryPaths;
+      return libraryPaths;
     }
   } catch (error) {
     console.error("Error loading last played info:", error);
     return null;
   }
 }
+
+ipcMain.handle("show-open-dialog", async (event, options) => {
+  return await dialog.showOpenDialog(options);
+});
 
 ipcMain.handle("get-library-paths", loadLibraryPaths);
 ipcMain.handle("save-library-paths", (event, paths) => {
@@ -174,6 +186,16 @@ ipcMain.handle("get-change-logs", () => {
     return JSON.parse(data);
   } else {
     return {};
+  }
+});
+
+ipcMain.handle("get-system-fonts", async () => {
+  try {
+    const fonts = await getFonts(); // returns string[] (may include quoted names)
+    return fonts;
+  } catch (err) {
+    console.error("getFonts error", err);
+    return [];
   }
 });
 

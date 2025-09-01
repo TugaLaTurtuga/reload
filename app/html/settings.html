@@ -12,137 +12,30 @@
         <link rel="stylesheet" href="../css/style.css" />
         <link rel="stylesheet" href="../css/slider.css" />
         <link rel="stylesheet" href="../css/toolTip.css" />
-
-        <style>
-            .input-wrapper {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                margin-bottom: 10px;
-                padding: 10px;
-                border: 1px solid var(--notificationBorderColor);
-                background: var(--sidebarColor);
-                width: 40vw;
-                min-width: 120px;
-                aspect-ratio: 4/1 !important;
-                border-radius: 10px;
-                transition:
-                    background 0.15s ease-out,
-                    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
-            }
-
-            .input-wrapper:hover {
-                background: var(--trackItemColorOnHover);
-                transform: scale(1.05);
-            }
-
-            input {
-                height: 100%;
-                width: 100%;
-            }
-
-            label {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 10px;
-                gap: 10px;
-            }
-
-            input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-                appearance: none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                background-color: var(--notificationBgColor);
-                border: 1px solid var(--notificationBorderColor);
-                color: transparent;
-                border-radius: 3px;
-                cursor: pointer;
-                position: relative;
-                margin: 10px;
-                transition: all 0.07s ease-out;
-            }
-
-            /* Change the background color when checkbox is checked */
-            input[type="checkbox"]:checked {
-                background-color: var(--activeColor);
-            }
-
-            /* Add a check mark when checked */
-            input[type="checkbox"]:checked::after {
-                position: absolute;
-                left: 5px;
-                top: 1px;
-                width: 6px;
-                height: 12px;
-                border-width: 0 3px 3px 0;
-                transform: rotate(45deg);
-            }
-
-            input[type="text"] {
-                margin-right: 10px;
-                border-radius: 10px;
-                background: var(--sidebar);
-                color: var(--textColor);
-            }
-
-            #settingsContainer {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                width: 100vw;
-                color: var(--textColor);
-            }
-
-            .slider {
-                width: auto;
-                max-width: none;
-                min-width: none;
-            }
-
-            button {
-                border-radius: 10px;
-                width: 40vw;
-                min-width: 120px;
-                aspect-ratio: 8/1;
-                background: var(--sidebarColor);
-                border: 1px solid var(--notificationBorderColor);
-                font-size: 1.2rem;
-                color: var(--textColor);
-                cursor: pointer;
-                transition:
-                    background 0.15s ease-out,
-                    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
-            }
-
-            button:hover {
-                background: var(--activeColor);
-                color: var(--sidebar);
-                transform: scale(1.1);
-            }
-            button:active {
-                transform: scale(1);
-            }
-
-            #version {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                padding: 10px;
-                color: var(--textColor);
-                font-size: 0.8rem;
-            }
-        </style>
+        <link rel="stylesheet" href="../css/overlay.css" />
+        <link rel="stylesheet" href="../css/html/settings.css" />
     </head>
     <body>
+        <div id="change-container"></div>
         <div id="app">
-            <div id="settingsContainer"></div>
+            <div id="settings" class="container"></div>
+            <div id="library-paths" class="container">
+                <div id="library-paths-container"></div>
+                <button id="addLibraryBtn">Add folder</button>
+            </div>
+        </div>
+
+        <div class="overlay" isVisible="false" style="display: none">
+            <div class="modal">
+                <div class="change-logs-container"></div>
+                <div class="change-log">
+                    <div class="change-log-header">
+                        <div class="change-log-title"></div>
+                        <div class="change-log-date"></div>
+                    </div>
+                    <div class="change-log-content"></div>
+                </div>
+            </div>
         </div>
 
         <p id="version">0.0.000</p>
@@ -150,7 +43,7 @@
         <!-- classes + imports -->
         <script src="../js/input/inputManagement.js"></script>
         <script src="../js/css/sliders.js"></script>
-        <script src="../js/settingsScript.js"></script>
+        <script src="../js/html/settings/settingsScript.js"></script>
 
         <!-- input -->
         <script src="../js/input/inputs.js"></script>
