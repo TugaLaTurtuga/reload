@@ -15,7 +15,7 @@
     "done": true
   },
   "0.0.101": {
-    "logs": "-Made the volume from settings not just change the slider in the main window, but also the volume of the audio source",
+    "logs": "-Made the volume from settings not just change the slider in the main window, but also the volume of the audio source -When creating a new theme, the sidebar scrolls to the new theme",
     "date": "02/10/2025",
     "done": true
   }

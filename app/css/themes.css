@@ -117,9 +117,9 @@
   --notificationWarningColor: #e5c890;
   --sidebarColor: rgba(42, 44, 60, 0.97);
   --sliderBgColor: #626880;
-  --spinnerBgColor: #8caaee33;
+  --spinnerBgColor: rgba(140, 170, 238, 0.21);
   --spinnerColor: #8caaee;
-  --textColor: #c6d0f5;
+  --textColor: rgba(198, 208, 245, 0.98);
   --textSubColor: #838ba7;
   --trackItemColor: #414559;
   --trackItemOddColor: #3a3f54;

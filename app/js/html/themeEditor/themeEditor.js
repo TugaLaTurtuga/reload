@@ -710,9 +710,11 @@ async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
 
     // Handler: clean create button and confirm overwrite flow
     async function createHandler() {
+      const themesList = document.getElementById("themesList");
       switch (handleCase) {
         case 0:
         case "addCustomCssTheme":
+          themesList.scrollTo(0, themesList.scrollHeight);
           parseThemesCSS(nameInput.value);
           updateCSS();
           renderThemesList();
@@ -730,6 +732,7 @@ async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
           renderThemesList();
           renderVarsTable();
           refreshButtons();
+          themesList.scrollTo(0, themesList.scrollHeight);
           setStatus(`Theme added`);
           applyTheme();
           break;
