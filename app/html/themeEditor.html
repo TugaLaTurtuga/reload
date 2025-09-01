@@ -68,6 +68,7 @@
                 position: sticky;
                 top: 0;
                 z-index: 5;
+                height: 60px !important;
             }
             header h1 {
                 font-size: 1rem;
@@ -160,29 +161,44 @@
                 display: block;
             }
             .theme-item {
+                --bg: var(--trackItemOddColor);
+                --border: var(--sliderBgColor);
+                --color: var(--textColor);
                 display: grid;
                 grid-template-columns: 1fr auto;
                 align-items: center;
                 padding: 0.5rem 0.6rem;
                 border-radius: 0.6rem;
                 margin: 5px;
-                background: var(--trackItemOddColor);
-                border: 1px solid var(--sliderBgColor);
+                background: var(--bg);
+                border: 1px solid var(--border);
+                color: var(--color);
                 cursor: pointer;
                 user-select: none;
                 transition: all 0.4s ease-out;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
+
             .theme-item:hover {
-                background: var(--trackItemOnHover);
+                --hover: var(--trackItemOnHover);
+                background: var(--hover);
                 transition: none;
             }
             .theme-item.active {
                 border: 2px solid var(--activeColor);
                 background: var(--trackItemColor);
             }
-            .theme-item small {
-                opacity: 0.7;
+            .theme-item span {
+                display: inline-block;
+                padding-right: 20px; /* spacing between repeats */
             }
+
+            .theme-item-title {
+                font-weight: 800;
+            }
+
             section.editor {
                 background: transparent;
                 border: 1px solid var(--sliderBgColor);
@@ -273,15 +289,19 @@
 
             #darkBtn.active {
                 background: var(--notaficationBorderColor);
+                color: var(--navItemActiveColor, #000);
             }
             #lightBtn.active {
                 background: var(--notaficationBorderColor);
+                color: var(--navItemActiveColor, #000);
             }
             #systemThemeBtn.active {
                 background: var(--activeColor);
+                color: var(--navItemActiveColor, #000);
             }
         </style>
         <link rel="stylesheet" href="../css/slider.css" />
+        <link rel="stylesheet" href="../css/toolTip.css" />
     </head>
     <body>
         <header>
@@ -289,7 +309,7 @@
                 <button id="saveBtn" class="primary" title="save changes">
                     Save
                 </button>
-                <button id="downloadBtn" title="Download updated CSS">
+                <button id="downloadBtn" title="Downloads CSS">
                     Export CSS
                 </button>
                 <button
@@ -327,12 +347,7 @@
                     <div>
                         <button id="addThemeBtn">+ Add</button>
                         <!-- New button: add custom CSS block / paste -->
-                        <button
-                            id="addCustomCssThemeBtn"
-                            title="Create theme by pasting a CSS block or variable list"
-                        >
-                            + Custom CSS
-                        </button>
+                        <button id="addCustomCssThemeBtn">+ Custom CSS</button>
                     </div>
                 </div>
                 <div
@@ -473,6 +488,8 @@
             </section>
         </main>
         <script src="../js/css/sliders.js"></script>
+        <script src="../js/css/tooltip.js"></script>
+        <script src="../js/themeEditor.js"></script>
 
         <script>
             const { ipcRenderer } = require("electron");
@@ -617,18 +634,28 @@
             function renderThemesList() {
                 const container = $("#themesList");
                 container.innerHTML = "";
-                for (const [name] of themes) {
+
+                for (const theme of themes) {
+                    const [name, data] = theme;
                     const item = document.createElement("div");
                     item.className =
                         "theme-item" + (name === selected ? " active" : "");
                     item.setAttribute("role", "option");
+                    item.style.setProperty(
+                        "--bg",
+                        data.get("--trackItemOddColor"),
+                    );
+                    item.style.setProperty("--color", data.get("--textColor"));
+                    item.style.setProperty(
+                        "--border",
+                        data.get("--sliderBgColor"),
+                    );
+                    item.style.setProperty(
+                        "--hover",
+                        data.get("--trackItemOnHover"),
+                    );
                     item.dataset.name = name;
-                    item.innerHTML = `
-          <div>
-            ${`<strong>${name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, " ")}</strong>`}
-          </div>
-          <div style="opacity:.7; font-size:.85rem;">${(themes.get(name) || new Map()).size} vars</div>
-        `;
+                    item.innerHTML = `<div class="theme-item-title">${name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, " ")}</div>`;
                     item.addEventListener("click", () => {
                         selected = name;
                         playSoundAffect("click", (volume = 0.15));
@@ -640,6 +667,7 @@
                     });
                     container.appendChild(item);
                 }
+                updateOverflows();
             }
 
             function renderVarsTable() {
@@ -682,14 +710,14 @@
                         if (hslaMatch) alpha = parseFloat(hslaMatch[3]);
 
                         inputHTML += `
-            <input type="range" min="0" max="1" step="0.01" value="${alpha}" class="slider" title="Alpha">
-          `;
+                <input type="range" min="0" max="1" step="0.01" value="${alpha}" class="slider" title="Alpha">
+              `;
                     }
 
                     tr.innerHTML = `
-          <td class="var-name">${name}</td>
-          <td class="var-value">${inputHTML}</td>
-        `;
+              <td class="var-name">${name}</td>
+              <td class="var-value">${inputHTML}</td>
+            `;
 
                     // Wire up events
                     const colorInput = tr.querySelector("input[type=color]");
@@ -917,6 +945,7 @@
                 renderThemesList();
                 renderVarsTable();
                 refreshButtons();
+                applyTheme();
                 setStatus("Theme deleted");
             }
 
@@ -1073,7 +1102,7 @@
                                 renderThemesList();
                                 renderVarsTable();
                                 refreshButtons();
-                                setStatus(`Theme "${name}" added`);
+                                setStatus(`Theme added`);
                                 applyTheme();
                                 break;
                         }

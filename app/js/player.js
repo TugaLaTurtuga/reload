@@ -203,8 +203,15 @@ function loadTrack(currTrack, playFromStart, firstLoad) {
 
   updateOverflowsOnNowPlaying();
 
-  if (settings.currentPlayingAlbum.cover) {
-    nowPlayingArtSmall.style.backgroundImage = `url('${settings.currentPlayingAlbum.cover}')`;
+  if (settings.currentPlayingAlbum.info.description.cover) {
+    nowPlayingArtSmall.style.backgroundImage = `url('${settings.currentPlayingAlbum.info.description.cover}')`;
+    if (
+      nowPlayingArtSmall.style.backgroundImage !==
+      `url("${settings.currentPlayingAlbum.info.description.cover}")`
+    )
+      nowPlayingArtSmall.style.backgroundImage = "none";
+
+    console.log(settings.currentPlayingAlbum.info.description.cover);
   } else {
     nowPlayingArtSmall.style.backgroundImage = "none";
   }

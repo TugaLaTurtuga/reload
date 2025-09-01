@@ -42,6 +42,13 @@ function createAppMenu() {
             openExternal(themePath, true);
           },
         },
+        {
+          label: "Edit",
+          accelerator: "CmdOrCtrl+E",
+          click: () => {
+            mainWindow.webContents.send("edit-album");
+          },
+        },
         { type: "separator" },
         {
           role: "quit",
@@ -209,7 +216,6 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           name: path.basename(folderPath),
           path: folderPath,
           tracks: [],
-          cover: null,
           info: {
             trackList: [],
             description: {
@@ -221,6 +227,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               genre: fromExternalProvider ? "from external provider." : "genre",
               color: "#AAAAAA",
               rating: 5,
+              cover: null,
             },
           },
         };
@@ -277,7 +284,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               "utf8",
             );
           } catch (err) {
-            console.error("Error creating music.json:", err);
+            console.error("Error creating json:", err);
           }
         } else if (!fromExternalProvider) {
           // json exists → load it
@@ -306,13 +313,11 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           shouldExtractColor = true;
         }
 
-        album.cover = await lookForCover(folderPath, files);
-
         // ✅ only rasterize cover if needed
-        if (album.cover && shouldExtractColor) {
-          album.info.description.color = await getImgColor(album.cover);
-
-          // also update json so we don’t need to redo this later
+        if (album.info.description.cover && shouldExtractColor) {
+          album.info.description.color = await getImgColor(
+            album.info.description.cover,
+          );
           try {
             fs.writeFileSync(
               confPath,
@@ -322,71 +327,89 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           } catch (err) {
             console.error("Error updating json with color:", err);
           }
+        } else if (!album.info.description.cover) {
+          album.info.description.cover = await lookForCover(folderPath, files);
+          if (album.info.description.cover) {
+            album.info.description.color = await getImgColor(
+              album.info.description.cover,
+            );
+            try {
+              fs.writeFileSync(
+                confPath,
+                JSON.stringify(album.info, null, 2),
+                "utf8",
+              );
+            } catch (err) {
+              console.error("Error updating json with color:", err);
+            }
+          }
         }
 
-        // Process tracks
+        // Utility functions
         const cleanTrackTitle = (title) =>
           title.replace(/^\d+\s*\.?\s*/, "").trim();
 
-        const ungarnizedTracks = [];
-        for (const audioFile of audioFiles) {
-          const trackPath = path.join(folderPath, audioFile);
-          const rawTitle = path.basename(audioFile, path.extname(audioFile));
-
-          try {
-            const metadata = await mm.parseFile(trackPath);
-            if (fromExternalProvider && metadata.common) {
-              if (metadata.common.artist)
-                album.info.description.author = metadata.common.artist;
-              if (metadata.common.album) album.name = metadata.common.album;
-              if (metadata.common.year)
-                album.info.description.year = metadata.common.year;
-              if (metadata.common.genre && metadata.common.genre.length > 0)
-                album.info.description.genre = metadata.common.genre[0];
-            }
-
-            ungarnizedTracks.push({
-              title: rawTitle,
-              path: trackPath,
-              duration: metadata.format.duration || 0,
-            });
-          } catch (err) {
-            console.error(`Error parsing metadata for ${rawTitle}:`, err);
-            ungarnizedTracks.push({
-              title: rawTitle,
-              path: trackPath,
-              duration: 0,
-            });
-          }
-        }
-
-        // Match tracks with trackList
         const clearTitle = (title) => title.toLowerCase().trim();
 
-        album.info.trackList.forEach((track) => {
-          for (let i = 0; i < ungarnizedTracks.length; i++) {
-            const ungarnizedTrack = ungarnizedTracks[i];
-            if (clearTitle(track.title) === clearTitle(ungarnizedTrack.title)) {
-              album.tracks.push({
-                title: cleanTrackTitle(ungarnizedTrack.title),
-                path: ungarnizedTrack.path,
-                duration: ungarnizedTrack.duration,
-              });
-              ungarnizedTracks.splice(i, 1); // Remove matched track
-              break;
-            }
-          }
-        });
-
-        // Sort trackList and tracks by leading number if present
         const sortByTrackNumber = (a, b) => {
           const numA = parseInt(a.title.match(/^\d+/)?.[0] || Infinity, 10);
           const numB = parseInt(b.title.match(/^\d+/)?.[0] || Infinity, 10);
           return numA - numB;
         };
 
+        // Process audio files
+        const ungarnizedTracks = await Promise.all(
+          audioFiles.map(async (audioFile) => {
+            const trackPath = path.join(folderPath, audioFile);
+            const rawTitle = path.basename(audioFile, path.extname(audioFile));
+
+            try {
+              const metadata = await mm.parseFile(trackPath);
+
+              if (fromExternalProvider && metadata.common) {
+                const { artist, album: alb, year, genre } = metadata.common;
+                if (artist) album.info.description.author = artist;
+                if (alb) album.name = alb;
+                if (year) album.info.description.year = year;
+                if (genre?.length) album.info.description.genre = genre[0];
+              }
+
+              return {
+                title: rawTitle,
+                path: trackPath,
+                duration: metadata.format.duration || 0,
+              };
+            } catch (err) {
+              console.error(`Error parsing metadata for ${rawTitle}:`, err);
+              return { title: rawTitle, path: trackPath, duration: 0 };
+            }
+          }),
+        );
+
+        // Build lookup map for efficient matching
+        const trackMap = new Map(
+          ungarnizedTracks.map((t) => [clearTitle(t.title), t]),
+        );
+
+        // Match with trackList
+        album.tracks = album.info.trackList
+          .map((track) => {
+            const match = trackMap.get(clearTitle(track.title));
+            if (match) {
+              return {
+                title: cleanTrackTitle(match.title),
+                path: match.path,
+                duration: match.duration,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        // Sort both arrays
         album.info.trackList.sort(sortByTrackNumber);
         album.tracks.sort(sortByTrackNumber);
+
         album.jsonPath = confPath;
 
         if (album.tracks.length > 0) albums.push(album);

@@ -152,11 +152,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   let version = "0.0.000";
   for (const key in changeLogs) {
     version = key; // the key is the version number ex: 0.0.001
-    // TODO: make a changeLog div and add the values of the keys.
+    //// TODO: make a changeLog div and add the values of the keys.
   }
   document.getElementById("version").textContent = version;
 
-  // TODO: get-library-paths, allow the user to select a path to save the library to.
+  //// TODO: get-library-paths, allow the user to select a path to save the library to.
   // and save it with save-library-paths thru ipcRenderer.invoke.
 });
 

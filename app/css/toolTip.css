@@ -1,0 +1,21 @@
+/* Tooltip base style */
+.custom-tooltip {
+    position: absolute;
+    background: var(--sidebarColor);
+    color: var(--textColor);
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, 24px);
+    transition:
+        opacity 0.2s ease,
+        transform 0.15s ease;
+    z-index: 9999;
+}
+.custom-tooltip.show {
+    opacity: 1;
+    transform: translate(-50%, -12px);
+}

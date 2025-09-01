@@ -45,8 +45,10 @@ async function updateLibrary() {
     if (playingAlbumUpdated) {
       nowPlayingArtist.textContent =
         playingAlbumUpdated.info.description.author;
+      updateOverflowsOnNowPlaying();
       settings.currentPlayingAlbum = playingAlbumUpdated;
     }
+    saveSettings();
   } catch (error) {
     console.error("Error reloading library:", error);
   }
@@ -73,8 +75,9 @@ function renderLibrary() {
   songs.forEach((album) => {
     const albumCard = document.createElement("div");
     albumCard.className = "album-card";
+    //albumCard.setAttribute("title", "Open album");
     albumCard.innerHTML = `
-      <div class="album-cover" style="background-image: url('${album.cover}')"></div>
+      <div class="album-cover" style="background-image: url('${album.info.description.cover}')"></div>
       <div class="album-info">
         <div class="album-title">${album.info.description.title || album.name}</div>
         <div class="album-artist">${album.info.description.author}</div>
@@ -83,6 +86,7 @@ function renderLibrary() {
     albumCard.addEventListener("click", () => openAlbum(album));
     albumsSection.appendChild(albumCard);
   });
+  //getTooltips();
 
   if (settings.currentAlbum) {
     openAlbum(settings.currentAlbum);
@@ -94,18 +98,12 @@ function openAlbum(album) {
   if (!album) return;
   settings.currentAlbum = album;
 
-  const savePath = path.join(__dirname, "saves", "jsonToLoad.txt");
-  try {
-    fs.writeFileSync(savePath, album.jsonPath, "utf8");
-  } catch (err) {
-    console.error("Error saving current album:", err);
-  }
-
   // Set album details
-  if (album.cover) {
-    albumArt.style.backgroundImage = `url('${settings.currentAlbum.cover}')`;
+  if (album.info.description.cover) {
+    albumArt.style.backgroundImage = `url('${settings.currentAlbum.info.description.cover}')`;
     if (
-      albumArt.style.backgroundImage !== `url("${settings.currentAlbum.cover}")`
+      albumArt.style.backgroundImage !==
+      `url("${settings.currentAlbum.info.description.cover}")`
     )
       albumArt.style.backgroundImage = "none";
   } else {
@@ -180,4 +178,15 @@ function backToLibrary() {
   mainContent.scrollTo(0, 0);
   changeBackgroundGradient(background.style.getPropertyPriority("--bg-2"));
   settings.currentAlbum = null;
+}
+
+async function editAlbum() {
+  // for html/musicEditor.html know what file to load
+  const savePath = path.join(__dirname, "saves", "jsonToLoad.txt");
+  try {
+    await fs.writeFileSync(savePath, settings.currentAlbum.jsonPath, "utf8");
+    openExternalHtml("html/musicEditor.html");
+  } catch (err) {
+    console.error("Error saving current album:", err);
+  }
 }

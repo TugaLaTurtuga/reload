@@ -97,6 +97,7 @@ nav ul {
     left: 95px;
     width: calc(100vw - 100px);
     height: 100vh;
+    -webkit-app-region: drag;
 }
 
 #player-controls {
@@ -360,7 +361,6 @@ nav ul {
 
 #player-container {
     height: 100%;
-    -webkit-app-region: no-drag;
 }
 
 #player-container.hidden {
@@ -369,11 +369,15 @@ nav ul {
 
 #library-container {
     height: 100%;
-    -webkit-app-region: no-drag;
+    pointer-events: all;
 }
 
 #library-container.hidden {
     display: none;
+}
+
+.album-card {
+    -webkit-app-region: no-drag;
 }
 
 #player-header {
@@ -392,6 +396,7 @@ nav ul {
     display: flex;
     flex-direction: row;
     align-items: center;
+    -webkit-app-region: no-drag;
 }
 
 #player-header:hover {
@@ -459,6 +464,7 @@ nav ul {
     height: 300px;
     margin-right: 30px;
     cursor: pointer;
+    -webkit-app-region: no-drag;
 }
 
 #album-art {
@@ -477,27 +483,32 @@ nav ul {
     font-weight: 900;
     font-size: 6em;
     margin-bottom: 10px;
+    -webkit-app-region: no-drag;
 }
 
 #album-artist {
     font-size: 1.5em;
     color: var(--activeColor);
     margin-bottom: 20px;
+    -webkit-app-region: no-drag;
 }
 
 #album-meta {
     margin-bottom: 20px;
     color: var(--textSubColor);
+    -webkit-app-region: no-drag;
 }
 
 #album-year,
 #album-genre {
     margin-right: 15px;
+    -webkit-app-region: no-drag;
 }
 
 #album-description {
     line-height: 1.6;
     max-width: 600px;
+    -webkit-app-region: no-drag;
 }
 
 #track-list {
@@ -505,6 +516,7 @@ nav ul {
     border-radius: 10px;
     overflow-y: hidden;
     width: 100%;
+    -webkit-app-region: no-drag;
 }
 
 #buffer {

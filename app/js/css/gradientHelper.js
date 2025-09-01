@@ -1,4 +1,4 @@
-// TODO: normalize the color and make a min max on the theme itself.
+//// TODO: normalize the color and make a min max on the theme itself.
 
 function getCSSVarRGB(varName) {
   let value = getComputedStyle(document.body).getPropertyValue(varName).trim();

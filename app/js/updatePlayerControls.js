@@ -21,7 +21,7 @@ function updateOverflowsOnNowPlaying() {
     const scrollWidth = nowPlayingTitle.scrollWidth || 1; // prevent division by zero
     const distance = nowPlayingTitleWrapper.clientWidth - scrollWidth; // negative value
     const duration =
-      Math.pow(Math.abs((distance / scrollWidth) * 4), 2) + minDuration[0];
+      Math.pow(Math.abs((distance / scrollWidth) * 5), 1.15) + minDuration[0];
 
     // Create a dynamic keyframes string
     const scrollFrames = `
@@ -54,7 +54,7 @@ function updateOverflowsOnNowPlaying() {
     const scrollWidth = nowPlayingArtist.scrollWidth || 1; // prevent division by zero
     const distance = nowPlayingArtistWrapper.clientWidth - scrollWidth; // negative value
     const duration =
-      Math.pow(Math.abs((distance / scrollWidth) * 6.5), 2) + minDuration[1];
+      Math.pow(Math.abs((distance / scrollWidth) * 6.5), 2.2) + minDuration[1];
 
     // Create a dynamic keyframes string
     const scrollFrames = `
