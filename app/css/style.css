@@ -8,12 +8,8 @@ html {
 
 #loading {
     position: absolute;
-    font-family: "Rubik", sans-serif;
-    font-weight: 700;
     bottom: 100px;
     left: 105px;
-    height: 40px;
-    width: 40px;
     text-align: right;
     z-index: 30;
 }

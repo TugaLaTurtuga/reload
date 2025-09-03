@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   playLoadedAudioFromSettings();
   setVolume();
   sController.updateSliders();
+  document.getElementById("spinner")?.remove();
 });
 
 window.addEventListener("resize", () => {

@@ -252,7 +252,7 @@ button:active {
 #library-paths-container .library-path {
     margin: 10px;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 10px;
     transition:
         all 0.1s ease-out,
         transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);

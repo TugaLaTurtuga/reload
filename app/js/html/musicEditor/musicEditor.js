@@ -240,7 +240,8 @@ function updateAlbumInfo() {
 // Function to save music data
 async function saveMusicData() {
   try {
-    saveButton.innerHTML = '<span class="spinner"></span>';
+    saveButton.innerHTML =
+      '<object id="spinner" type="image/svg+xml" data="../css/svg/loading.svg"></object>';
     saveButton.disabled = true;
 
     // Save the latest album and track info before sending

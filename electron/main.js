@@ -90,6 +90,9 @@ function createAppMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+const { startSubsonicBackend } = require("./subsonic-backend.js");
+let backend = startSubsonicBackend();
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -125,6 +128,29 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+ipcMain.handle("show-open-dialog", async (event, options) => {
+  return await dialog.showOpenDialog(options);
+});
+
+ipcMain.handle("get-change-logs", () => {
+  if (fs.existsSync(changeLogsPath)) {
+    const data = fs.readFileSync(changeLogsPath, "utf8");
+    return JSON.parse(data);
+  } else {
+    return {};
+  }
+});
+
+ipcMain.handle("get-system-fonts", async () => {
+  try {
+    const fonts = await getFonts(); // returns string[] (may include quoted names)
+    return fonts;
+  } catch (err) {
+    console.error("getFonts error", err);
+    return [];
   }
 });
 
@@ -165,10 +191,6 @@ function loadLibraryPaths() {
   }
 }
 
-ipcMain.handle("show-open-dialog", async (event, options) => {
-  return await dialog.showOpenDialog(options);
-});
-
 ipcMain.handle("get-library-paths", loadLibraryPaths);
 ipcMain.handle("save-library-paths", (event, paths) => {
   if (paths.length !== 0 && Array.isArray(paths)) {
@@ -177,25 +199,6 @@ ipcMain.handle("save-library-paths", (event, paths) => {
     } catch (error) {
       console.error("Error saving library paths:", error);
     }
-  }
-});
-
-ipcMain.handle("get-change-logs", () => {
-  if (fs.existsSync(changeLogsPath)) {
-    const data = fs.readFileSync(changeLogsPath, "utf8");
-    return JSON.parse(data);
-  } else {
-    return {};
-  }
-});
-
-ipcMain.handle("get-system-fonts", async () => {
-  try {
-    const fonts = await getFonts(); // returns string[] (may include quoted names)
-    return fonts;
-  } catch (err) {
-    console.error("getFonts error", err);
-    return [];
   }
 });
 

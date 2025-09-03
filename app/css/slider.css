@@ -1,16 +1,19 @@
 .spinner {
     display: inline-block;
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     border: 3px solid var(--spinnerBgColor);
     border-radius: 50%;
-    border-top-color: var(--spinnerColor);
-    animation: spin 1s ease-in-out infinite;
+    border-top: 4px solid var(--spinnerColor);
+    animation: spin 1s cubic-bezier(0.4, 0.7, 0.7, 1.6) infinite;
     cursor: pointer;
-    transform: rotate(45deg);
+    justify-self: center;
+    transform: rotate(0deg);
 }
 @keyframes spin {
-    to { transform: rotate(405deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .slider {
@@ -29,7 +32,13 @@
 
 /* WebKit browsers (Chrome, Safari) */
 .slider::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, var(--slider-color) 0%, var(--slider-color) var(--slider-value), var(--slider-background-color) var(--slider-value), var(--slider-background-color) 100%);
+    background: linear-gradient(
+        to right,
+        var(--slider-color) 0%,
+        var(--slider-color) var(--slider-value),
+        var(--slider-background-color) var(--slider-value),
+        var(--slider-background-color) 100%
+    );
     height: 8px;
     border-radius: 10px;
 }
@@ -57,7 +66,13 @@
 
 /* Firefox: Track with left part (before the thumb) colored dynamically */
 .slider::-moz-range-track {
-    background: linear-gradient(to right, var(--slider-color) 0%, var(--slider-color) var(--slider-value), var(--slider-background-color) var(--slider-value), var(--slider-background-color) 100%);
+    background: linear-gradient(
+        to right,
+        var(--slider-color) 0%,
+        var(--slider-color) var(--slider-value),
+        var(--slider-background-color) var(--slider-value),
+        var(--slider-background-color) 100%
+    );
     height: 8px;
     border-radius: 10px;
 }
