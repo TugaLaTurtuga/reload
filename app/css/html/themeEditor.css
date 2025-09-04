@@ -110,7 +110,7 @@ textarea:hover {
 }
 button.primary {
     background: var(--activeColor);
-    color: var(--sidebarColor);
+    color: var(--bg-1);
     border: none;
 }
 button.danger {
@@ -277,13 +277,13 @@ code.inline {
 
 #darkBtn.active {
     background: var(--notaficationBorderColor);
-    color: var(--sidebarColor);
+    color: var(--bg-1);
 }
 #lightBtn.active {
     background: var(--notaficationBorderColor);
-    color: var(--sidebarColor);
+    color: var(--bg-1);
 }
 #systemThemeBtn.active {
     background: var(--activeColor);
-    color: var(--sidebarColor);
+    color: var(--bg-1);
 }

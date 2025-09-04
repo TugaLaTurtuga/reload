@@ -20,6 +20,10 @@ const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const openedWindows = new Map();
 
 let mainWindow;
+let audioIsMuffled = false;
+
+const { startSubsonicBackend } = require("./subsonic-backend.js");
+let subsomicBackend = startSubsonicBackend();
 
 function createAppMenu() {
   const template = [
@@ -90,9 +94,6 @@ function createAppMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-const { startSubsonicBackend } = require("./subsonic-backend.js");
-let backend = startSubsonicBackend();
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -107,6 +108,26 @@ function createWindow() {
   });
 
   mainWindow.loadFile("app/index.html");
+
+  // Handle mainWindow focus events
+  mainWindow.on("focus", () => {
+    if (openedWindows.size > 0) {
+      mainWindow.webContents.send("unmuffleAudio");
+    }
+  });
+
+  mainWindow.on("blur", () => {
+    // Check if focus is moving to one of our external windows
+    setTimeout(() => {
+      const focusedWin = BrowserWindow.getFocusedWindow();
+      if (
+        focusedWin &&
+        Array.from(openedWindows.values()).includes(focusedWin)
+      ) {
+        mainWindow.webContents.send("muffleAudio");
+      }
+    }, 50); // Small delay to ensure focus has transferred
+  });
 }
 
 app.whenReady().then(() => {
@@ -610,13 +631,8 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
     // if already opened, just focus it
     if (openedWindows.has(absolutePath)) {
       const existingWin = openedWindows.get(absolutePath);
-      if (!existingWin.isDestroyed()) {
-        existingWin.focus();
-        return;
-      } else {
-        // clean up destroyed reference
-        openedWindows.delete(absolutePath);
-      }
+      existingWin.focus();
+      return;
     }
   }
 
@@ -633,11 +649,49 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   win.loadFile(absolutePath);
   openedWindows.set(absolutePath, win);
 
+  // Handle focus events for external windows
+  win.on("focus", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("muffleAudio");
+      audioIsMuffled = true;
+    }
+  });
+
+  win.on("blur", () => {
+    // Check if focus is moving to one of our external windows
+    setTimeout(() => {
+      const focusedWin = BrowserWindow.getFocusedWindow();
+      if (
+        focusedWin &&
+        Array.from(openedWindows.values()).includes(focusedWin)
+      ) {
+        mainWindow.webContents.send("muffleAudio");
+        audioIsMuffled = true;
+      } else {
+        mainWindow.webContents.send("unmuffleAudio");
+        audioIsMuffled = false;
+      }
+    }, 50); // Small delay to ensure focus has transferred
+  });
+
   // clean up on close
   win.on("closed", () => {
     openedWindows.delete(absolutePath);
+
+    // Check if mainWindow should be unmuffled after this window closes
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // If no other external windows are open, unmuffle
+      if (openedWindows.size === 0) {
+        mainWindow.webContents.send("unmuffleAudio");
+        audioIsMuffled = false;
+      }
+    }
   });
 }
+
+ipcMain.handle("getMuffleStatus", () => {
+  return audioIsMuffled;
+});
 
 ipcMain.handle("save-file", async (event, absolutePath, data) => {
   try {
@@ -679,19 +733,6 @@ function rbgToHex(rgb) {
       }
     }
   }
-
-  // limit how bright the color can be (to avoid white colors)
-  const total = r + g + b;
-  const clamp = 0.9 * 765; // 765 = 255 * 3
-  if (total > clamp) {
-    const scale = clamp / total;
-    r = Math.round(r * scale);
-    g = Math.round(g * scale);
-    b = Math.round(b * scale);
-  }
-  r = Math.max(0, Math.min(255, r));
-  g = Math.max(0, Math.min(255, g));
-  b = Math.max(0, Math.min(255, b)); // always nice to clamp (bc me bad at js)
 
   return `#${((1 << 24) + (r << 16) + (g << 8) + b)
     .toString(16)

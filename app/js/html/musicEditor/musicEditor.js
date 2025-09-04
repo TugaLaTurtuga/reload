@@ -132,13 +132,18 @@ function addTrackToDOM(track, index) {
 `;
 
   // Add event listeners to the track
-  trackDiv
-    .querySelector(".track-title")
-    .addEventListener("input", updateTrackData);
+  trackDiv.querySelector(".track-title").addEventListener("input", () => {
+    playSoundAffect("click", (volume = 0.35));
+    updateTrackData();
+  });
   trackDiv.querySelector(".slider").addEventListener("change", updateTrackData);
-  trackDiv
-    .querySelector(".remove-track")
-    .addEventListener("click", () => removeTrack(trackDiv));
+  trackDiv.querySelector(".slider").addEventListener("input", () => {
+    playSoundAffect("click", (volume = 0.35));
+  });
+  trackDiv.querySelector(".remove-track").addEventListener("click", () => {
+    playSoundAffect("warning", (volume = 1));
+    removeTrack(trackDiv);
+  });
   trackDiv
     .querySelector(".move-up")
     .addEventListener("click", () => moveTrack(trackDiv, "up"));
@@ -203,6 +208,7 @@ function moveTrack(trackElement, direction) {
     tracksContainer.insertBefore(trackElements[currentIndex + 1], trackElement);
   }
 
+  playSoundAffect("click", (volume = 0.15));
   updateTrackData();
 }
 
@@ -290,19 +296,6 @@ function updateColor() {
   } else {
     [r, b, g] = colorInput.value;
   }
-
-  // limit how bright the color can be (to avoid white colors)
-  const total = r + g + b;
-  const clamp = 0.9 * 765; // 765 = 255 * 3
-  if (total > clamp) {
-    const scale = clamp / total;
-    r = Math.round(r * scale);
-    g = Math.round(g * scale);
-    b = Math.round(b * scale);
-  }
-  r = Math.max(0, Math.min(255, r));
-  g = Math.max(0, Math.min(255, g));
-  b = Math.max(0, Math.min(255, b)); // always nice to clamp (bc me bad at js)
 
   colorInput.value = `#${((1 << 24) + (r << 16) + (g << 8) + b)
     .toString(16)

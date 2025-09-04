@@ -73,6 +73,13 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
 
 ipcRenderer.on("music-json-updated", updateLibrary);
 
+ipcRenderer.on("muffleAudio", () => {
+  muffleAudio();
+});
+ipcRenderer.on("unmuffleAudio", () => {
+  unmuffleAudio();
+});
+
 audioPlayer.addEventListener("timeupdate", updateProgress);
 audioPlayer.addEventListener("ended", playNext);
 audioSource = getAudioSource("curr");
@@ -99,6 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setVolume();
   sController.updateSliders();
   document.getElementById("spinner")?.remove();
+  ipcRenderer.invoke("getMuffleStatus").then((status) => {
+    if (status) muffleAudio(0);
+  });
 });
 
 window.addEventListener("resize", () => {

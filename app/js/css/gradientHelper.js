@@ -36,44 +36,40 @@ function getCSSVarRGB(varName) {
   return [128, 128, 128];
 }
 
-function isLightBackground() {
-  const rgb1 = getCSSVarRGB("--bg-1");
-  const rgb2 = getCSSVarRGB("--bg-2");
-  const total = rgb1[0] + rgb1[1] + rgb1[2] + rgb2[0] + rgb2[1] + rgb2[2];
-  const threshold = 255 * 6 * 0.85;
-  return total > threshold;
-}
-
 function changeBackGroundColorFromNewAlbum(color) {
-  if (isLightBackground()) {
-    // multiply the color x1.2
-    let minColor = 160;
-    let maxColor = 220;
-    // Assume color is in hex format: #rrggbb
-    if (color && color.startsWith("#") && color.length === 7) {
-      let r = parseInt(color.substr(1, 2), 16);
-      let g = parseInt(color.substr(3, 2), 16);
-      let b = parseInt(color.substr(5, 2), 16);
-      r = Math.max(minColor, Math.min(maxColor, Math.round(r * 1.2)));
-      g = Math.max(minColor, Math.min(maxColor, Math.round(g * 1.2)));
-      b = Math.max(minColor, Math.min(maxColor, Math.round(b * 1.2)));
-      color = `rgb(${r},${g},${b})`;
-    } else if (color && color.startsWith("rgb")) {
-      // Assume color is in rgb(r,g,b) or rgb(r, g, b) format
-      const match = color.match(
-        /rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i,
-      );
-      if (match) {
-        let r = parseInt(color.substr(1, 2), 16);
-        let g = parseInt(color.substr(3, 2), 16);
-        let b = parseInt(color.substr(5, 2), 16);
-        r = Math.max(minColor, Math.min(maxColor, Math.round(r * 1.2)));
-        g = Math.max(minColor, Math.min(maxColor, Math.round(g * 1.2)));
-        b = Math.max(minColor, Math.min(maxColor, Math.round(b * 1.2)));
-        color = `rgb(${r},${g},${b})`;
-      }
+  const bg2 = getCSSVarRGB("--bg-2");
+  const colorgepper = 0.5;
+
+  let normalizedColor = [0, 0, 0];
+  let r = parseInt(color.substr(1, 2), 16);
+  let g = parseInt(color.substr(3, 2), 16);
+  let b = parseInt(color.substr(5, 2), 16);
+
+  // Assume color is in hex format: #rrggbb
+  if (color && color.startsWith("#") && color.length === 7) {
+    r = Math.max(0, Math.min(255, r));
+    g = Math.max(0, Math.min(255, g));
+    b = Math.max(0, Math.min(255, b));
+  } else if (color && color.startsWith("rgb")) {
+    // Assume color is in rgb(r,g,b) or rgb(r, g, b) format
+    const match = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    if (match) {
+      r = Math.max(0, Math.min(255, r));
+      g = Math.max(0, Math.min(255, g));
+      b = Math.max(0, Math.min(255, b));
     }
   }
+
+  // Interpolate between bg2 (when colorgepper=0) and original rgb (when colorgepper=1)
+  const finalR = Math.round(bg2[0] * (1 - colorgepper) + r * colorgepper);
+  const finalG = Math.round(bg2[1] * (1 - colorgepper) + g * colorgepper);
+  const finalB = Math.round(bg2[2] * (1 - colorgepper) + b * colorgepper);
+
+  color = `rgb(
+      ${Math.max(0, Math.min(255, finalR))},
+      ${Math.max(0, Math.min(255, finalG))},
+      ${Math.max(0, Math.min(255, finalB))}
+    )`;
   changeBackgroundGradient(color);
 }
 

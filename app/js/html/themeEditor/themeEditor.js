@@ -189,10 +189,59 @@ function serializeThemesCSS(allThemesToSerialize = themes) {
   return parts.join("\n\n").trim() + "\n";
 }
 
+function getCSSVarInRGB(value) {
+  // If it's already rgb()
+  if (value.startsWith("rgb")) {
+    const match = value.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    if (match) {
+      return [
+        parseInt(match[1], 10),
+        parseInt(match[2], 10),
+        parseInt(match[3], 10),
+      ];
+    }
+  }
+
+  // If it's hex (#rrggbb or #rgb)
+  if (value.startsWith("#")) {
+    if (value.length === 7) {
+      return [
+        parseInt(value.substr(1, 2), 16),
+        parseInt(value.substr(3, 2), 16),
+        parseInt(value.substr(5, 2), 16),
+      ];
+    } else if (value.length === 4) {
+      return [
+        parseInt(value[1] + value[1], 16),
+        parseInt(value[2] + value[2], 16),
+        parseInt(value[3] + value[3], 16),
+      ];
+    }
+  }
+
+  // Fallback → gray
+  return [128, 128, 128];
+}
+
+function isLightTheme(data) {
+  const [r1, g1, b1] = getCSSVarInRGB(data.get("--bg-1"));
+  const [r2, g2, b2] = getCSSVarInRGB(data.get("--bg-2"));
+
+  const luminance1 = (0.299 * r1 + 0.587 * g1 + 0.114 * b1) / 255;
+  const luminance2 = (0.299 * r2 + 0.587 * g2 + 0.114 * b2) / 255;
+
+  return (luminance1 + luminance2) / 2 > 0.5;
+}
+
 // ---------- Rendering ----------
 function renderThemesList() {
-  const container = $("#themesList");
-  container.innerHTML = "";
+  const container = {
+    dark: $("#themesListDark"),
+    light: $("#themesListLight"),
+  };
+
+  container.dark.innerHTML = "";
+  container.light.innerHTML = "";
 
   for (const theme of themes) {
     const [name, data] = theme;
@@ -216,8 +265,22 @@ function renderThemesList() {
       // apply theme but do not block UI
       applyTheme().catch(() => {});
     });
-    container.appendChild(item);
+
+    if (isLightTheme(data)) {
+      container.light.appendChild(item);
+    } else {
+      container.dark.appendChild(item);
+    }
   }
+
+  if (settings.themeMode === "light") {
+    container.light.style.display = "block";
+    container.dark.style.display = "none";
+  } else {
+    container.light.style.display = "none";
+    container.dark.style.display = "block";
+  }
+
   updateOverflows();
 }
 
@@ -585,7 +648,7 @@ async function saveToDisk() {
 }
 
 function setThememode(mode) {
-  playSoundAffect("click", (volume = 0.15));
+  playSoundAffect("jobPurchase", (volume = 0.8));
   $(`#${settings.themeMode}Btn`).classList.remove("active");
   $(`#${mode}Btn`).classList.add("active");
   settings.themeMode = mode;
@@ -598,7 +661,7 @@ function setThememode(mode) {
 }
 
 function setSystemTheme() {
-  playSoundAffect("click", (volume = 0.15));
+  playSoundAffect("jobPurchase", (volume = 1));
   settings.getSystemTheme = !settings.getSystemTheme;
   if (settings.getSystemTheme) {
     $("#systemThemeBtn").classList.add("active");

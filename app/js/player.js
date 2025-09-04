@@ -221,6 +221,7 @@ function loadTrack(currTrack, playFromStart, firstLoad) {
   totalTimeEl.textContent = currTrack.duration
     ? formatTime(currTrack.duration)
     : "--:--";
+  initAudioGraph();
 }
 
 async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
@@ -266,6 +267,49 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
 
   src.setAttribute("data-album-path", albumPathAndIndex[0]);
   src.setAttribute("data-index", albumPathAndIndex[1]);
+}
+
+// Web Audio API context and filter
+let audioCtx;
+let sourceNode;
+let filterNode;
+let isMuffled = false;
+
+function initAudioGraph() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(audioPlayer);
+
+    // Create a low-pass filter
+    filterNode = audioCtx.createBiquadFilter();
+    filterNode.type = "lowpass";
+    filterNode.frequency.value = 20000; // start clear
+    filterNode.Q.value = 1;
+
+    // Connect: source -> filter -> destination
+    sourceNode.connect(filterNode);
+    filterNode.connect(audioCtx.destination);
+  }
+}
+
+// Apply muffling effect
+function muffleAudio(time = 0.5) {
+  if (isMuffled) return;
+  const now = audioCtx.currentTime;
+  filterNode.frequency.cancelScheduledValues(now);
+  filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
+  filterNode.frequency.linearRampToValueAtTime(175, now + time);
+  isMuffled = true;
+}
+
+// Remove muffling effect
+function unmuffleAudio() {
+  if (!isMuffled) return;
+  const now = audioCtx.currentTime;
+  filterNode.frequency.cancelScheduledValues(now);
+  filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
+  filterNode.frequency.linearRampToValueAtTime(20000, now + 1.5);
+  isMuffled = false;
 }
 
 // Toggle play/pause

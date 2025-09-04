@@ -21,7 +21,6 @@
   --notificationWarningColor: rgb(222, 222, 24);
   --sidebarColor: rgba(24, 24, 24, 0.7);
   --sliderBgColor: rgb(90, 90, 90);
-  --spinnerBgColor: rgba(255, 255, 255, 0.302);
   --spinnerColor: rgb(255, 255, 255);
   --textColor: rgb(245, 245, 245);
   --textSubColor: rgb(170, 170, 170);
@@ -115,9 +114,9 @@
   --notificationCorrectColor: #a6d189;
   --notificationErrorColor: #e78284;
   --notificationWarningColor: #e5c890;
-  --sidebarColor: rgba(42, 44, 60, 0.97);
+  --sidebarColor: rgba(42, 44, 60, 0.7);
   --sliderBgColor: #626880;
-  --spinnerBgColor: rgba(140, 170, 238, 0.21);
+  --spinnerBgColor: rgba(140, 170, 238, 0);
   --spinnerColor: #8caaee;
   --textColor: rgba(198, 208, 245, 0.98);
   --textSubColor: #838ba7;
@@ -133,7 +132,7 @@
   --bg-1: #eff1f5;
   --bg-2: #e6e9ef;
   --ControlsBtnsColor: #1e66f5;
-  --font: 'Fira Code', sans-serif;
+  --font: "Fira Code", sans-serif;
   --notaficationBorderColor: #8c8fa1;
   --notificationBgColor: #e6e9ef;
   --notificationCorrectColor: #40a02b;
@@ -157,7 +156,7 @@
   --bg-1: #24273a;
   --bg-2: #363a4f;
   --ControlsBtnsColor: #8aadf4;
-  --font: 'Fira Code', sans-serif;
+  --font: "Fira Code", sans-serif;
   --notaficationBorderColor: #8aadf4;
   --notificationBgColor: #363a4f;
   --notificationCorrectColor: #a6da95;
@@ -181,7 +180,7 @@
   --bg-1: #1e1e2e;
   --bg-2: #313244;
   --ControlsBtnsColor: #89b4fa;
-  --font: 'Fira Code', sans-serif;
+  --font: "Fira Code", sans-serif;
   --notaficationBorderColor: #89b4fa;
   --notificationBgColor: #313244;
   --notificationCorrectColor: #a6e3a1;
@@ -835,7 +834,7 @@
   --notificationCorrectColor: #50a14f;
   --notificationErrorColor: #e45649;
   --notificationWarningColor: #c18401;
-  --sidebarColor: rgba(240, 240, 240, 0.7);
+  --sidebarColor: rgba(240, 240, 240, 0.25);
   --sliderBgColor: #d0d0d0;
   --spinnerBgColor: rgba(64, 120, 242, 0.2);
   --spinnerColor: #4078f2;

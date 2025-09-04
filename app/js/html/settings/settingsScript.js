@@ -250,7 +250,8 @@ function changeChangeLog(key) {
     const changeLogDate = document.querySelector(".change-log-date");
     const changeLogContent = document.querySelector(".change-log-content");
 
-    if (changeLogTitle) changeLogTitle.textContent = key;
+    if (changeLogTitle)
+      changeLogTitle.textContent = changeLogs[key].name || key;
     if (changeLogDate) changeLogDate.textContent = changeLogs[key].date || "";
     if (changeLogContent) {
       changeLogContent.innerHTML = "";
