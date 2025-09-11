@@ -1,14 +1,19 @@
-async function loadSettings(onlyNewchanges = false) {
+async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
   try {
-    let updatedSettings = (await ipcRenderer.invoke("get-settings")) || {};
+    if (Object.keys(updatedSettings).length === 0) {
+      updatedSettings = (await ipcRenderer.invoke("get-settings")) || {};
+    }
     if (!updatedSettings) return;
 
     for (const key in settings) {
       // saver load then just putting
       if (updatedSettings.hasOwnProperty(key) && !onlyNewchanges) {
         settings[key] = updatedSettings[key];
-      } else if (updatedSettings.new.hasOwnProperty(key) && onlyNewchanges) {
-        console.log(key, updatedSettings.new[key]);
+      } else if (
+        onlyNewchanges &&
+        updatedSettings.new &&
+        updatedSettings.new.hasOwnProperty(key)
+      ) {
         settings[key] = updatedSettings.new[key];
       }
     }
@@ -19,9 +24,26 @@ async function loadSettings(onlyNewchanges = false) {
 
   volumeSlider.value = settings.volume;
   setVolume();
+  setLook();
   sController.updateSliders();
   updateTheme();
   ipcRenderer.invoke("clean-new-settings");
+}
+
+function setLook() {
+  let userLookCSS = document.getElementById("user-look");
+  if (!userLookCSS) {
+    userLookCSS = document.createElement("link");
+    userLookCSS.id = "user-look";
+    userLookCSS.rel = "stylesheet";
+    document.head.appendChild(userLookCSS);
+  }
+
+  userLookCSS.href = `css/look.css?ts=${Date.now()}`;
+
+  let themeCSS = document.getElementById("themes-stylesheet");
+  // Force reload by appending timestamp query
+  themeCSS.href = `css/themes.css?ts=${Date.now()}`;
 }
 
 function updateTheme() {
@@ -52,7 +74,15 @@ function updateSettings() {
     );
     updateOverflowsOnNowPlaying();
   }
-  openAlbum(settings.currentAlbum);
+  if (settings.currentAlbum) {
+    openAlbum(settings.currentAlbum);
+  } else if (settings.currentPlayingAlbum) {
+    openAlbum(settings.currentPlayingAlbum);
+    backToLibrary();
+  } else {
+    openAlbum(songs[0]);
+    backToLibrary();
+  }
 }
 
 // Event listeners
@@ -63,12 +93,8 @@ window.addEventListener("beforeunload", async (e) => {
 
 // this saves correctly on exit.
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
-  await loadSettings(true);
+  await loadSettings(true, updatedSettings);
   updateSettings();
-
-  let link = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  link.href = `css/themes.css?ts=${Date.now()}`;
 });
 
 ipcRenderer.on("music-json-updated", updateLibrary);

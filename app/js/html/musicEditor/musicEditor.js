@@ -49,6 +49,20 @@ async function loadSettings() {
   }
 
   // Apply settings
+  let userLookCSS = document.getElementById("user-look");
+  if (!userLookCSS) {
+    userLookCSS = document.createElement("link");
+    userLookCSS.id = "user-look";
+    userLookCSS.rel = "stylesheet";
+    document.head.appendChild(userLookCSS);
+  }
+
+  userLookCSS.href = `../css/look.css?ts=${Date.now()}`;
+
+  let themeCSS = document.getElementById("themes-stylesheet");
+  // Force reload by appending timestamp query
+  themeCSS.href = `../css/themes.css?ts=${Date.now()}`;
+
   document.body.setAttribute("theme", settings.theme[settings.themeMode]);
 }
 
@@ -74,21 +88,31 @@ async function loadMusicData() {
     musicData = await response.json();
 
     await populateForm();
+    console.log(musicData.description.name, musicData);
     if (!musicData.description.name) {
-      musicData.description.name = musicData.name; // this is the folder's name
-      nameInput.value = musicData.description.name;
+      if (musicData.name) {
+        musicData.description.name = musicData.name; // this is the folder's name
+        nameInput.value = musicData.description.name;
+      } else {
+        musicData.description.name =
+          musicData.description.cover.split("/")[
+            musicData.description.cover.split("/").length - 2
+          ]; // terrible.
+        musicData.name = musicData.description.name;
+        nameInput.value = musicData.description.name;
+      }
     }
     changeBackGroundColorFromNewAlbum(musicData.description.color);
 
-    showNotification("Music data loaded successfully");
+    setStatus("Music data loaded successfully");
   } catch (error) {
     console.error("Error loading music data:", error);
-    showNotification("Error loading music data: " + error.message);
+    setStatus("Error loading music data: " + error.message);
   }
 }
 
 // Function to populate the form with music data
-function populateForm() {
+async function populateForm() {
   const { description } = musicData;
 
   // Fill album information
@@ -228,7 +252,7 @@ function sortTracks() {
   });
 
   sController.updateSliders();
-  showNotification("Tracks sorted by title");
+  setStatus("Tracks sorted by title");
 }
 
 // Function to update the album information
@@ -266,10 +290,10 @@ async function saveMusicData() {
       console.error("Error creating music.json:", err);
     }
 
-    showNotification("Music data saved successfully!");
+    setStatus("Music data saved successfully!");
   } catch (error) {
     console.error("Error saving music data:", error);
-    showNotification("Error saving music data: " + error.message, "error");
+    setStatus("Error saving music data: " + error.message, "error");
   } finally {
     saveButton.innerHTML = "Save Changes";
     saveButton.disabled = false;

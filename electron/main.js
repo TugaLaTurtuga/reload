@@ -5,6 +5,7 @@ const {
   Menu,
   nativeTheme,
   dialog,
+  shell,
 } = require("electron");
 const { childProcess, spawn, exec } = require("child_process");
 const path = require("path");
@@ -13,8 +14,12 @@ const mm = require("music-metadata");
 const ColorThief = require("colorthief");
 const { getFonts } = require("font-list");
 
-const settingsFilePath = path.join(app.getPath("userData"), "settings.json");
-const libraryFilePath = path.join(app.getPath("userData"), "library.json");
+const userDataPath = app.getPath("userData");
+if (!fs.existsSync(userDataPath)) {
+  fs.mkdirSync(userDataPath);
+}
+const settingsFilePath = path.join(userDataPath, "settings.json");
+const libraryFilePath = path.join(userDataPath, "library.json");
 let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const openedWindows = new Map();
@@ -51,6 +56,15 @@ function createAppMenu() {
               __dirname,
               "../app/html/themeEditor.html",
             );
+            openExternal(themePath, true);
+          },
+        },
+        {
+          label: "CSS",
+          accelerator: "CmdOrCtrl+L",
+          click: () => {
+            // open theme editor page
+            const themePath = path.join(__dirname, "../app/look.html");
             openExternal(themePath, true);
           },
         },
@@ -144,12 +158,6 @@ app.on("window-all-closed", () => {
   */
 
   app.quit(); // plain better + IT'S MY FUCKING APP
-});
-
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
 });
 
 ipcMain.handle("show-open-dialog", async (event, options) => {
@@ -689,6 +697,79 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 }
 
+ipcMain.handle("get-main-reload-html", async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return [null, null];
+
+  // grab snapshot of renderer DOM
+  const state = await mainWindow.webContents.executeJavaScript(
+    "document.documentElement.outerHTML",
+  );
+
+  // helper: safely add/remove "hidden" class
+  function toggleHidden(html, id, shouldHide) {
+    const regex = new RegExp(`<div id="${id}"([^>]*)>`);
+    return html.replace(regex, (match, attrs) => {
+      const classMatch = attrs.match(/class="([^"]*)"/);
+      if (classMatch) {
+        let classes = classMatch[1].trim().split(/\s+/).filter(Boolean);
+        if (shouldHide) {
+          if (!classes.includes("hidden")) classes.push("hidden");
+        } else {
+          classes = classes.filter((c) => c !== "hidden");
+        }
+        return `<div id="${id}"${attrs.replace(
+          /class="[^"]*"/,
+          `class="${classes.join(" ")}"`,
+        )}>`;
+      } else {
+        return shouldHide
+          ? `<div id="${id}"${attrs} class="hidden">`
+          : `<div id="${id}"${attrs}>`;
+      }
+    });
+  }
+
+  const states = [];
+
+  // -----------------------------
+  // State 0: player hidden, library visible, app clean
+  // -----------------------------
+  states[0] = toggleHidden(state, "player-container", true);
+  states[0] = toggleHidden(states[0], "library-container", false);
+  states[0] = states[0].replace(/<div id="app"[^>]*>/, '<div id="app">');
+
+  // -----------------------------
+  // State 1: player visible, library hidden, style moved to app
+  // -----------------------------
+
+  // extract the style string from player-container
+  const styleMatch = state.match(
+    /<div id="player-container"[^>]*style="([^"]*)"/,
+  );
+  const playerStyle = styleMatch ? styleMatch[1] : "";
+
+  states[1] = toggleHidden(state, "player-container", false);
+  states[1] = toggleHidden(states[1], "library-container", true);
+
+  // merge style with existing #app attributes
+  states[1] = states[1].replace(/<div id="app"([^>]*)>/, (match, attrs) => {
+    // check if app already has a style attribute
+    const styleMatchApp = attrs.match(/style="([^"]*)"/);
+    if (styleMatchApp) {
+      // merge styles
+      const merged = styleMatchApp[1].trim();
+      return `<div id="app"${attrs.replace(
+        /style="[^"]*"/,
+        `style="${merged}; ${playerStyle}"`,
+      )}>`;
+    } else {
+      return `<div id="app"${attrs} style="${playerStyle}">`;
+    }
+  });
+
+  return states;
+});
+
 ipcMain.handle("getMuffleStatus", () => {
   return audioIsMuffled;
 });
@@ -816,3 +897,26 @@ function deleteConfPath(folderPath, confFileName) {
     }
   }
 }
+
+ipcMain.handle("get-all-user-looks", async () => {
+  const looksDir = path.join(userDataPath, "looks");
+
+  try {
+    // ensure directory exists
+    await fs.promises.mkdir(looksDir, { recursive: true });
+
+    const files = await fs.promises.readdir(looksDir);
+    return files
+      .filter((file) => file.toLowerCase().endsWith(".css"))
+      .map((file) => path.join(looksDir, file));
+  } catch (err) {
+    console.error("Failed to load user looks:", err);
+    return [];
+  }
+});
+
+ipcMain.handle("open-looks-dir", async () => {
+  const looksDir = path.join(userDataPath, "looks");
+  await shell.openPath(looksDir);
+  return looksDir;
+});

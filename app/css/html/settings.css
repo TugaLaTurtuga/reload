@@ -5,7 +5,7 @@
     justify-content: center;
     margin-bottom: 10px;
     padding: 10px;
-    border: 1px solid var(--notificationBorderColor);
+    border: 1px solid var(--trackItemColorOnHover);
     background: var(--sidebarColor);
     width: 40vw;
     min-width: 120px;
@@ -41,8 +41,8 @@ input[type="checkbox"] {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: var(--notificationBgColor);
-    border: 1px solid var(--notificationBorderColor);
+    background-color: var(--trackItemOnHover);
+    border: 1px solid var(--ControlsBtnsColor);
     color: transparent;
     border-radius: 3px;
     cursor: pointer;
@@ -94,7 +94,7 @@ button {
     border-radius: 10px;
     padding: 0.55rem 0.7rem;
     background: var(--sidebarColor);
-    border: 1px solid var(--notificationBorderColor);
+    border: 1px solid var(--trackItemColorOnHover);
     color: var(--textColor);
     cursor: pointer;
     transition:
@@ -137,13 +137,13 @@ button:active {
     top: 0;
     left: 0;
     padding: 10px;
-    border-radius: 0 0 10px;
+    border-radius: 0 0 10px 0;
     color: var(--textColor);
     background: var(--sidebarColor);
 }
 
 .container-change-btn {
-    background: var(--notificationBgColor);
+    background: var(--sliderBgColor);
     margin: 0 5px 0 5px;
 }
 

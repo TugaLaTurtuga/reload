@@ -172,11 +172,12 @@ function openAlbum(album) {
 }
 
 // Return to library view
-function backToLibrary() {
+async function backToLibrary() {
   playerContainer.classList.add("hidden");
   libraryContainer.classList.remove("hidden");
   mainContent.scrollTo(0, 0);
-  changeBackgroundGradient(background.style.getPropertyPriority("--bg-2"));
+  const color = await tryGetComputedStyle("--bg-2");
+  changeBackgroundGradient(color);
   settings.currentAlbum = null;
 }
 

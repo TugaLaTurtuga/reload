@@ -67,11 +67,22 @@ function updateOverflows() {
   });
 }
 
+function setLook() {
+  let userLookCSS = document.getElementById("user-look");
+  if (!userLookCSS) {
+    userLookCSS = document.createElement("link");
+    userLookCSS.id = "user-look";
+    userLookCSS.rel = "stylesheet";
+    document.head.appendChild(userLookCSS);
+  }
+
+  userLookCSS.href = `../css/look.css?ts=${Date.now()}`;
+}
+
 // ---------- Utilities ----------
 const CSS_URL = "../css/themes.css";
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-const statusEl = $("#status");
 
 // Data model: Map<name, Map<var, val>>
 let themes = new Map();
@@ -80,9 +91,6 @@ let selected = "root";
 let fileHandle = null;
 let stylesheetReadyPromise = null;
 
-function setStatus(msg) {
-  statusEl.textContent = msg;
-}
 function sanitizeName(n) {
   n = String(n || "")
     .trim()
@@ -126,6 +134,7 @@ function parseThemesCSS(cssText) {
     );
 
     const map = new Map();
+    const newMap = new Map();
     const varRe = /--([\w-]+)\s*:\s*([^;]+);/g;
     let vm;
     while ((vm = varRe.exec(body)) !== null) {
@@ -133,15 +142,20 @@ function parseThemesCSS(cssText) {
     }
 
     // Ensure all root vars exist in every theme
+    // And no more then the root values
     if (name !== "root" && themes.has("root")) {
       const rootVars = themes.get("root");
       for (const [rootKey, rootVal] of rootVars.entries()) {
         if (!map.has(rootKey)) {
-          map.set(rootKey, rootVal);
+          newMap.set(rootKey, rootVal);
+        } else {
+          newMap.set(rootKey, map.get(rootKey));
         }
       }
+      themes.set(name, newMap);
+    } else {
+      themes.set(name, map);
     }
-    themes.set(name, map);
   }
 }
 
@@ -899,6 +913,7 @@ async function loadSettings() {
   refreshButtons();
 
   applyTheme();
+  setLook();
 }
 
 // ---------- Wire up ----------
@@ -922,4 +937,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) {
     console.warn("loadSettings error", e);
   }
+});
+
+ipcRenderer.on("settings-updated", (event, updatedSettings) => {
+  loadSettings(true, updatedSettings);
 });

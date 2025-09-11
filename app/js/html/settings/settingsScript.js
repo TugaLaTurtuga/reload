@@ -14,7 +14,6 @@ const changeLogsSidebar = document.querySelector(".change-logs-container");
 let settings = {
   volume: 0.5,
   showFeatures: true,
-  showNotifications: true,
 };
 let themeSettings = {
   themeMode: "dark",
@@ -53,10 +52,24 @@ async function loadSettings(onlyNewchanges = false) {
   console.log("Settings loaded");
 
   //volumeSlider.value = settings.volume;
-  updateTheme();
+  setLook();
 }
 
-function updateTheme() {
+function setLook() {
+  let userLookCSS = document.getElementById("user-look");
+  if (!userLookCSS) {
+    userLookCSS = document.createElement("link");
+    userLookCSS.id = "user-look";
+    userLookCSS.rel = "stylesheet";
+    document.head.appendChild(userLookCSS);
+  }
+
+  userLookCSS.href = `../css/look.css?ts=${Date.now()}`;
+
+  let themeCSS = document.getElementById("themes-stylesheet");
+  // Force reload by appending timestamp query
+  themeCSS.href = `../css/themes.css?ts=${Date.now()}`;
+
   document.body.setAttribute(
     "theme",
     themeSettings.theme[themeSettings.themeMode],
@@ -68,7 +81,7 @@ async function saveSettings() {
 }
 
 function updateSettings() {
-  updateTheme();
+  setLook();
 }
 
 // Event listeners

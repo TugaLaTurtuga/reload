@@ -20,7 +20,6 @@
     <div id="main-content">
       <div id="library-container">
         <div id="albums-section" class="content-section"></div>
-        <div id="singles-section" class="content-section hidden"></div>
         <div id="buffer"></div>
       </div>
 
@@ -82,9 +81,9 @@
   <div class="spinner" id="loading"></div>
 
   <audio id="audio-player">
-    <source class="audio-source" id="prev" type="audio/mpeg"></source>
-    <source class="audio-source" id="curr" type="audio/mpeg"></source>
-    <source class="audio-source" id="next" type="audio/mpeg"></source>
+    <source id="prev" class="audio-source" preload="auto" crossorigin="anonymous"></source>
+    <source id="curr" class="audio-source" preload="auto" crossorigin="anonymous"></source>
+    <source id="next" class="audio-source" preload="auto" crossorigin="anonymous"></source>
   </audio>
   <div id="special-player" style="display: none;"></div>
 

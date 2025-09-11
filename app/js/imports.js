@@ -70,6 +70,7 @@ let settings = {
   themeMode: "dark", // dark or light
   getSystemTheme: false, // if true, the theme will be set to the system theme
   showFeatures: true, // shows features from a track, if false hides this: (feat: someone)
+  look: "default", // default
 };
 
 const inputsFilePath = path.join(__dirname, "js/input/reloadMainAppInp.json");

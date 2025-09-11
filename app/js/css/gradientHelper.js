@@ -1,44 +1,76 @@
-//// TODO: normalize the color and make a min max on the theme itself.
+async function tryGetComputedStyle(name) {
+  const tries = 5;
+  const timeout = 100;
+  for (let i = 0; i < tries; i++) {
+    const result = await getComputedStyle(document.body)
+      .getPropertyValue(name)
+      .trim();
+    if (result) {
+      return result;
+    }
 
-function getCSSVarRGB(varName) {
-  let value = getComputedStyle(document.body).getPropertyValue(varName).trim();
+    if (i < tries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+    }
+  }
+  return null; // fallback
+}
 
-  // If it's already rgb()
+async function getCSSVarRGB(varName) {
+  let value = await tryGetComputedStyle(varName);
+
+  if (!value) return null;
+
+  // rgb() or rgba()
   if (value.startsWith("rgb")) {
-    const match = value.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    const match = value.match(
+      /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i,
+    );
     if (match) {
       return [
         parseInt(match[1], 10),
         parseInt(match[2], 10),
         parseInt(match[3], 10),
+        match[4] !== undefined ? parseFloat(match[4]) : 1, // alpha if present
       ];
     }
   }
 
-  // If it's hex (#rrggbb or #rgb)
+  // Hex formats: #rgb, #rrggbb, #rrggbbaa
   if (value.startsWith("#")) {
-    if (value.length === 7) {
-      return [
-        parseInt(value.substr(1, 2), 16),
-        parseInt(value.substr(3, 2), 16),
-        parseInt(value.substr(5, 2), 16),
-      ];
-    } else if (value.length === 4) {
+    if (value.length === 4) {
       return [
         parseInt(value[1] + value[1], 16),
         parseInt(value[2] + value[2], 16),
         parseInt(value[3] + value[3], 16),
+        1,
+      ];
+    } else if (value.length === 7) {
+      return [
+        parseInt(value.substr(1, 2), 16),
+        parseInt(value.substr(3, 2), 16),
+        parseInt(value.substr(5, 2), 16),
+        1,
+      ];
+    } else if (value.length === 9) {
+      return [
+        parseInt(value.substr(1, 2), 16),
+        parseInt(value.substr(3, 2), 16),
+        parseInt(value.substr(5, 2), 16),
+        parseInt(value.substr(7, 2), 16) / 255,
       ];
     }
   }
 
-  // Fallback → gray
-  return [128, 128, 128];
+  // fallback
+  return Array(4).fill(0);
 }
 
-function changeBackGroundColorFromNewAlbum(color) {
-  const bg2 = getCSSVarRGB("--bg-2");
-  const colorgepper = 0.5;
+async function changeBackGroundColorFromNewAlbum(color) {
+  const [bg2, colorgepper] = await Promise.all([
+    getCSSVarRGB("--bg-2"),
+    tryGetComputedStyle("--colorBlend"),
+  ]);
 
   let normalizedColor = [0, 0, 0];
   let r = parseInt(color.substr(1, 2), 16);
@@ -71,8 +103,13 @@ function changeBackGroundColorFromNewAlbum(color) {
       ${Math.max(0, Math.min(255, finalB))}
     )`;
   changeBackgroundGradient(color);
+  console.log("PLAYERCONTAINER", color, colorgepper);
+  if (playerContainer) {
+    playerContainer.style.setProperty("--backgroundColor", color);
+  }
 }
 
 function changeBackgroundGradient(color) {
+  console.log("--backgroundColor");
   background.style.setProperty("--backgroundColor", color);
 }

@@ -2,31 +2,37 @@
   "0.0.000": {
     "name": "Usable app",
     "logs": "-App is now usable, with basic functionality -Themes window -Settings window -Editor window",
-    "date": "30/09/2025",
+    "date": "30/08/2025",
     "done": true
   },
   "0.0.001": {
     "name": "slight optimizations",
     "logs": "-more themes added -better tool tip -theme item have their theme engraved to the it -cmd+E to open the editor window -font renderer now renders the font weight of 900 -new inputs, like n for next track, v for previous track and others -now possible to add params to the inputs -cover ins't fetched every time it reloads, now only the tracks are fetched every time, but now the algorithem uses map insted of 2 for loops -Added verions logs",
-    "date": "01/10/2025",
+    "date": "01/09/2025",
     "done": true
   },
   "0.0.100": {
     "name": "Change logs and fonts",
     "logs": "-Added dates to change logs -Possible to change fonts in any theme. The fonts are from the user's computer or Rubik, that comes installed -Overlay blur animates on creation instead of being immediately visible (easear on the eyes, at least for me) -Visible change logs to user -Possible to change the library paths, where the tracks are fetched from",
-    "date": "02/10/2025",
+    "date": "02/09/2025",
     "done": true
   },
   "0.0.101": {
     "name": "Bug fixes",
     "logs": "-Made the volume from settings not just change the slider in the main window, but also the volume of the audio source -When creating a new theme, the sidebar scrolls to the new theme",
-    "date": "02/10/2025",
+    "date": "02/09/2025",
     "done": true
   },
   "0.0.102": {
     "name": "Themes changes",
     "logs": "-Album color now mixes with the background color and not with a clamp and checking if the theme is white, now it looks better in themes that the bg ins't a neutral color and light themes. -When another reload window is opened, the audio muffles and unmuffles when all external reload windows are closed -Added sfx to all external reload windows -Seperated the light themes from dark themes in theme editor for easers selection. -Added names to versions (the 'Themes changes' at the top)",
-    "date": "04/10/2025",
+    "date": "04/09/2025",
+    "done": true
+  },
+  "0.0.200": {
+    "name": "Changable CSS",
+    "logs": "-Random bug fixes that I forgor 💀 -911 happened 24 years ago -Ability to add custom CSS to all windows (ctrl or cmd + l to see the CSS window that allows you to see the CSS) -Changes to how music editor items is displayed -Added color blend for each theme, making it possible to change the amount of color mixing happening as described on 0.0.102 -Simplified the colorscheme, from 20vars to 14vars",
+    "date": "11/09/2025",
     "done": true
   }
 }

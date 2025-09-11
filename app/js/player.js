@@ -15,7 +15,6 @@ async function playLoadedAudioFromSettings() {
 
 // Play track by index
 //// TODO: Make the audioSources work on the backend so its able to play without any window opened
-//// TODO: Make the system interacted with the audio and update the UI with the interactions
 function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   const { pushPrev = true, playFromStart = true, firstLoad = false } = opts;
 

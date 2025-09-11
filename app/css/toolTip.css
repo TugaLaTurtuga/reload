@@ -19,3 +19,10 @@
     opacity: 1;
     transform: translate(-50%, -12px);
 }
+
+.status {
+    font-weight: 400;
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
