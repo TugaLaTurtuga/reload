@@ -1,0 +1,101 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>CSS</title>
+
+        <link rel="stylesheet" href="css/themes.css" />
+        <style>
+            body {
+                font-family: var(--font);
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-1);
+                color: var(--textColor);
+            }
+            h1 {
+                font-size: 18px;
+                margin: 0 0 12px;
+            }
+            .controls {
+                margin-bottom: 12px;
+                width: 100vw;
+                display: block;
+                text-align: center;
+            }
+            #looks-grid {
+                display: block;
+            }
+            .look-card {
+                background: var(--sidebarColor);
+                border-radius: 20px !important;
+            }
+
+            .look-frames {
+                padding: 0;
+                margin: 0;
+
+                min-height: 350px;
+                height: 40vh;
+
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 0;
+            }
+
+            .look-header {
+                text-align-last: center;
+                width: 100vw;
+                cursor: pointer;
+                margin-top: 8px;
+            }
+            iframe {
+                min-height: 700px;
+                height: 40vh;
+                transform: scale(0.5);
+                border: none;
+                transform-origin: top left;
+            }
+            button {
+                background: var(--activeColor);
+                color: var(--bg-2);
+                border: none;
+                padding: 6px 10px;
+                border-radius: 0 0 6px 6px;
+                cursor: pointer;
+
+                transition: all 0.2s ease;
+            }
+
+            button:hover {
+                background: var(--bg-2);
+                color: var(--activeColor);
+            }
+
+            button.secondary {
+                background: var(--bg-2);
+                color: var(--activeColor);
+            }
+
+            button.secondary:hover {
+                background: var(--activeColor);
+                color: var(--bg-2);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="controls">
+            <button id="refresh">Refresh looks</button>
+            <button id="open-looks-folder" class="secondary">
+                Open Looks Folder
+            </button>
+        </div>
+
+        <div id="looks-grid">
+            <div class="empty">Loading looks...</div>
+        </div>
+
+        <script src="js/html/look/script.js"></script>
+    </body>
+</html>
