@@ -1,4 +1,7 @@
 {
+  "opts": {
+    "logKeyPress": true
+  },
   "keyboard": {
     "whenPressed": {
       " ": "togglePlayPause()",
@@ -6,6 +9,18 @@
       "f10": "toggleMute()",
       "v": "playPrevious()",
       "n": "playNext()",
+      "ArrowLeft": "moveVirtualCursor(-1, 0)",
+      "ArrowRight": "moveVirtualCursor(1, 0)",
+      "ArrowUp": "moveVirtualCursor(0, 1)",
+      "ArrowDown": "moveVirtualCursor(0, -1)",
+      "s": "moveVirtualCursor(-1, 0)",
+      "f": "moveVirtualCursor(1, 0)",
+      "j": "moveVirtualCursor(0, 1)",
+      "l": "moveVirtualCursor(0, -1)",
+      "return": "clickVirtualCursor(0)",
+      "delete": "goBack()",
+      "backspace": "goBack()",
+      "escape": "backToLibrary()",
       "home": "backToLibrary()"
     },
     "whenDown": {
@@ -18,5 +33,47 @@
       "<": "addProgress(-2)",
       ">": "addProgress(2)"
     }
+  },
+
+  "gamepad": {
+    "deadzone": 0.1,
+    "whenPressed": {
+      "17": "togglePlayPause()",
+      "10": "togglePlayPause()",
+      "3": "openAlbum(settings.currentPlayingAlbum)",
+      "8": "toggleMute()",
+      "4": "playPrevious()",
+      "5": "playNext()",
+      "axes[0]": "moveVirtualCursor(Math.ceil(value.x), Math.ceil(value.y))",
+      "14": "moveVirtualCursor(-1, 0)",
+      "15": "moveVirtualCursor(1, 0)",
+      "12": "moveVirtualCursor(0, 1)",
+      "13": "moveVirtualCursor(0, -1)",
+      "0": "clickVirtualCursor(0)",
+      "1": "goBack()",
+      "6": "goBack()",
+      "7": "goBack()",
+      "16": "backToLibrary()",
+      "9": "openExternalHtml('html/settings.html')"
+    },
+    "whenDown": {
+      "LeftStick": "addVolume(-.02)",
+      "RightStick": "addVolume(.02)",
+      "LeftTrigger": "addVolume(-.02)",
+      "RightTrigger": "addVolume(.02)",
+      "LeftBumper": "addProgress(-2)",
+      "RightBumper": "addProgress(2)",
+      "LeftThumbstick": "addProgress(-2)",
+      "RightThumbstick": "addProgress(2)"
+    },
+    "whenUpOrDown": {}
+  },
+
+  "mouse": {
+    "whenPressed": {
+      "3": "goBack()",
+      "4": "goForward()"
+    },
+    "whenDown": {}
   }
 }

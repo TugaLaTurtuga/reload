@@ -26,3 +26,14 @@
     opacity: 0.8;
     font-size: 0.9rem;
 }
+
+.virtual-cursor {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--sidebarColor);
+    border: 2px solid var(--textColor);
+    pointer-events: none;
+    z-index: 9999;
+}

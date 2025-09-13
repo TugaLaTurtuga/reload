@@ -148,3 +148,49 @@ async function openExternalHtml(relativePathFromHtml) {
     path.join(__dirname, relativePathFromHtml),
   );
 }
+
+const buttons = [
+  { id: "min-btn", hoverText: "—" },
+  { id: "max-btn", hoverText: "☐" },
+  { id: "close-btn", hoverText: "×" },
+];
+
+buttons.forEach(({ id, hoverText }) => {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+
+  // Hover in
+  btn.addEventListener("mouseenter", () => {
+    btn.textContent = hoverText;
+  });
+
+  // Hover out (reset to original, optional)
+  btn.addEventListener("mouseleave", () => {
+    btn.textContent = "";
+  });
+});
+
+// Click handlers
+document.getElementById("min-btn").addEventListener("click", () => {
+  ipcRenderer.send("window-minimize");
+});
+
+document.getElementById("max-btn").addEventListener("click", () => {
+  ipcRenderer.send("window-toggle-maximize");
+});
+
+document.getElementById("close-btn").addEventListener("click", () => {
+  ipcRenderer.send("window-close");
+});
+
+function goBack() {
+  if (settings.currentAlbum) {
+    backToLibrary();
+  } else {
+    openAlbum(settings.currentPlayingAlbum);
+  }
+}
+
+function goForward() {
+  return;
+}

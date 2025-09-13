@@ -51,6 +51,7 @@ const albumDescription = document.getElementById("album-description");
 const trackList = document.getElementById("track-list");
 const background = document.getElementById("app");
 const mainContent = document.getElementById("main-content");
+const playerControls = document.getElementById("player-controls");
 
 // App State
 let songs = []; // the fetched albums/comps/eps/singles
@@ -72,5 +73,9 @@ let settings = {
   showFeatures: true, // shows features from a track, if false hides this: (feat: someone)
   look: "default", // default
 };
+
+let currentEvent = {};
+const pastEvents = [];
+const futureEvents = [];
 
 const inputsFilePath = path.join(__dirname, "js/input/reloadMainAppInp.json");

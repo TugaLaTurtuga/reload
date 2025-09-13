@@ -191,3 +191,121 @@ async function editAlbum() {
     console.error("Error saving current album:", err);
   }
 }
+
+function getGridXSize(width) {
+  if (width <= 200) return 0;
+  return Math.ceil((width - 200) / 220);
+}
+
+async function moveVirtualCursor(x, y) {
+  const allAlbums = document.querySelectorAll(".album-cover");
+  const gridXSize = getGridXSize(albumsSection.clientWidth);
+  const gridYSize = Math.ceil(allAlbums.length / gridXSize);
+  const [cursorPos, isInCard] = await getCurrentGridPosition();
+
+  let pos = cursorPos;
+  if (isInCard) {
+    pos += x - y * gridXSize;
+    if (pos < 0) {
+      if (x !== 0) {
+        pos = gridXSize - 1;
+        console.log(pos);
+      } else {
+        let gridPosY = Math.floor(cursorPos / gridXSize);
+        let gridPosX = cursorPos % gridXSize;
+        pos = gridPosX + (gridPosY + gridYSize) * gridXSize;
+      }
+      if (pos >= allAlbums.length) {
+        pos -= gridXSize;
+      }
+    } else if (pos >= allAlbums.length) {
+      let gridPosY = Math.floor(cursorPos / gridXSize);
+      let gridPosX = cursorPos % gridXSize;
+      if (x !== 0) {
+        console.log(gridPosX, gridXSize);
+        if (gridPosX + 1 === gridXSize) {
+          console.log("Reached end of row");
+          pos = cursorPos - gridXSize + 1;
+        } else {
+          console.log("Reached end of uncompleted row");
+          pos = cursorPos - gridXSize;
+        }
+      } else {
+        pos = gridPosX + (gridPosY - gridYSize) * gridXSize;
+      }
+      if (pos < 0) {
+        pos += gridXSize;
+      }
+    }
+  }
+
+  // Ensure pos is within bounds
+  pos = Math.min(Math.max(0, pos), allAlbums.length - 1);
+  const album = allAlbums[pos];
+
+  const playerControlsRect = playerControls.getBoundingClientRect();
+  const albumRect = album.getBoundingClientRect();
+  let albumCenterX = Math.ceil(albumRect.left + albumRect.width / 2);
+  let albumCenterY = Math.ceil(albumRect.top + albumRect.height / 2);
+
+  // scroll until album is fully visible
+  let safety = allAlbums.length; // prevent infinite loop
+  while (
+    (albumCenterY >= playerControlsRect.top - albumRect.height / 4 ||
+      albumCenterY < albumRect.height / 4) &&
+    safety-- > 0
+  ) {
+    if (albumCenterY >= playerControlsRect.top - albumRect.height / 4) {
+      mainContent.scrollBy(0, albumRect.height);
+      albumCenterY -= albumRect.height;
+    } else if (albumCenterY < albumRect.height / 4) {
+      mainContent.scrollBy(0, -albumRect.height);
+      albumCenterY += albumRect.height;
+    }
+  }
+
+  await ipcRenderer.invoke("set-cursor-pos", albumCenterX, albumCenterY);
+}
+
+async function getCurrentGridPosition() {
+  const allAlbums = document.querySelectorAll(".album-card");
+
+  let closestIndex = -1;
+  let closestDistance = Infinity;
+  let isInCard = false;
+
+  const cursorPos = await ipcRenderer.invoke("get-cursor-pos");
+
+  for (let index = 0; index < allAlbums.length; index++) {
+    const rect = allAlbums[index].getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const dx = cursorPos.x - centerX;
+    const dy = cursorPos.y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+
+      // check if cursor is inside this rect
+      if (
+        cursorPos.x >= rect.left &&
+        cursorPos.x <= rect.right &&
+        cursorPos.y >= rect.top &&
+        cursorPos.y <= rect.bottom
+      ) {
+        isInCard = true;
+        break; // stop early since cursor is inside a card
+      }
+    }
+  }
+
+  if (closestIndex === -1) return [null, false];
+  return [closestIndex, isInCard];
+}
+
+function clickVirtualCursor(click) {
+  ipcRenderer.invoke("click-cursor-btn", click);
+}

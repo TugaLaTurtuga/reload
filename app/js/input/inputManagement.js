@@ -30,8 +30,10 @@ class InputManager {
     this.mouseButtons = new Set(); // Track pressed mouse buttons
     this.gamepadButtons = new Set(); // Track gamepad button presses
     this.gamepadAxes = [0, 0, 0, 0]; // Track gamepad axes (left/right sticks)
+    this.cleanedAxes = []; // turns the top one to [{x: 0, y: 0}, {x: 0, y: 0}, ...]
     this.simClickIndex = {};
     this.nonDefaultKeys = [];
+    this.logKeyPress = false;
 
     this._setupEventListeners();
     this._startGamepadLoop();
@@ -41,13 +43,26 @@ class InputManager {
   _setupEventListeners() {
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
-      console.log(key);
       if (this.nonDefaultKeys.includes(key)) e.preventDefault();
 
-      if (e.metaKey) this.lastPressedKeys.add("cmd");
-      if (e.ctrlKey) this.lastPressedKeys.add("ctrl");
-      if (e.shiftKey) this.lastPressedKeys.add("shift");
-      if (e.altKey) this.lastPressedKeys.add("alt");
+      if (e.metaKey) {
+        this.lastPressedKeys.add("cmd");
+        if (this.logKeyPress) console.log(`super/command/windows key pressed`);
+      }
+      if (e.ctrlKey) {
+        this.lastPressedKeys.add("ctrl");
+        if (this.logKeyPress) console.log(`key "ctrl" pressed`);
+      }
+      if (e.shiftKey) {
+        this.lastPressedKeys.add("shift");
+        if (this.logKeyPress) console.log(`key "shift" pressed`);
+      }
+      if (e.altKey) {
+        this.lastPressedKeys.add("alt");
+        if (this.logKeyPress) console.log(`key "alt" pressed`);
+      }
+
+      if (this.logKeyPress) console.log(`Key "${key}" pressed`);
       this.lastPressedKeys.add(key);
     });
 
@@ -63,12 +78,14 @@ class InputManager {
     document.addEventListener("mousedown", (e) => {
       const key = `m-${e.button}`;
       if (this.nonDefaultKeys.includes(key)) e.preventDefault();
+      if (this.logKeyPress) console.log(`Mouse button "${e.button}" pressed`);
       this.mouseButtons.add(key);
     });
 
     document.addEventListener("contextmenu", (e) => {
       const key = `m-${e.button}`;
       if (this.nonDefaultKeys.includes(key)) e.preventDefault();
+      if (this.logKeyPress) console.log(`Mouse button "${e.button}" pressed`);
     });
 
     document.addEventListener("mouseup", (e) => {
@@ -88,11 +105,15 @@ class InputManager {
             // Track pressed gamepad buttons
             this.gamepadButtons.clear();
             pad.buttons.forEach((btn, index) => {
-              if (btn.pressed) this.gamepadButtons.add(`g-${index}`);
+              if (btn.pressed) {
+                this.gamepadButtons.add(`g-${index}`);
+                if (this.logKeyPress)
+                  console.log(`Gamepad button "${index}" pressed`);
+              }
             });
 
             // Track gamepad axes (left/right stick values)
-            this.gamepadAxes = pad.axes.slice(0, 4); // Usually: [LX, LY, RX, RY]
+            this.gamepadAxes = pad.axes;
           }
         }
       }
@@ -158,7 +179,14 @@ class InputManager {
 
   // Get gamepad axis values
   GetGamepadAxes() {
-    return [...this.gamepadAxes];
+    this.cleanedAxes = [];
+    for (let i = 0; i < this.gamepadAxes.length; i += 2) {
+      this.cleanedAxes.push({
+        x: this.gamepadAxes[i],
+        y: this.gamepadAxes[i + 1],
+      });
+    }
+    return this.cleanedAxes;
   }
 
   SimulateMouseClick(button = 0) {

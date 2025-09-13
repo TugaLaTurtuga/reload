@@ -7,6 +7,7 @@
     "start": "electron ."
   },
   "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
     "colorthief": "^2.6.0",
     "cors": "^2.8.5",
     "electron-store": "^10.1.0",
@@ -17,5 +18,8 @@
     "music-metadata": "^7.14.0",
     "sharp": "^0.34.3",
     "undici": "^7.15.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1"
   }
 }

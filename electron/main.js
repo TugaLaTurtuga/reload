@@ -6,6 +6,7 @@ const {
   nativeTheme,
   dialog,
   shell,
+  screen,
 } = require("electron");
 const { childProcess, spawn, exec } = require("child_process");
 const path = require("path");
@@ -114,7 +115,7 @@ function createWindow() {
     height: 800,
     minWidth: 570,
     minHeight: 100,
-    titleBarStyle: "hidden",
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -144,6 +145,25 @@ function createWindow() {
   });
 }
 
+ipcMain.on("window-minimize", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.minimize();
+});
+
+ipcMain.on("window-toggle-maximize", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
+});
+
+ipcMain.on("window-close", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.close();
+});
+
 app.whenReady().then(() => {
   getSystemTheme();
   createWindow();
@@ -158,6 +178,113 @@ app.on("window-all-closed", () => {
   */
 
   app.quit(); // plain better + IT'S MY FUCKING APP
+});
+
+const nut = require("@nut-tree-fork/nut-js");
+const { mouse, Button } = nut;
+
+ipcMain.handle("click-cursor-btn", async (event, button) => {
+  let btnEnum;
+
+  if (typeof button === "number") {
+    btnEnum = button;
+  } else if (typeof button === "string") {
+    // Normalize string
+    button = button.toLowerCase();
+
+    if (!isNaN(Number(button))) {
+      // If it's a numeric string like "0" or "1"
+      return await ipcMain.handle("click-cursor-btn", event, Number(button));
+    } else if (button === "left") btnEnum = 0;
+    else if (button === "middle") btnEnum = 1;
+    else if (button === "right") btnEnum = 2;
+    else throw new Error(`Unknown button string: ${button}`);
+  } else {
+    throw new Error(`Unsupported button type: ${typeof button}`);
+  }
+
+  try {
+    await mouse.click(btnEnum);
+    return { ok: true, button };
+  } catch (err) {
+    console.error("click-cursor-btn failed", err);
+    return { ok: false, error: err.message };
+  }
+});
+
+// small helper: convert coords relative-to-window -> absolute screen coords
+function toScreenCoords(win, x, y) {
+  const bounds = win.getBounds();
+  return {
+    x: Math.round(bounds.x + Number(x || 0)),
+    y: Math.round(bounds.y + Number(y || 0)),
+  };
+}
+
+ipcMain.handle("get-cursor-pos", async (event) => {
+  const cursorPos = screen.getCursorScreenPoint();
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const winBounds = win.getBounds();
+  return { x: cursorPos.x - winBounds.x, y: cursorPos.y - winBounds.y };
+});
+
+// set-cursor-pos: moves the system cursor to (x,y) relative to the window top-left
+ipcMain.handle("set-cursor-pos", async (event, x, y) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) throw new Error("Could not resolve BrowserWindow for caller.");
+
+  const { x: sx, y: sy } = toScreenCoords(win, x, y);
+  console.log(`Moving cursor to (${sx}, ${sy}),`);
+  console.log(x, y);
+
+  try {
+    await mouse.setPosition({ x: sx, y: sy }); // nut.js API
+    return { ok: true, screenX: sx, screenY: sy };
+  } catch (err) {
+    console.error("mouse.setPosition failed", err);
+    throw err;
+  }
+});
+
+ipcMain.handle("click-cursor", async (event, arg = {}) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) throw new Error("Could not resolve BrowserWindow for caller.");
+
+  // normalize args
+  let x,
+    y,
+    button = "left",
+    useContentBounds = false;
+  if (typeof arg === "string") {
+    button = arg;
+  } else {
+    ({ x, y, button = "left", useContentBounds = false } = arg || {});
+  }
+
+  // map button string to nut.js Button
+  const b = (button || "left").toString().toLowerCase();
+  let btnEnum = Button.LEFT; // default
+  if (b === "right") btnEnum = Button.RIGHT;
+  else if (b === "middle" || b === "middle-button") btnEnum = Button.MIDDLE;
+
+  try {
+    if (typeof x === "number" && typeof y === "number") {
+      // move then click
+      const { x: sx, y: sy } = toScreenCoords(win, x, y, useContentBounds);
+      await mouse.setPosition({ x: sx, y: sy });
+      // tiny delay to let OS settle (mostly unnecessary but safe)
+      await new Promise((r) => setTimeout(r, 12));
+      await mouse.click(btnEnum);
+      return { ok: true, moved: true, screenX: sx, screenY: sy, button: b };
+    } else {
+      // click at current cursor position
+      await mouse.click(btnEnum);
+      return { ok: true, moved: false, button: b };
+    }
+  } catch (err) {
+    console.error("click-cursor failed", err);
+    throw err;
+  }
 });
 
 ipcMain.handle("show-open-dialog", async (event, options) => {

@@ -7,6 +7,57 @@ let settings = {
   theme: { dark: "", light: "light" }, // app's theme
   themeMode: "dark",
 };
+
+function getRootFromCSS(css) {
+  // Match optional comment, then :root { ... }
+  const re =
+    /(?:\/\*\s*(?<comment>[^\*]+?)\s*\*\/\s*)?:root\s*{(?<body>[^}]*)}/gms;
+
+  let m;
+  const blocks = [];
+
+  while ((m = re.exec(css)) !== null) {
+    blocks.push(m);
+  }
+
+  for (const match of blocks) {
+    const body = match.groups.body;
+    if (!body) continue;
+
+    const map = new Map();
+    const varRe = /--([\w-]+)\s*:\s*([^;]+);/g;
+    let vm;
+    while ((vm = varRe.exec(body)) !== null) {
+      map.set(`--${vm[1]}`, vm[2].trim());
+    }
+    return map; // return first :root block
+  }
+
+  return null;
+}
+
+function updateCSSContent(look, lookCssContent, lookCssOptions) {
+  // rebuild the :root { ... } block
+  let newRoot = ":root {\n";
+  for (const [name, value] of lookCssOptions.entries()) {
+    newRoot += `  ${name}: ${value};\n`;
+  }
+  newRoot += "}\n";
+
+  // replace the old :root { ... } block
+  const updatedCss = lookCssContent.replace(/:root\s*{[^}]*}/m, newRoot.trim());
+
+  // save to file
+  try {
+    fs.writeFileSync(look.path, updatedCss, "utf-8");
+    console.log(`✅ CSS updated and saved to ${look.path}`);
+  } catch (err) {
+    console.error(`❌ Failed to write CSS to ${look.path}:`, err);
+  }
+
+  return updatedCss;
+}
+
 async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
   try {
     if (Object.keys(updatedSettings).length === 0) {
@@ -78,11 +129,9 @@ async function loadLooks() {
 
   grid.innerHTML = "";
 
-  console.log(looks);
-
-  // normalize to objects: { name, css }
+  // normalize to objects: { name, css, path }
   looks = looks.map((item, idx) => {
-    return { name: item.split("/").pop(), css: String(item) };
+    return { name: item.split("/").pop(), css: String(item), path: item };
   });
 
   // Extract css/look.css content
@@ -100,8 +149,6 @@ async function loadLooks() {
     const framesDiv = document.createElement("div");
     framesDiv.className = "look-frames";
 
-    console.log(look);
-
     const card = document.createElement("div");
     card.className = "look-card";
 
@@ -109,8 +156,12 @@ async function loadLooks() {
     header.className = "look-header";
     header.textContent = look.name;
 
+    const valueChanger = document.createElement("div");
+    valueChanger.className = "look-values";
+
     // Extract CSS content from look.css file
     let lookCssContent = "";
+
     try {
       if (fs.existsSync(look.css)) {
         lookCssContent = fs.readFileSync(look.css, "utf8");
@@ -145,8 +196,66 @@ async function loadLooks() {
       framesDiv.appendChild(frames[i]);
     }
 
+    let lookCssOptions = getRootFromCSS(lookCssContent);
+
+    if (lookCssOptions) {
+      console.log(lookCssOptions);
+
+      // iterate over Map entries
+      for (const [name, data] of lookCssOptions.entries()) {
+        console.log(name, data);
+
+        // add input fields for each option
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = data;
+
+        input.addEventListener("input", () => {
+          // update Map
+          lookCssOptions.set(name, input.value);
+
+          // rebuild CSS content and save
+          let updatedCss = updateCSSContent(
+            look,
+            lookCssContent,
+            lookCssOptions,
+          );
+          look.css = updatedCss;
+          looks[i].css = updatedCss;
+          lookCssContent = updatedCss;
+          lookCssOptions = getRootFromCSS(lookCssContent);
+
+          // 🔥 live-update all iframes for this look
+          frames.forEach((frame) => {
+            try {
+              const doc = frame.contentDocument;
+              if (!doc) return;
+              let styleEl = doc.getElementById("user-look-style");
+              if (!styleEl) {
+                styleEl = doc.createElement("style");
+                styleEl.id = "user-look-style";
+                doc.head.appendChild(styleEl);
+              }
+              styleEl.textContent = updatedCss;
+            } catch (e) {
+              console.warn("iframe update failed:", e);
+            }
+          });
+
+          if (lookCssContent === mainLookCssContent) {
+            header.style.color = "var(--activeColor)";
+          } else {
+            header.style.color = "";
+          }
+        });
+
+        valueChanger.appendChild(input);
+      }
+    }
+
     card.appendChild(header);
     card.appendChild(framesDiv);
+    card.appendChild(valueChanger);
     grid.appendChild(card);
 
     async function populateIframe(frame) {
@@ -198,7 +307,6 @@ async function loadLooks() {
 // initial load
 document.addEventListener("DOMContentLoaded", async () => {
   htmls = await ipcRenderer.invoke("get-main-reload-html");
-  console.log(htmls);
   baseHtml = htmls[1];
   loadSettings();
   loadLooks();
