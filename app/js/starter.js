@@ -64,7 +64,7 @@ async function saveSettings() {
   await ipcRenderer.invoke("save-settings", settings);
 }
 
-function updateSettings() {
+async function updateSettings() {
   updateTheme();
 
   // update the tracks name when settings.showFeatures is changed
@@ -76,12 +76,15 @@ function updateSettings() {
   }
   if (settings.currentAlbum) {
     openAlbum(settings.currentAlbum);
+    console.log(0);
   } else if (settings.currentPlayingAlbum) {
-    openAlbum(settings.currentPlayingAlbum);
+    const test = await openAlbum(settings.currentPlayingAlbum);
     backToLibrary();
+    console.log(1);
   } else {
-    openAlbum(songs[0]);
+    const test = await openAlbum(songs[0]);
     backToLibrary();
+    console.log(2);
   }
 }
 

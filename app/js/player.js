@@ -15,6 +15,37 @@ async function playLoadedAudioFromSettings() {
 
 // Play track by index
 //// TODO: Make the audioSources work on the backend so its able to play without any window opened
+
+function getCompressedInfo(album, index) {
+  // Keep only essential album info
+  const compressedAlbum = {
+    info: {
+      description: {
+        author: album.info.description.author,
+        cover: album.info.description.cover,
+        name: album.info.description.name,
+        color: album.info.description.color,
+      },
+    },
+    path: album.path,
+    name: album.name,
+    tracks: [],
+  };
+
+  // Fill tracks with placeholders before the current one
+  for (let i = 0; i < index; i++) {
+    compressedAlbum.tracks.push(null);
+  }
+
+  // Add only the current track
+  compressedAlbum.tracks.push(album.tracks[index]);
+
+  return {
+    albumC: compressedAlbum,
+    indexC: index,
+  };
+}
+
 function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   const { pushPrev = true, playFromStart = true, firstLoad = false } = opts;
 
@@ -79,38 +110,41 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   // bc I assume the track is different from the saved one, or the user clicked on it again.
   if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
     if (pushPrev && pushPrev !== null) {
+      const { albumC, indexC } = getCompressedInfo(
+        settings.currentPlayingAlbum,
+        settings.currentTrackIndex,
+      );
       settings.previousTracks.push({
-        album: settings.currentPlayingAlbum,
-        index: settings.currentTrackIndex,
+        album: albumC,
+        index: indexC,
       });
       settings.previousTracks = settings.previousTracks.slice(-50); // limit previousTracks size
     } else if (pushPrev !== null) {
+      const { albumC, indexC } = getCompressedInfo(
+        settings.currentPlayingAlbum,
+        settings.currentTrackIndex,
+      );
       settings.nextTracks.unshift({
-        album: settings.currentPlayingAlbum,
-        index: settings.currentTrackIndex,
+        album: albumC,
+        index: indexC,
       });
       settings.nextTracks = settings.nextTracks.slice(-50); // limit nextTracks size
     }
   }
 
-  settings.currentPlayingAlbum = album;
-  settings.currentTrackIndex = index;
+  const { albumC, indexC } = getCompressedInfo(album, index);
+  settings.currentPlayingAlbum = albumC;
+  settings.currentTrackIndex = indexC;
 
   // Update track highlight (works when the album view is the one currently open)
   if (settings.currentAlbum !== null) {
-    if (settings.currentAlbum.path === settings.currentPlayingAlbum.path) {
-      document
-        .querySelectorAll(".track-item")
-        .forEach((item) => item.classList.remove("active"));
-      const activeEl = document.querySelector(
-        `.track-item[data-index="${index}"]`,
-      );
-      if (activeEl) activeEl.classList.add("active");
-    } else {
-      document
-        .querySelectorAll(".track-item")
-        .forEach((item) => item.classList.remove("active"));
-    }
+    document
+      .querySelectorAll(".track-item")
+      .forEach((item) => item.classList.remove("active"));
+    const activeEl = document.querySelector(
+      `.track-item[data-index="${index}"]`,
+    );
+    if (activeEl) activeEl.classList.add("active");
   } // no need to remove any track-item active mode if settings.currentAlbum is null
   const currTrack = album.tracks[index];
   let alreadyLoadedTrack = false;
@@ -211,8 +245,6 @@ function loadTrack(currTrack, playFromStart, firstLoad) {
       `url("${settings.currentPlayingAlbum.info.description.cover}")`
     )
       nowPlayingArtSmall.style.backgroundImage = "none";
-
-    console.log(settings.currentPlayingAlbum.info.description.cover);
   } else {
     nowPlayingArtSmall.style.backgroundImage = "none";
   }
@@ -293,7 +325,7 @@ function initAudioGraph() {
 
 // Apply muffling effect
 function muffleAudio(time = 0.5) {
-  if (isMuffled) return;
+  if (isMuffled || !audioCtx) return;
   const now = audioCtx.currentTime;
   filterNode.frequency.cancelScheduledValues(now);
   filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
@@ -303,7 +335,7 @@ function muffleAudio(time = 0.5) {
 
 // Remove muffling effect
 function unmuffleAudio() {
-  if (!isMuffled) return;
+  if (!isMuffled || !audioCtx) return;
   const now = audioCtx.currentTime;
   filterNode.frequency.cancelScheduledValues(now);
   filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
@@ -354,7 +386,8 @@ function setNextTracksFromAlbum(album, startIndex) {
   settings.nextTracks = [];
   if (!album || !album.tracks) return;
   for (let i = startIndex + 1; i < album.tracks.length; i++) {
-    settings.nextTracks.push({ album, index: i });
+    const { albumC, indexC } = getCompressedInfo(album, i);
+    settings.nextTracks.push({ album: albumC, index: indexC });
   }
 }
 

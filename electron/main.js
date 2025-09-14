@@ -15,7 +15,7 @@ const mm = require("music-metadata");
 const ColorThief = require("colorthief");
 const { getFonts } = require("font-list");
 
-const userDataPath = app.getPath("userData");
+const userDataPath = path.join(app.getPath("userData"), "user-data");
 if (!fs.existsSync(userDataPath)) {
   fs.mkdirSync(userDataPath);
 }
@@ -183,7 +183,7 @@ app.on("window-all-closed", () => {
 const nut = require("@nut-tree-fork/nut-js");
 const { mouse, Button } = nut;
 
-ipcMain.handle("click-cursor-btn", async (event, button) => {
+ipcMain.handle("click-cursor", async (event, button) => {
   let btnEnum;
 
   if (typeof button === "number") {
@@ -193,7 +193,6 @@ ipcMain.handle("click-cursor-btn", async (event, button) => {
     button = button.toLowerCase();
 
     if (!isNaN(Number(button))) {
-      // If it's a numeric string like "0" or "1"
       return await ipcMain.handle("click-cursor-btn", event, Number(button));
     } else if (button === "left") btnEnum = 0;
     else if (button === "middle") btnEnum = 1;
@@ -208,6 +207,45 @@ ipcMain.handle("click-cursor-btn", async (event, button) => {
     return { ok: true, button };
   } catch (err) {
     console.error("click-cursor-btn failed", err);
+    return { ok: false, error: err.message };
+  }
+});
+
+const stickyClicks = {};
+ipcMain.handle("sticky-click-cursor", async (event, button, stick) => {
+  let btnEnum;
+
+  if (typeof button === "number") {
+    btnEnum = button;
+  } else if (typeof button === "string") {
+    // Normalize string
+    button = button.toLowerCase();
+
+    if (!isNaN(Number(button))) {
+      return await ipcMain.handle("click-cursor-btn", event, Number(button));
+    } else if (button === "left") btnEnum = 0;
+    else if (button === "middle") btnEnum = 1;
+    else if (button === "right") btnEnum = 2;
+    else throw new Error(`Unknown button string: ${button}`);
+  } else {
+    throw new Error(`Unsupported button type: ${typeof button}`);
+  }
+
+  try {
+    console.log(stick);
+    if (stickyClicks[btnEnum] || !stick) {
+      // already held -> release
+      await mouse.releaseButton(btnEnum);
+      delete stickyClicks[btnEnum];
+      return { ok: true, action: "released", button };
+    } else {
+      // not held -> press & hold
+      await mouse.pressButton(btnEnum);
+      stickyClicks[btnEnum] = true;
+      return { ok: true, action: "pressed", button };
+    }
+  } catch (err) {
+    console.error("sticky-click-cursor failed", err);
     return { ok: false, error: err.message };
   }
 });
@@ -242,47 +280,6 @@ ipcMain.handle("set-cursor-pos", async (event, x, y) => {
     return { ok: true, screenX: sx, screenY: sy };
   } catch (err) {
     console.error("mouse.setPosition failed", err);
-    throw err;
-  }
-});
-
-ipcMain.handle("click-cursor", async (event, arg = {}) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  if (!win) throw new Error("Could not resolve BrowserWindow for caller.");
-
-  // normalize args
-  let x,
-    y,
-    button = "left",
-    useContentBounds = false;
-  if (typeof arg === "string") {
-    button = arg;
-  } else {
-    ({ x, y, button = "left", useContentBounds = false } = arg || {});
-  }
-
-  // map button string to nut.js Button
-  const b = (button || "left").toString().toLowerCase();
-  let btnEnum = Button.LEFT; // default
-  if (b === "right") btnEnum = Button.RIGHT;
-  else if (b === "middle" || b === "middle-button") btnEnum = Button.MIDDLE;
-
-  try {
-    if (typeof x === "number" && typeof y === "number") {
-      // move then click
-      const { x: sx, y: sy } = toScreenCoords(win, x, y, useContentBounds);
-      await mouse.setPosition({ x: sx, y: sy });
-      // tiny delay to let OS settle (mostly unnecessary but safe)
-      await new Promise((r) => setTimeout(r, 12));
-      await mouse.click(btnEnum);
-      return { ok: true, moved: true, screenX: sx, screenY: sy, button: b };
-    } else {
-      // click at current cursor position
-      await mouse.click(btnEnum);
-      return { ok: true, moved: false, button: b };
-    }
-  } catch (err) {
-    console.error("click-cursor failed", err);
     throw err;
   }
 });
@@ -633,11 +630,16 @@ ipcMain.handle("save-settings", (event, unsavedSettings) => {
 function saveSettings(unsavedSettings, fromsystemTheme = false) {
   try {
     let settings = {};
+    const saveNewAsSettings = false;
 
     if (fs.existsSync(settingsFilePath)) {
       const data = fs.readFileSync(settingsFilePath, "utf8");
       settings = JSON.parse(data);
     }
+
+    if (settings == {}) saveNewAsSettings = true;
+
+    console.log(settings);
 
     if (fromsystemTheme) {
       if (settings.getSystemTheme) {
@@ -660,6 +662,11 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
       }
     }
 
+    if (saveNewAsSettings) {
+      settings = settings.new;
+      settings.new = settings;
+    }
+
     fs.writeFileSync(
       settingsFilePath,
       JSON.stringify(settings, null, 2),
@@ -673,6 +680,10 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
 
     return true;
   } catch (error) {
+    if (error.message.startsWith("Unexpected end of JSON input")) {
+      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 2), "utf8");
+      saveSettings(unsavedSettings, fromsystemTheme);
+    }
     console.error("❌ Error saving last played info:", error);
     return false;
   }

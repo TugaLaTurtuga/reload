@@ -103,13 +103,11 @@ async function changeBackGroundColorFromNewAlbum(color) {
       ${Math.max(0, Math.min(255, finalB))}
     )`;
   changeBackgroundGradient(color);
-  console.log("PLAYERCONTAINER", color, colorgepper);
   if (playerContainer) {
     playerContainer.style.setProperty("--backgroundColor", color);
   }
 }
 
 function changeBackgroundGradient(color) {
-  console.log("--backgroundColor");
   background.style.setProperty("--backgroundColor", color);
 }

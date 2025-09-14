@@ -15,7 +15,6 @@ class SliderController {
       this.updateSlider(slider); // Update background and spans on initialization
       this._addSliderListeners(slider, spanElements); // Attach listeners
     });
-    console.log(this.sliders);
   }
 
   updateSlider(slider) {

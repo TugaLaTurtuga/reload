@@ -94,8 +94,16 @@ function renderLibrary() {
 }
 
 // Open album view
-function openAlbum(album) {
+async function openAlbum(album) {
   if (!album) return;
+
+  if (!album.info.trackList) {
+    // get the uncompressed album
+    const fullAlbum = songMap.get(album.path);
+    if (fullAlbum) {
+      album = fullAlbum;
+    }
+  }
   settings.currentAlbum = album;
 
   // Set album details
@@ -122,7 +130,7 @@ function openAlbum(album) {
   albumGenre.textContent = album.info.description.genre;
   albumDescription.textContent = album.info.description.description;
 
-  changeBackGroundColorFromNewAlbum(album.info.description.color);
+  await changeBackGroundColorFromNewAlbum(album.info.description.color);
 
   // Render track list
   trackList.innerHTML = "";
@@ -168,7 +176,7 @@ function openAlbum(album) {
   libraryContainer.classList.add("hidden");
   playerContainer.classList.remove("hidden");
   mainContent.scrollTo(0, 0);
-  //mainContent.style.marginTop = '15px';
+  return true;
 }
 
 // Return to library view
@@ -179,6 +187,7 @@ async function backToLibrary() {
   const color = await tryGetComputedStyle("--bg-2");
   changeBackgroundGradient(color);
   settings.currentAlbum = null;
+  return true;
 }
 
 async function editAlbum() {
@@ -195,6 +204,28 @@ async function editAlbum() {
 function getGridXSize(width) {
   if (width <= 200) return 0;
   return Math.ceil((width - 200) / 220);
+}
+
+async function moveCursor(x, y) {
+  const cursorPos = await ipcRenderer.invoke("get-cursor-pos");
+
+  let newCursorPos = {
+    x: cursorPos.x + x * settings.controller.cursorSensitifity,
+    y: cursorPos.y + y * settings.controller.cursorSensitifity,
+  };
+  if (settings.controller.keepMouseBetweenBounds) {
+    newCursorPos.x = Math.max(0, Math.min(newCursorPos.x, window.innerWidth));
+    newCursorPos.y = Math.max(0, Math.min(newCursorPos.y, window.innerHeight));
+  }
+
+  ipcRenderer.invoke("set-cursor-pos", newCursorPos.x, newCursorPos.y);
+}
+
+function scroll(x, y) {
+  mainContent.scrollBy(
+    x * settings.controller.scrollSensitifity,
+    y * settings.controller.scrollSensitifity,
+  );
 }
 
 async function moveVirtualCursor(x, y) {
@@ -224,10 +255,8 @@ async function moveVirtualCursor(x, y) {
       if (x !== 0) {
         console.log(gridPosX, gridXSize);
         if (gridPosX + 1 === gridXSize) {
-          console.log("Reached end of row");
           pos = cursorPos - gridXSize + 1;
         } else {
-          console.log("Reached end of uncompleted row");
           pos = cursorPos - gridXSize;
         }
       } else {
@@ -307,5 +336,10 @@ async function getCurrentGridPosition() {
 }
 
 function clickVirtualCursor(click) {
-  ipcRenderer.invoke("click-cursor-btn", click);
+  ipcRenderer.invoke("click-cursor", click);
+}
+
+function stickyClickVirtualCursor(click, stick) {
+  console.log(stick);
+  ipcRenderer.invoke("sticky-click-cursor", click, stick);
 }

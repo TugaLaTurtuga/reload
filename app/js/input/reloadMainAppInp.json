@@ -23,6 +23,7 @@
       "escape": "backToLibrary()",
       "home": "backToLibrary()"
     },
+    "whenUnpressed": {},
     "whenDown": {
       "f11": "addVolume(-.02)",
       "f12": "addVolume(.02)",
@@ -32,7 +33,9 @@
       "m": "addProgress(2)",
       "<": "addProgress(-2)",
       ">": "addProgress(2)"
-    }
+    },
+    "whenUpOrDown": {},
+    "whenUp": {}
   },
 
   "gamepad": {
@@ -44,29 +47,26 @@
       "8": "toggleMute()",
       "4": "playPrevious()",
       "5": "playNext()",
-      "axes[0]": "moveVirtualCursor(Math.ceil(value.x), Math.ceil(value.y))",
       "14": "moveVirtualCursor(-1, 0)",
       "15": "moveVirtualCursor(1, 0)",
       "12": "moveVirtualCursor(0, 1)",
       "13": "moveVirtualCursor(0, -1)",
-      "0": "clickVirtualCursor(0)",
       "1": "goBack()",
       "6": "goBack()",
       "7": "goBack()",
       "16": "backToLibrary()",
-      "9": "openExternalHtml('html/settings.html')"
+      "9": "openExternalHtml('html/settings.html')",
+      "0": "stickyClickVirtualCursor(0, true)"
+    },
+    "whenUnpressed": {
+      "0": "stickyClickVirtualCursor(0, false)"
     },
     "whenDown": {
-      "LeftStick": "addVolume(-.02)",
-      "RightStick": "addVolume(.02)",
-      "LeftTrigger": "addVolume(-.02)",
-      "RightTrigger": "addVolume(.02)",
-      "LeftBumper": "addProgress(-2)",
-      "RightBumper": "addProgress(2)",
-      "LeftThumbstick": "addProgress(-2)",
-      "RightThumbstick": "addProgress(2)"
+      "axes[0]": "moveCursor(value.x, value.y)",
+      "axes[1]": "scroll(value.x, value.y)"
     },
-    "whenUpOrDown": {}
+    "whenUpOrDown": {},
+    "whenUp": {}
   },
 
   "mouse": {
@@ -74,6 +74,9 @@
       "3": "goBack()",
       "4": "goForward()"
     },
-    "whenDown": {}
+    "whenUnpressed": {},
+    "whenDown": {},
+    "whenUpOrDown": {},
+    "whenUp": {}
   }
 }
