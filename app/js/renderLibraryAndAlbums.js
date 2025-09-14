@@ -4,7 +4,7 @@ function updateTracks(trackList) {
   if (Array.isArray(trackList)) {
     const updatedTrackList = [];
     for (const track of trackList) {
-      const match = songMap.get(track.album.path);
+      const match = songsMap.get(track.album.path);
       if (match) {
         track.album = match;
       }
@@ -12,7 +12,7 @@ function updateTracks(trackList) {
     }
     return updatedTrackList;
   } else {
-    const match = songMap.get(trackList.path);
+    const match = songsMap.get(trackList.path);
     if (match) {
       return match;
     } else {
@@ -25,7 +25,7 @@ async function updateLibrary() {
   try {
     // Reload the library
     songs = await ipcRenderer.invoke("get-library");
-    songMap = new Map(songs.map((song) => [song.path, song]));
+    songsMap = new Map(songs.map((song) => [song.path, song]));
     await renderLibrary();
 
     //                  Update tracks                  //
@@ -58,7 +58,7 @@ async function updateLibrary() {
 async function loadLibrary() {
   try {
     songs = await ipcRenderer.invoke("get-library");
-    songMap = new Map(songs.map((song) => [song.path, song]));
+    songsMap = new Map(songs.map((song) => [song.path, song]));
     renderLibrary();
     loading.style.display = "none";
   } catch (error) {
@@ -99,7 +99,7 @@ async function openAlbum(album) {
 
   if (!album.info.trackList) {
     // get the uncompressed album
-    const fullAlbum = songMap.get(album.path);
+    const fullAlbum = songsMap.get(album.path);
     if (fullAlbum) {
       album = fullAlbum;
     }

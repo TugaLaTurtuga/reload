@@ -1,6 +1,6 @@
 async function tryGetComputedStyle(name) {
-  const tries = 5;
-  const timeout = 100;
+  const tries = 10;
+  const timeout = 50;
   for (let i = 0; i < tries; i++) {
     const result = await getComputedStyle(document.body)
       .getPropertyValue(name)

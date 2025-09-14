@@ -16,40 +16,77 @@ async function playLoadedAudioFromSettings() {
 // Play track by index
 //// TODO: Make the audioSources work on the backend so its able to play without any window opened
 
-function getCompressedInfo(album, index) {
+function getCompressedInfo(album) {
+  return { path: album.path };
+}
+
+async function getLessCompressedInfo(album, index) {
   // Keep only essential album info
+
+  if (!album?.info?.trackList) {
+    album = await getUncompressedInfo(album, index);
+  }
+
   const compressedAlbum = {
-    info: {
-      description: {
-        author: album.info.description.author,
-        cover: album.info.description.cover,
-        name: album.info.description.name,
-        color: album.info.description.color,
-      },
-    },
     path: album.path,
-    name: album.name,
+    info: {
+      description: album.info.description,
+    },
     tracks: [],
   };
 
-  // Fill tracks with placeholders before the current one
-  for (let i = 0; i < index; i++) {
+  for (let i = 0; i < index.length - 1; i++) {
     compressedAlbum.tracks.push(null);
   }
-
-  // Add only the current track
   compressedAlbum.tracks.push(album.tracks[index]);
 
-  return {
-    albumC: compressedAlbum,
-    indexC: index,
-  };
+  console.log(compressedAlbum);
+
+  return compressedAlbum;
 }
 
-function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
+async function getUncompressedInfo(album, index) {
+  if (album?.info?.trackList) return album; // already uncompressed
+  const tries = 10;
+  const timeout = 50;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const ready = songsMap && songsMap.size > 0;
+      if (ready) {
+        return check(album);
+      }
+    } catch (err) {
+      // songsMap is not defiened for now.
+    }
+
+    if (i < tries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+    }
+  }
+  return null; // fallback
+
+  function check(album) {
+    // get the uncompressed album
+    const fullAlbum = songsMap.get(album.path);
+    if (fullAlbum) {
+      album = fullAlbum;
+    }
+    return album;
+  }
+}
+
+async function playTrack(
+  index,
+  album = settings.currentPlayingAlbum,
+  opts = {},
+) {
   const { pushPrev = true, playFromStart = true, firstLoad = false } = opts;
 
-  if (!album || !album.tracks || !album.tracks[index]) return;
+  if (!album) return;
+
+  album = await getUncompressedInfo(album);
+
+  if (!album?.tracks[index]) return;
 
   let sourcesToUpdate = [true, true, true];
   let sources = [0, 1, 2];
@@ -110,41 +147,34 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
   // bc I assume the track is different from the saved one, or the user clicked on it again.
   if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
     if (pushPrev && pushPrev !== null) {
-      const { albumC, indexC } = getCompressedInfo(
-        settings.currentPlayingAlbum,
-        settings.currentTrackIndex,
-      );
       settings.previousTracks.push({
-        album: albumC,
-        index: indexC,
+        album: getCompressedInfo(settings.currentPlayingAlbum),
+        index: settings.currentTrackIndex,
       });
       settings.previousTracks = settings.previousTracks.slice(-50); // limit previousTracks size
     } else if (pushPrev !== null) {
-      const { albumC, indexC } = getCompressedInfo(
-        settings.currentPlayingAlbum,
-        settings.currentTrackIndex,
-      );
       settings.nextTracks.unshift({
-        album: albumC,
-        index: indexC,
+        album: getCompressedInfo(settings.currentPlayingAlbum),
+        index: settings.currentTrackIndex,
       });
       settings.nextTracks = settings.nextTracks.slice(-50); // limit nextTracks size
     }
   }
 
-  const { albumC, indexC } = getCompressedInfo(album, index);
-  settings.currentPlayingAlbum = albumC;
-  settings.currentTrackIndex = indexC;
+  settings.currentPlayingAlbum = await getLessCompressedInfo(album, index);
+  settings.currentTrackIndex = index;
 
   // Update track highlight (works when the album view is the one currently open)
   if (settings.currentAlbum !== null) {
     document
       .querySelectorAll(".track-item")
       .forEach((item) => item.classList.remove("active"));
-    const activeEl = document.querySelector(
-      `.track-item[data-index="${index}"]`,
-    );
-    if (activeEl) activeEl.classList.add("active");
+    if (settings.currentAlbum.path === album.path) {
+      const activeEl = document.querySelector(
+        `.track-item[data-index="${index}"]`,
+      );
+      if (activeEl) activeEl.classList.add("active");
+    }
   } // no need to remove any track-item active mode if settings.currentAlbum is null
   const currTrack = album.tracks[index];
   let alreadyLoadedTrack = false;
@@ -173,6 +203,7 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
           settings.previousTracks[settings.previousTracks.length - 1];
         if (!prev || !prev.album || prev.index == null) continue;
 
+        prev.album = await getLessCompressedInfo(prev.album, prev.index);
         albumPathAndIndex[0] = prev.album.path;
         albumPathAndIndex[1] = prev.index;
         track = prev.album.tracks[prev.index];
@@ -186,6 +217,7 @@ function playTrack(index, album = settings.currentPlayingAlbum, opts = {}) {
         if (settings.nextTracks.length === 0) continue;
         const next = settings.nextTracks[0];
         if (!next || !next.album || next.index == null) continue;
+        next.album = await getLessCompressedInfo(next.album, next.index);
         albumPathAndIndex[0] = next.album.path;
         albumPathAndIndex[1] = next.index;
         track = next.album.tracks[next.index];
@@ -386,8 +418,7 @@ function setNextTracksFromAlbum(album, startIndex) {
   settings.nextTracks = [];
   if (!album || !album.tracks) return;
   for (let i = startIndex + 1; i < album.tracks.length; i++) {
-    const { albumC, indexC } = getCompressedInfo(album, i);
-    settings.nextTracks.push({ album: albumC, index: indexC });
+    settings.nextTracks.push({ album: getCompressedInfo(album), index: i });
   }
 }
 
