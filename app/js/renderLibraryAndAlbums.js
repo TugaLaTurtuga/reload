@@ -209,10 +209,25 @@ function getGridXSize(width) {
 async function moveCursor(x, y) {
   const cursorPos = await ipcRenderer.invoke("get-cursor-pos");
 
+  const accel = settings.controller.cursorAceleration;
+  const sens = settings.controller.cursorSensitifity;
+
+  // Per-axis signs
+  const signX = x >= 0 ? 1 : -1;
+  const signY = y >= 0 ? 1 : -1;
+
+  // Apply acceleration to absolute values, then restore sign
+  const deltaX =
+    ((signX * Math.pow(Math.abs(x * accel), accel)) / accel) * sens;
+  const deltaY =
+    ((signY * Math.pow(Math.abs(y * accel), accel)) / accel) * sens;
+
   let newCursorPos = {
-    x: cursorPos.x + x * settings.controller.cursorSensitifity,
-    y: cursorPos.y + y * settings.controller.cursorSensitifity,
+    x: cursorPos.x + deltaX,
+    y: cursorPos.y + deltaY,
   };
+
+  // Keep within bounds if needed
   if (settings.controller.keepMouseBetweenBounds) {
     newCursorPos.x = Math.max(0, Math.min(newCursorPos.x, window.innerWidth));
     newCursorPos.y = Math.max(0, Math.min(newCursorPos.y, window.innerHeight));

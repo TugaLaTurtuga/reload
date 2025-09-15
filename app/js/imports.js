@@ -75,11 +75,8 @@ let settings = {
     cursorSensitifity: 20,
     keepMouseBetweenBounds: true,
     scrollSensitifity: 20,
+    cursorAceleration: 2,
   },
 };
-
-let currentEvent = {};
-const pastEvents = [];
-const futureEvents = [];
 
 const inputsFilePath = path.join(__dirname, "js/input/reloadMainAppInp.json");
