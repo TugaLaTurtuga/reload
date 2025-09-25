@@ -387,8 +387,7 @@ nav ul {
     text-overflow: ellipsis;
 }
 
-#albums-section,
-#singles-section {
+#albums-section {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     grid-gap: 20px;
@@ -591,6 +590,7 @@ nav ul {
 .track-number {
     width: 30px;
     text-align: left;
+    cursor: pointer;
 }
 
 .track-title {

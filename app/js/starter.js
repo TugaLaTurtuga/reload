@@ -9,17 +9,16 @@ async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
       // saver load then just putting
       if (updatedSettings.hasOwnProperty(key) && !onlyNewchanges) {
         settings[key] = updatedSettings[key];
-      } else if (
-        onlyNewchanges &&
-        updatedSettings.new &&
-        updatedSettings.new.hasOwnProperty(key)
-      ) {
+      } else if (updatedSettings.new.hasOwnProperty(key) && onlyNewchanges) {
+        console.log(key, updatedSettings.new[key]);
         settings[key] = updatedSettings.new[key];
       }
     }
   } catch (error) {
     console.error("Error loading settings:", error);
   }
+  console.log("Settings loaded");
+
   console.log("Settings loaded");
 
   volumeSlider.value = settings.volume;
@@ -50,8 +49,8 @@ function updateTheme() {
   document.body.setAttribute("theme", settings.theme[settings.themeMode]);
 }
 
-function getTrackName(track) {
-  if (settings.showFeatures) return track.title.trim();
+function getTrackName(track, overrideFeatures = false) {
+  if (settings.showFeatures && !overrideFeatures) return track.title.trim();
   else return track.title.replace(/(\(|\[)(feat|ft|with).*$/i, "").trim();
 }
 
@@ -76,15 +75,12 @@ async function updateSettings() {
   }
   if (settings.currentAlbum) {
     openAlbum(settings.currentAlbum);
-    console.log(0);
   } else if (settings.currentPlayingAlbum) {
     const test = await openAlbum(settings.currentPlayingAlbum);
     backToLibrary();
-    console.log(1);
   } else {
     const test = await openAlbum(songs[0]);
     backToLibrary();
-    console.log(2);
   }
 }
 

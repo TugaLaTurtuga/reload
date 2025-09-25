@@ -37,3 +37,45 @@
     pointer-events: none;
     z-index: 9999;
 }
+
+/* remove scrollbar cause they're terrible and shouldn't exist. */
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--trackItemOnHover);
+    border: 1px solid var(--ControlsBtnsColor);
+    color: transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    margin: 10px;
+    transition: all 0.07s ease-out;
+}
+
+/* Change the background color when checkbox is checked */
+input[type="checkbox"]:checked {
+    background-color: var(--activeColor);
+}
+
+/* Add a check mark when checked */
+input[type="checkbox"]:checked::after {
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 12px;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}

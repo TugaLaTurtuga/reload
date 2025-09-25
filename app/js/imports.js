@@ -75,7 +75,8 @@ let settings = {
     cursorSensitifity: 20,
     keepMouseBetweenBounds: true,
     scrollSensitifity: 20,
-    cursorAceleration: 2,
+    invertScroll: false,
+    cursorAceleration: 1.2,
   },
 };
 

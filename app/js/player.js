@@ -40,8 +40,6 @@ async function getLessCompressedInfo(album, index) {
   }
   compressedAlbum.tracks.push(album.tracks[index]);
 
-  console.log(compressedAlbum);
-
   return compressedAlbum;
 }
 
@@ -161,7 +159,7 @@ async function playTrack(
     }
   }
 
-  settings.currentPlayingAlbum = await getLessCompressedInfo(album, index);
+  settings.currentPlayingAlbum = await getUncompressedInfo(album, index);
   settings.currentTrackIndex = index;
 
   // Update track highlight (works when the album view is the one currently open)
@@ -178,6 +176,11 @@ async function playTrack(
   } // no need to remove any track-item active mode if settings.currentAlbum is null
   const currTrack = album.tracks[index];
   let alreadyLoadedTrack = false;
+
+  updateMediaSessionMetadata(
+    currTrack,
+    settings.currentPlayingAlbum.info.description,
+  );
 
   for (let i = 0; i < sources.length; ++i) {
     if (sources[i] === 1) {
@@ -223,7 +226,7 @@ async function playTrack(
         track = next.album.tracks[next.index];
     }
 
-    if (track !== null) {
+    if (track !== null && track?.path) {
       // load track to audioSource
       loadTrackToAudioSource(track, albumPathAndIndex, audioSources[i]);
       if (track === currTrack && !alreadyLoadedTrack) {
@@ -353,6 +356,100 @@ function initAudioGraph() {
     sourceNode.connect(filterNode);
     filterNode.connect(audioCtx.destination);
   }
+}
+
+function getMimeTypeFromUrl(url) {
+  const ext = url.split(".").pop().toLowerCase().split("?")[0].split("#")[0];
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    case "bmp":
+      return "image/bmp";
+    case "svg":
+      return "image/svg+xml";
+    default:
+      return "image/*";
+  }
+}
+
+function getImgBase64AndMimeType(filePath) {
+  console.log(filePath);
+  const mime = getMimeTypeFromUrl(filePath);
+  const data = fs.readFileSync(filePath);
+  const base64 = data.toString("base64");
+  return [`data:${mime};base64,${base64}`, mime];
+}
+
+function updateMediaSessionMetadata(track, albumDescription) {
+  if (!("mediaSession" in navigator)) return;
+
+  let cover = "";
+  let mimeType = "image/*";
+
+  if (albumDescription?.cover) {
+    // If you wrote getImgBase64AndMimeType(filePath) to return [dataUrl, mime]
+    [cover, mimeType] = getImgBase64AndMimeType(albumDescription.cover);
+  }
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: getTrackName(track, true),
+    artist: albumDescription?.author || "",
+    album: albumDescription?.title || "",
+    artwork: cover
+      ? [
+          { src: cover, sizes: "512x512", type: mimeType },
+          { src: cover, sizes: "256x256", type: mimeType },
+        ]
+      : [],
+  });
+}
+
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.setActionHandler("play", () => {
+    if (!settings.isPlayingMusic) togglePlayPause();
+  });
+
+  navigator.mediaSession.setActionHandler("pause", () => {
+    if (settings.isPlayingMusic) togglePlayPause();
+  });
+
+  navigator.mediaSession.setActionHandler("previoustrack", () => {
+    playPrevious();
+  });
+
+  navigator.mediaSession.setActionHandler("nexttrack", () => {
+    playNext();
+  });
+
+  // Optional: seek handlers
+  navigator.mediaSession.setActionHandler("seekbackward", (details) => {
+    audioPlayer.currentTime = Math.max(
+      audioPlayer.currentTime - (details.seekOffset || 10),
+      0,
+    );
+  });
+
+  navigator.mediaSession.setActionHandler("seekforward", (details) => {
+    audioPlayer.currentTime = Math.min(
+      audioPlayer.currentTime + (details.seekOffset || 10),
+      audioPlayer.duration,
+    );
+  });
+
+  navigator.mediaSession.setActionHandler("seekto", (details) => {
+    if (details.fastSeek && "fastSeek" in audioPlayer) {
+      audioPlayer.fastSeek(details.seekTime);
+      return;
+    }
+    audioPlayer.currentTime = details.seekTime;
+  });
 }
 
 // Apply muffling effect
@@ -486,12 +583,13 @@ function setVolume() {
 
 function addVolume(plus) {
   // Convert slider value (string) to number
-  let newVal = parseFloat(volumeSlider.value) + plus;
+  let newVal = parseFloat(volumeSlider.value) + parseFloat(plus);
 
   // Clamp between 0 and 1
   newVal = Math.max(0, Math.min(1, newVal));
 
   volumeSlider.value = newVal;
+  console.log(newVal, plus);
   setVolume();
   sController.updateSlider(volumeSlider);
 }

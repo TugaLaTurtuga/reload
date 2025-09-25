@@ -1,7 +1,7 @@
 {
   "0.0.000": {
     "name": "Usable app",
-    "logs": "-App is now usable, with basic functionality -Themes window -Settings window -Editor window",
+    "logs": "-App is now usable, with basic functionality -Themes window -Settings window -Editor window -Full compatibility with old reload",
     "date": "30/08/2025",
     "done": true
   },
@@ -34,5 +34,23 @@
     "logs": "-Random bug fixes that I forgor 💀 -911 happened 24 years ago -Ability to add custom CSS to all windows (ctrl or cmd + l to see the CSS window that allows you to see the CSS) -Changes to how music editor items is displayed -Added color blend for each theme, making it possible to change the amount of color mixing happening as described on 0.0.102 -Simplified the colorscheme, from 20vars to 14vars",
     "date": "11/09/2025",
     "done": true
+  },
+  "0.0.300": {
+    "name": "Keyboard controls",
+    "logs": "-bug fixes -controller and only keyboard controls fully compatible with the main reload window and some compatibility with other reload windows, for controller, and full compatibility to settings for keyboard -can move cursor with a controller -Added controller settings to settings in the settings window (settings) -full compatibility with media session -Added default user data for looks and shortcuts -Removed scrollbars and consolidate shared CSS -Improved active state styling and modal backdrop",
+    "date": "25/09/2025",
+    "done": true
+  },
+  "0.0.301": {
+    "name": "keyboards controls settings",
+    "logs": "-Can add and remove shortcuts in settings -Able to change shortcuts in the settings, and not by editing the JSON file manually",
+    "date": "1/10/2025",
+    "done": false
+  },
+  "0.1.000": {
+    "name": "Algorithm",
+    "logs": "-Changed playing songs to the backend, to make it possible to play songs without the main reload window opened -Made favourites, that get added into the sidebar, and can be played from there -Made it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label.",
+    "date": "15/10/2025",
+    "done": false
   }
 }

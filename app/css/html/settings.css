@@ -35,42 +35,18 @@ label {
     gap: 10px;
 }
 
-input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: var(--trackItemOnHover);
-    border: 1px solid var(--ControlsBtnsColor);
-    color: transparent;
-    border-radius: 3px;
-    cursor: pointer;
-    position: relative;
-    margin: 10px;
-    transition: all 0.07s ease-out;
-}
-
-/* Change the background color when checkbox is checked */
-input[type="checkbox"]:checked {
-    background-color: var(--activeColor);
-}
-
-/* Add a check mark when checked */
-input[type="checkbox"]:checked::after {
-    position: absolute;
-    left: 5px;
-    top: 1px;
-    width: 6px;
-    height: 12px;
-    border-width: 0 3px 3px 0;
-    transform: rotate(45deg);
-}
-
 input[type="text"] {
     margin-right: 10px;
     border-radius: 10px;
     background: var(--sidebarColor);
+    color: var(--textColor);
+}
+
+input[type="number"] {
+    border-radius: 10px;
+    background: var(--sidebarColor);
+    border: none;
+    padding: 10px;
     color: var(--textColor);
 }
 
@@ -152,8 +128,8 @@ button:active {
 }
 
 .active {
-    background: var(--activeColor);
-    color: var(--bg-1);
+    background: var(--activeColor) !important;
+    color: var(--bg-1) !important;
 }
 
 .modal {
@@ -162,6 +138,7 @@ button:active {
     padding: 0;
     overflow: hidden;
     background: var(--sidebarColor);
+    backdrop-filter: blur(4px);
 }
 
 .change-logs-container {
@@ -264,4 +241,44 @@ button:active {
 #library-paths-container .library-path:hover {
     background: var(--sliderBgColor);
     transform: scale(1.15);
+}
+
+.top-buttons {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 10px;
+    border-radius: 0 0 0 10px;
+    color: var(--textColor);
+    background: var(--sidebarColor);
+}
+
+.section-btn {
+    background: var(--sliderBgColor);
+    margin: 0 5px 0 5px;
+}
+
+.section-btn:hover {
+    transform: scale(1.1);
+}
+
+.section {
+    display: none; /* hidden by default */
+}
+
+.input-wrapper {
+    margin-bottom: 10px;
+}
+
+.shortcut-div {
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition:
+        background 0.15s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+.shortcut-div:hover {
+    transform: scale(1.1);
 }

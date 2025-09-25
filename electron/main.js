@@ -8,17 +8,41 @@ const {
   shell,
   screen,
 } = require("electron");
-const { childProcess, spawn, exec } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const mm = require("music-metadata");
 const ColorThief = require("colorthief");
 const { getFonts } = require("font-list");
+const nut = require("@nut-tree-fork/nut-js");
+const { mouse, Button } = nut;
 
 const userDataPath = path.join(app.getPath("userData"), "user-data");
 if (!fs.existsSync(userDataPath)) {
-  fs.mkdirSync(userDataPath);
+  const defaultUserDataPath = path.join(__dirname, "user-data");
+  fs.mkdirSync(userDataPath, { recursive: true });
+
+  // Copy contents from defaultUserDataPath to userDataPath if it exists
+  if (fs.existsSync(defaultUserDataPath)) {
+    const copyRecursively = (src, dest) => {
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+
+        if (entry.isDirectory()) {
+          fs.mkdirSync(destPath, { recursive: true });
+          copyRecursively(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    };
+
+    copyRecursively(defaultUserDataPath, userDataPath);
+  }
 }
+
 const settingsFilePath = path.join(userDataPath, "settings.json");
 const libraryFilePath = path.join(userDataPath, "library.json");
 let libraryPaths = [path.join(app.getPath("documents"), "reload")];
@@ -180,9 +204,6 @@ app.on("window-all-closed", () => {
   app.quit(); // plain better + IT'S MY FUCKING APP
 });
 
-const nut = require("@nut-tree-fork/nut-js");
-const { mouse, Button } = nut;
-
 ipcMain.handle("click-cursor", async (event, button) => {
   let btnEnum;
 
@@ -211,7 +232,6 @@ ipcMain.handle("click-cursor", async (event, button) => {
   }
 });
 
-const stickyClicks = {};
 ipcMain.handle("sticky-click-cursor", async (event, button, stick) => {
   let btnEnum;
 
@@ -232,21 +252,43 @@ ipcMain.handle("sticky-click-cursor", async (event, button, stick) => {
   }
 
   try {
-    console.log(stick);
-    if (stickyClicks[btnEnum] || !stick) {
-      // already held -> release
-      await mouse.releaseButton(btnEnum);
-      delete stickyClicks[btnEnum];
-      return { ok: true, action: "released", button };
-    } else {
-      // not held -> press & hold
+    if (stick) {
+      // press & hold
       await mouse.pressButton(btnEnum);
-      stickyClicks[btnEnum] = true;
       return { ok: true, action: "pressed", button };
+    } else {
+      // release
+      await mouse.releaseButton(btnEnum);
+      return { ok: true, action: "released", button };
     }
   } catch (err) {
     console.error("sticky-click-cursor failed", err);
     return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("scroll-cursor", async (event, x, y) => {
+  if (y !== 0) {
+    const a = Math.abs(y);
+    const signIsPositive = y > 0 ? true : false;
+    if (signIsPositive) {
+      await mouse.scrollUp(a);
+      return { ok: true, action: "scrolled-up", a };
+    } else {
+      await mouse.scrollDown(a);
+      return { ok: true, action: "scrolled-down", a };
+    }
+  }
+  if (x !== 0) {
+    const a = Math.abs(x);
+    const signIsPositive = x > 0 ? true : false;
+    if (signIsPositive) {
+      await mouse.scrollLeft(a);
+      return { ok: true, action: "scrolled-left", a };
+    } else {
+      await mouse.scrollRight(a);
+      return { ok: true, action: "scrolled-right", a };
+    }
   }
 });
 
@@ -272,8 +314,6 @@ ipcMain.handle("set-cursor-pos", async (event, x, y) => {
   if (!win) throw new Error("Could not resolve BrowserWindow for caller.");
 
   const { x: sx, y: sy } = toScreenCoords(win, x, y);
-  console.log(`Moving cursor to (${sx}, ${sy}),`);
-  console.log(x, y);
 
   try {
     await mouse.setPosition({ x: sx, y: sy }); // nut.js API
@@ -406,6 +446,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               color: "#AAAAAA",
               rating: 5,
               cover: null,
+              copyrightFree: false,
             },
           },
         };
@@ -639,8 +680,6 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
 
     if (settings == {}) saveNewAsSettings = true;
 
-    console.log(settings);
-
     if (fromsystemTheme) {
       if (settings.getSystemTheme) {
         settings.themeMode = unsavedSettings.themeMode;
@@ -786,6 +825,8 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   const win = new BrowserWindow({
     width: 950,
     height: 700,
+    minWidth: 600,
+    minHeight: 300,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -1057,4 +1098,66 @@ ipcMain.handle("open-looks-dir", async () => {
   const looksDir = path.join(userDataPath, "looks");
   await shell.openPath(looksDir);
   return looksDir;
+});
+
+ipcMain.handle("open-shortcuts-dir", async () => {
+  const shortcutsDir = path.join(userDataPath, "shortcuts");
+  await shell.openPath(shortcutsDir);
+  return shortcutsDir;
+});
+
+ipcMain.handle("get-all-shortcuts", async () => {
+  const shortcutsDir = path.join(userDataPath, "shortcuts");
+
+  try {
+    const files = await fs.promises.readdir(shortcutsDir);
+    return files
+      .filter((file) => file.toLowerCase().endsWith(".json"))
+      .map((file) => path.join(shortcutsDir, file));
+  } catch (err) {
+    console.error("Failed to load user looks:", err);
+    return [];
+  }
+});
+
+ipcMain.handle("get-current-shortcut", async () => {
+  const shortcutsDir = path.join(userDataPath, "shortcuts");
+  const currTxt = path.join(shortcutsDir, "curr.txt");
+
+  try {
+    let contentOfCurrTxt = await fs.promises.readFile(currTxt, "utf8");
+    if (!contentOfCurrTxt || contentOfCurrTxt.trim().length === 0) {
+      contentOfCurrTxt = "default.json";
+    }
+    const currShortcut = path.join(shortcutsDir, contentOfCurrTxt.trim());
+    return currShortcut;
+  } catch (err) {
+    // If currTxt doesn't exist, create it with default.json
+    if (err.code === "ENOENT") {
+      try {
+        const contentOfCurrTxt = "default.json";
+        await fs.promises.writeFile(currTxt, contentOfCurrTxt);
+        const currShortcut = path.join(shortcutsDir, contentOfCurrTxt);
+        return currShortcut;
+      } catch (writeErr) {
+        console.error("Failed to create curr.txt:", writeErr);
+        return false;
+      }
+    }
+    console.error("Failed to load user looks:", err);
+    return false;
+  }
+});
+
+ipcMain.handle("set-current-shortcut", async (event, shortcutPath) => {
+  const shortcutsDir = path.join(userDataPath, "shortcuts");
+  const currTxt = path.join(shortcutsDir, "curr.txt");
+
+  try {
+    await fs.promises.writeFile(currTxt, path.basename(shortcutPath));
+    return true;
+  } catch (err) {
+    console.error("Failed to set current shortcut:", err);
+    return false;
+  }
 });

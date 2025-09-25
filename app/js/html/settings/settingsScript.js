@@ -7,6 +7,7 @@ const settingsContainer = document.getElementById("settings");
 const libraryPathsContainer = document.getElementById(
   "library-paths-container",
 );
+const shortcutsContainer = document.getElementById("shortcuts");
 const addLibraryBtn = document.getElementById("addLibraryBtn");
 const containers = document.querySelectorAll(".container");
 const changeLogsSidebar = document.querySelector(".change-logs-container");
@@ -14,7 +15,15 @@ const changeLogsSidebar = document.querySelector(".change-logs-container");
 let settings = {
   volume: 0.5,
   showFeatures: true,
+  controller: {
+    cursorSensitifity: 20,
+    keepMouseBetweenBounds: true,
+    scrollSensitifity: 20,
+    invertScroll: false,
+    cursorAceleration: 1.2,
+  },
 };
+
 let themeSettings = {
   themeMode: "dark",
   theme: {
@@ -51,7 +60,6 @@ async function loadSettings(onlyNewchanges = false) {
   }
   console.log("Settings loaded");
 
-  //volumeSlider.value = settings.volume;
   setLook();
 }
 
@@ -100,68 +108,178 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
   link.href = `../css/themes.css?ts=${Date.now()}`;
 });
 
-function renderSettingsEditor() {
-  settingsContainer.innerHTML = ""; // Clear old inputs
-
-  for (const key in settings) {
-    const value = settings[key];
-    let input = document.createElement("input");
-
-    if (typeof value === "boolean") {
-      // Checkbox for boolean
-      input.type = "checkbox";
-      input.checked = value;
-      input.classList.add("checkbox-input");
-      input.addEventListener("change", (e) => {
-        settings[key] = e.target.checked;
-      });
-    } else if (typeof value === "number" || !isNaN(parseFloat(value))) {
-      // Number input
-      input.type = "range";
-      input.step = ".01";
-      input.min = 0;
-      input.max = 1;
-      input.value = parseFloat(value);
-      input.classList.add("slider");
-      input.addEventListener("input", (e) => {
-        settings[key] = parseFloat(e.target.value) || settings[key];
-      });
-    } else {
-      // String input
-      input.type = "text";
-      input.value = value;
-      input.classList.add("text-input");
-      input.addEventListener("input", (e) => {
-        settings[key] = e.target.value;
-      });
+// helpers: get / set by path (path is an array of keys)
+function getAtPath(obj, path) {
+  return path.reduce((acc, key) => (acc ? acc[key] : undefined), obj);
+}
+function setAtPath(obj, path, value) {
+  let cur = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const k = path[i];
+    if (!(k in cur) || typeof cur[k] !== "object" || cur[k] === null) {
+      cur[k] = {};
     }
+    cur = cur[k];
+  }
+  cur[path[path.length - 1]] = value;
+}
 
-    // Label + input wrapper
-    const label = document.createElement("label");
-    const name = key
-      .replace(/([A-Z])/g, " $1")
-      .replace(/-/g, " ")
-      .replace(/^./, (c) => c.toUpperCase())
-      .replace(/ (.)/g, (m, c) => " " + c.toLowerCase());
-    label.textContent = name;
-    label.appendChild(input);
+function renderSettingsEditor() {
+  settingsContainer.innerHTML = ""; // Clear old UI
 
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("input-wrapper");
-    wrapper.appendChild(label);
+  // --- Create top buttons ---
+  const topButtonsWrapper = document.createElement("div");
+  topButtonsWrapper.classList.add("top-buttons");
 
-    settingsContainer.appendChild(wrapper);
+  const keys = Object.keys(settings);
+
+  // Create a "general" button for all non-object top-level settings
+  const hasGeneral = keys.some(
+    (k) => !(settings[k] && typeof settings[k] === "object"),
+  );
+  if (hasGeneral) {
+    const btn = document.createElement("button");
+    btn.textContent = "general";
+    btn.classList.add("section-btn");
+    btn.addEventListener("click", () => showSection("general"));
+    topButtonsWrapper.appendChild(btn);
   }
 
-  // Add Save button
+  // Buttons for object sections (like controller)
+  keys.forEach((k) => {
+    if (settings[k] && typeof settings[k] === "object") {
+      const btn = document.createElement("button");
+      btn.textContent = k;
+      btn.classList.add("section-btn");
+      btn.addEventListener("click", () => showSection(k));
+      topButtonsWrapper.appendChild(btn);
+    }
+  });
+
+  settingsContainer.appendChild(topButtonsWrapper);
+
+  // --- Wrapper for actual settings ---
+  const sectionsWrapper = document.createElement("div");
+  sectionsWrapper.classList.add("sections-wrapper");
+  settingsContainer.appendChild(sectionsWrapper);
+
+  // General (non-object) section
+  const generalDiv = document.createElement("div");
+  generalDiv.classList.add("section");
+  generalDiv.dataset.section = "general";
+  keys.forEach((k) => {
+    if (!(settings[k] && typeof settings[k] === "object")) {
+      generalDiv.appendChild(createInput([k]));
+    }
+  });
+  sectionsWrapper.appendChild(generalDiv);
+
+  // Object sections
+  keys.forEach((sectionKey) => {
+    const section = settings[sectionKey];
+    if (section && typeof section === "object") {
+      const sectionDiv = document.createElement("div");
+      sectionDiv.classList.add("section");
+      sectionDiv.dataset.section = sectionKey;
+      for (const key in section) {
+        sectionDiv.appendChild(createInput([sectionKey, key]));
+        console.log(key);
+      }
+      sectionsWrapper.appendChild(sectionDiv);
+    }
+  });
+
+  // Show settings (general) by default
+  showSection("general");
+
+  // --- Save button ---
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Save Settings";
   saveBtn.classList.add("save-btn");
-  saveBtn.addEventListener("click", async () => {
+  saveBtn.addEventListener("click", () => {
     saveSettings();
   });
-
   settingsContainer.appendChild(saveBtn);
+}
+
+function createInput(path) {
+  const key = path[path.length - 1];
+  const value = getAtPath(settings, path);
+  const input = document.createElement("input");
+
+  if (typeof value === "boolean") {
+    input.type = "checkbox";
+    input.checked = value;
+    input.classList.add("checkbox-input");
+    input.addEventListener("change", (e) => {
+      setAtPath(settings, path, e.target.checked);
+    });
+  } else if (typeof value === "number" || !isNaN(parseFloat(value))) {
+    if (key === "volume") {
+      input.type = "range";
+      input.step = "0.01";
+      input.min = 0;
+      input.max = 1;
+      input.classList.add("slider");
+    } else {
+      input.type = "number";
+      input.step = "0.1";
+      input.min = 0;
+    }
+
+    input.value = value;
+
+    input.addEventListener("input", (e) => {
+      const parsed = parseFloat(e.target.value);
+      if (!isNaN(parsed)) {
+        setAtPath(settings, path, parsed);
+      }
+    });
+  } else {
+    input.type = "text";
+    input.value = value === undefined ? "" : value;
+    input.classList.add("text-input");
+    input.addEventListener("input", (e) => {
+      setAtPath(settings, path, e.target.value);
+    });
+  }
+
+  const label = document.createElement("label");
+  const name = key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/-/g, " ")
+    .replace(/^./, (c) => c.toUpperCase())
+    .replace(/ (.)/g, (m, c) => " " + c.toLowerCase());
+
+  label.textContent = name + " ";
+  label.appendChild(input);
+
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("input-wrapper");
+  wrapper.appendChild(label);
+
+  return wrapper;
+}
+
+// Show only the clicked section
+function showSection(sectionKey) {
+  const btns = document
+    .querySelector(".top-buttons")
+    .querySelectorAll("button");
+  document.querySelectorAll(".section").forEach((sectionDiv) => {
+    if (sectionDiv.dataset.section === sectionKey) {
+      sectionDiv.style.display = "block";
+      for (let i = 0; i < btns.length; ++i) {
+        if (btns[i].textContent === sectionKey) {
+          btns[i].classList.add("active");
+        } else {
+          btns[i].classList.remove("active");
+        }
+      }
+    } else {
+      sectionDiv.style.display = "none";
+    }
+  });
 }
 
 loadSettings();
@@ -205,9 +323,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("version").textContent = version;
   changeChangeLog(version);
-
-  //// TODO: get-library-paths, allow the user to select a path to save the library to.
-  // and save it with save-library-paths thru ipcRenderer.invoke.
 });
 
 function showChangeLog() {
@@ -287,14 +402,6 @@ function changeChangeLog(key) {
 
     console.log("Updated main log:", { key, data: changeLogs[key] });
   }
-}
-
-async function openExternalHtml(relativePathFromHtml) {
-  await saveSettings();
-  ipcRenderer.invoke(
-    "open-external",
-    path.join(__dirname, relativePathFromHtml),
-  );
 }
 
 function updateChangeContainer() {
@@ -387,3 +494,56 @@ addLibraryBtn.addEventListener("click", async () => {
 
 // Initial load
 renderLibraryPaths();
+renderShortcuts();
+
+async function renderShortcuts() {
+  // Clear container
+  shortcutsContainer.innerHTML = "";
+
+  const topButtons = document.createElement("div");
+  topButtons.classList.add("top-buttons");
+
+  const seeShortcutsFiles = document.createElement("button");
+  seeShortcutsFiles.textContent = "See Shortcuts Files";
+  seeShortcutsFiles.classList.add("section-btn");
+  seeShortcutsFiles.addEventListener("click", () => {
+    ipcRenderer.invoke("open-shortcuts-dir");
+  });
+  topButtons.appendChild(seeShortcutsFiles);
+
+  shortcutsContainer.appendChild(topButtons);
+
+  let shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
+
+  if (!shortcuts || shortcuts.length === 0) {
+    shortcutsContainer.innerHTML =
+      "<div class='empty'>No shortcuts added yet.</div>";
+    return;
+  }
+
+  const currShortcut = await ipcRenderer.invoke("get-current-shortcut");
+  shortcuts = [...new Set(shortcuts)];
+  console.log(shortcuts);
+  shortcuts.forEach((shortcut, index) => {
+    const shortcutDiv = document.createElement("div");
+    shortcutDiv.classList.add("shortcut-div");
+
+    shortcutDiv.textContent = shortcut.split("/").pop().split(".json")[0];
+
+    shortcutDiv.addEventListener("click", () => {
+      ipcRenderer.send("set-current-shortcut", shortcut.split("/").pop());
+
+      const shortcuts = document.querySelectorAll(".shortcut-div");
+      for (let i = 0; i < shortcuts.length; ++i) {
+        shortcuts[i].classList.remove("active");
+      }
+      shortcutDiv.classList.add("active");
+    });
+
+    if (currShortcut === shortcut) {
+      shortcutDiv.classList.add("active");
+    }
+
+    shortcutsContainer.appendChild(shortcutDiv);
+  });
+}

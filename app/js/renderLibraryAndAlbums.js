@@ -201,11 +201,6 @@ async function editAlbum() {
   }
 }
 
-function getGridXSize(width) {
-  if (width <= 200) return 0;
-  return Math.ceil((width - 200) / 220);
-}
-
 async function moveCursor(x, y) {
   const cursorPos = await ipcRenderer.invoke("get-cursor-pos");
 
@@ -237,17 +232,65 @@ async function moveCursor(x, y) {
 }
 
 function scroll(x, y) {
-  mainContent.scrollBy(
+  if (settings.controller.invertScroll) {
+    y = -y;
+    x = -x;
+  }
+
+  ipcRenderer.invoke(
+    "scroll-cursor",
     x * settings.controller.scrollSensitifity,
     y * settings.controller.scrollSensitifity,
   );
 }
 
+function getGridXSize(nodes) {
+  const visible = Array.from(nodes).filter((el) => el.offsetParent !== null);
+  if (visible.length === 0) return 0;
+  const uniqueX = [...new Set(visible.map((el) => el.offsetLeft))];
+  return uniqueX.length;
+}
+
 async function moveVirtualCursor(x, y) {
-  const allAlbums = document.querySelectorAll(".album-cover");
-  const gridXSize = getGridXSize(albumsSection.clientWidth);
+  const elements = [
+    [
+      libraryContainer,
+      [libraryContainer.querySelectorAll(".album-card"), 0],
+      libraryContainer.querySelectorAll(".album-cover"),
+    ],
+    [
+      playerContainer,
+      [
+        playerContainer.querySelectorAll(".track-item, .track-item.odd-color"),
+        playerContainer.querySelectorAll(".track-item, .track-item.odd-color"),
+        1,
+      ],
+      playerContainer.querySelectorAll(".track-number"),
+    ],
+  ];
+
+  let i = -1;
+  for (let index = 0; index < elements.length; ++index) {
+    if (!elements[index][0].classList.contains("hidden")) {
+      i = index;
+      break;
+    }
+  }
+
+  const allAlbums = elements[i][2];
+  let nodes = elements[i][1][elements[i][1].pop()];
+  const allNodes = elements[i][1][0];
+
+  console.log(
+    document.querySelectorAll("#album-art-container .track-number"),
+    allAlbums,
+    nodes,
+    allNodes,
+  );
+
+  const gridXSize = getGridXSize(nodes);
   const gridYSize = Math.ceil(allAlbums.length / gridXSize);
-  const [cursorPos, isInCard] = await getCurrentGridPosition();
+  const [cursorPos, isInCard] = await getCurrentGridPosition(allNodes);
 
   let pos = cursorPos;
   if (isInCard) {
@@ -260,6 +303,12 @@ async function moveVirtualCursor(x, y) {
         let gridPosY = Math.floor(cursorPos / gridXSize);
         let gridPosX = cursorPos % gridXSize;
         pos = gridPosX + (gridPosY + gridYSize) * gridXSize;
+
+        if (gridYSize > 2) {
+          if (Math.min(Math.max(0, pos), allAlbums.length - 1) !== pos) {
+            pos = gridPosX + (gridPosY + gridYSize - 1) * gridXSize;
+          }
+        }
       }
       if (pos >= allAlbums.length) {
         pos -= gridXSize;
@@ -284,8 +333,11 @@ async function moveVirtualCursor(x, y) {
   }
 
   // Ensure pos is within bounds
-  pos = Math.min(Math.max(0, pos), allAlbums.length - 1);
+  const maxIndex = Math.max(0, allAlbums.length - 1);
+  if (typeof pos !== "number" || Number.isNaN(pos)) pos = 0;
+  pos = Math.min(Math.max(0, pos), maxIndex);
   const album = allAlbums[pos];
+  console.log(album, pos, allAlbums);
 
   const playerControlsRect = playerControls.getBoundingClientRect();
   const albumRect = album.getBoundingClientRect();
@@ -295,14 +347,14 @@ async function moveVirtualCursor(x, y) {
   // scroll until album is fully visible
   let safety = allAlbums.length; // prevent infinite loop
   while (
-    (albumCenterY >= playerControlsRect.top - albumRect.height / 4 ||
-      albumCenterY < albumRect.height / 4) &&
+    (albumCenterY >= playerControlsRect.top - albumRect.height / 3 ||
+      albumCenterY < albumRect.height / 3) &&
     safety-- > 0
   ) {
-    if (albumCenterY >= playerControlsRect.top - albumRect.height / 4) {
+    if (albumCenterY >= playerControlsRect.top - albumRect.height / 3) {
       mainContent.scrollBy(0, albumRect.height);
       albumCenterY -= albumRect.height;
-    } else if (albumCenterY < albumRect.height / 4) {
+    } else if (albumCenterY < albumRect.height / 3) {
       mainContent.scrollBy(0, -albumRect.height);
       albumCenterY += albumRect.height;
     }
@@ -311,9 +363,7 @@ async function moveVirtualCursor(x, y) {
   await ipcRenderer.invoke("set-cursor-pos", albumCenterX, albumCenterY);
 }
 
-async function getCurrentGridPosition() {
-  const allAlbums = document.querySelectorAll(".album-card");
-
+async function getCurrentGridPosition(allAlbums) {
   let closestIndex = -1;
   let closestDistance = Infinity;
   let isInCard = false;
@@ -355,6 +405,5 @@ function clickVirtualCursor(click) {
 }
 
 function stickyClickVirtualCursor(click, stick) {
-  console.log(stick);
   ipcRenderer.invoke("sticky-click-cursor", click, stick);
 }

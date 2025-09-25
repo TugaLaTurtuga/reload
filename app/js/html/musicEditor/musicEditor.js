@@ -10,6 +10,7 @@ let musicData = {
     genre: "",
     color: "#AAAAAA",
     rating: 5,
+    copyrightFree: false,
   },
 };
 
@@ -22,6 +23,7 @@ const genreInput = document.getElementById("genre");
 const albumRatingSelect = document.getElementById("albumRating");
 const descriptionInput = document.getElementById("description");
 const colorInput = document.getElementById("color");
+const copyrightFree = document.getElementById("copyrightFree");
 const tracksContainer = document.getElementById("tracks-container");
 const addTrackButton = document.getElementById("add-track");
 const sortTracksButton = document.getElementById("sort-tracks");
@@ -127,6 +129,7 @@ async function populateForm() {
 
   // Colors
   colorInput.value = description?.color || "#AAAAAA";
+  copyrightFree.checked = description?.copyrightFree || false;
 
   // Clear existing tracks
   tracksContainer.innerHTML = "";
@@ -265,6 +268,7 @@ function updateAlbumInfo() {
   musicData.description.rating = parseInt(albumRatingSelect.value);
   musicData.description.description = descriptionInput.value;
   musicData.description.color = colorInput.value;
+  musicData.description.copyrightFree = copyrightFree.checked;
 }
 
 // Function to save music data
@@ -340,6 +344,8 @@ colorInput.addEventListener("change", updateColor);
 colorInput.addEventListener("input", () => {
   changeBackGroundColorFromNewAlbum(colorInput.value);
 });
+
+copyrightFree.addEventListener("change", updateAlbumInfo);
 
 addTrackButton.addEventListener("click", addNewTrack);
 sortTracksButton.addEventListener("click", sortTracks);

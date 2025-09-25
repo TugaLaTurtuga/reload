@@ -29,7 +29,7 @@ const DEFAULT_INPUTS = {
 };
 
 // ---------------- Safe JSON load ----------------
-function safeReadJSON(filePath, fallback) {
+async function safeReadJSON(filePath, fallback) {
   try {
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = JSON.parse(raw);
@@ -58,7 +58,37 @@ function deepMerge(target, src) {
   return out;
 }
 
-const inputs = safeReadJSON(inputsFilePath, DEFAULT_INPUTS);
+let inputs = DEFAULT_INPUTS;
+async function loadInputs() {
+  const shortcutPath = await ipcRenderer.invoke("get-current-shortcut"); // returns a path
+  console.log(shortcutPath);
+  if (!shortcutPath) {
+    console.warn("No shortcut path returned, using defaults");
+    return false;
+  }
+
+  inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
+
+  if (inputs.opts.logKeyPress) {
+    inp.logKeyPress = true;
+  }
+
+  normalizedInputs = {
+    opts: inputs.opts || {},
+    keyboard: preprocessInputType(inputs.keyboard, false),
+    mouse: preprocessInputType(inputs.mouse, false),
+    gamepad: (() => {
+      const p = preprocessInputType(inputs.gamepad, true);
+      p.deadzone =
+        typeof inputs.gamepad.deadzone === "number"
+          ? inputs.gamepad.deadzone
+          : 0.1;
+      return p;
+    })(),
+  };
+
+  return true;
+}
 
 // ---------------- Gamepad key normalizer ----------------
 function normalizeGamepadKey(k) {
@@ -228,19 +258,7 @@ function preprocessInputType(section = {}, isGamepad = false) {
   return out;
 }
 
-const normalizedInputs = {
-  opts: inputs.opts || {},
-  keyboard: preprocessInputType(inputs.keyboard, false),
-  mouse: preprocessInputType(inputs.mouse, false),
-  gamepad: (() => {
-    const p = preprocessInputType(inputs.gamepad, true);
-    p.deadzone =
-      typeof inputs.gamepad.deadzone === "number"
-        ? inputs.gamepad.deadzone
-        : 0.1;
-    return p;
-  })(),
-};
+let normalizedInputs = {};
 
 // ---------------- Try removing default events (best-effort) ----------------
 try {
@@ -250,11 +268,6 @@ try {
   ) {
     // keyboard & mouse: remove raw keys
     for (const mode of MODES) {
-      for (const key of Object.keys(inputs.keyboard[mode] || {}))
-        inp.removeDefaultEvent(key);
-      for (const key of Object.keys(inputs.mouse[mode] || {}))
-        inp.removeDefaultEvent(key);
-      // gamepad: try both raw and normalized
       for (const key of Object.keys(inputs.gamepad[mode] || {})) {
         inp.removeDefaultEvent(key);
         const norm = normalizeGamepadKey(key);
@@ -328,5 +341,13 @@ function updateInputs() {
   else setTimeout(updateInputs, 1000 / 60);
 }
 
+async function startInputs() {
+  const success = await loadInputs();
+  if (success) {
+    console.log(inputs);
+    updateInputs();
+  }
+}
+
 // Start the loop
-updateInputs();
+startInputs();
