@@ -33,7 +33,7 @@ function loadConfig() {
 }
 
 function saveConfig(cfg) {
-  fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), "utf-8");
+  fs.writeFileSync(configPath, JSON.stringify(cfg, null, 4), "utf-8");
 }
 
 let config = loadConfig();

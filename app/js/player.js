@@ -380,7 +380,6 @@ function getMimeTypeFromUrl(url) {
 }
 
 function getImgBase64AndMimeType(filePath) {
-  console.log(filePath);
   const mime = getMimeTypeFromUrl(filePath);
   const data = fs.readFileSync(filePath);
   const base64 = data.toString("base64");

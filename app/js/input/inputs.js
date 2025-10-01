@@ -2,29 +2,25 @@ inp = new InputManager();
 
 // Minimal safe defaults
 const DEFAULT_INPUTS = {
-  opts: { logKeyPress: false },
+  opts: { logKeyPress: false, gamepadDeadzone: 0.1 },
   keyboard: {
     whenPressed: {},
     whenUnpressed: {},
     whenDown: {},
-    whenUpOrDown: {},
     whenUp: {},
     whenUnpressed: {},
-  },
-  mouse: {
-    whenPressed: {},
-    whenUnpressed: {},
-    whenDown: {},
-    whenUpOrDown: {},
-    whenUp: {},
   },
   gamepad: {
     whenPressed: {},
     whenUnpressed: {},
     whenDown: {},
-    whenUpOrDown: {},
     whenUp: {},
-    deadzone: 0.1,
+  },
+  mouse: {
+    whenPressed: {},
+    whenUnpressed: {},
+    whenDown: {},
+    whenUp: {},
   },
 };
 
@@ -61,17 +57,20 @@ function deepMerge(target, src) {
 let inputs = DEFAULT_INPUTS;
 async function loadInputs() {
   const shortcutPath = await ipcRenderer.invoke("get-current-shortcut"); // returns a path
-  console.log(shortcutPath);
   if (!shortcutPath) {
     console.warn("No shortcut path returned, using defaults");
     return false;
   }
 
   inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
-
-  if (inputs.opts.logKeyPress) {
-    inp.logKeyPress = true;
+  if (inputs === DEFAULT_INPUTS) {
+    // the shortcutPath is invalid or empty
+    const shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
+    await ipcRenderer.invoke("set-current-shortcut", shortcuts[0]);
+    inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
   }
+
+  inp.logKeyPress = inputs.opts.logKeyPress;
 
   normalizedInputs = {
     opts: inputs.opts || {},
@@ -310,8 +309,9 @@ function processType(typeName, typeDesc) {
       : [];
   const deadzone = typeDesc.deadzone || 0.1;
   for (const key of typeDesc.allKeys) {
+    let input = key === "Space" ? " " : key;
     const prev = Boolean(keyState.get(`${typeName}:${key}`));
-    const { active, value } = getActiveForKey(typeName, key, axes, deadzone);
+    const { active, value } = getActiveForKey(typeName, input, axes, deadzone);
 
     const D = typeDesc.modes; // descriptors per mode
     if (D.whenPressed && active && !prev)
@@ -343,11 +343,9 @@ function updateInputs() {
 
 async function startInputs() {
   const success = await loadInputs();
-  if (success) {
-    console.log(inputs);
-    updateInputs();
-  }
+  if (success) updateInputs();
 }
 
 // Start the loop
 startInputs();
+ipcRenderer.on("shortcuts-updated", loadInputs);

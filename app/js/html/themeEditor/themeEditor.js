@@ -898,8 +898,14 @@ async function loadSettings() {
 
   if (settings.themeMode === "dark") {
     $(`#darkBtn`).classList.add("active");
+
+    if ($(`#lightBtn`).classList.contains("active"))
+      $(`#lightBtn`).classList.remove("active");
   } else {
     $(`#lightBtn`).classList.add("active");
+
+    if ($(`#darkBtn`).classList.contains("active"))
+      $(`#darkBtn`).classList.remove("active");
   }
 
   if (settings.getSystemTheme) {

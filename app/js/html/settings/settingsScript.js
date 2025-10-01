@@ -16,10 +16,10 @@ let settings = {
   volume: 0.5,
   showFeatures: true,
   controller: {
-    cursorSensitifity: 20,
     keepMouseBetweenBounds: true,
-    scrollSensitifity: 20,
     invertScroll: false,
+    cursorSensitifity: 20,
+    scrollSensitifity: 20,
     cursorAceleration: 1.2,
   },
 };
@@ -31,8 +31,6 @@ let themeSettings = {
     light: "light",
   },
 };
-
-const inputsFilePath = path.join(__dirname, "../js/input/settingsImp.json");
 
 let changeLogs = {};
 
@@ -46,7 +44,6 @@ async function loadSettings(onlyNewchanges = false) {
       if (updatedSettings.hasOwnProperty(key) && !onlyNewchanges) {
         settings[key] = updatedSettings[key];
       } else if (updatedSettings.new.hasOwnProperty(key) && onlyNewchanges) {
-        console.log(key, updatedSettings.new[key]);
         settings[key] = updatedSettings.new[key];
       }
     }
@@ -183,7 +180,6 @@ function renderSettingsEditor() {
       sectionDiv.dataset.section = sectionKey;
       for (const key in section) {
         sectionDiv.appendChild(createInput([sectionKey, key]));
-        console.log(key);
       }
       sectionsWrapper.appendChild(sectionDiv);
     }
@@ -362,7 +358,6 @@ document.getElementById("version").addEventListener("click", () => {
 
 function changeChangeLog(key) {
   const sidebarItem = document.getElementById(`change-logs-item-${key}`);
-  console.log("Clicked item:", sidebarItem);
 
   // remove active from all
   document.querySelectorAll(".change-logs-item").forEach((item) => {
@@ -399,8 +394,6 @@ function changeChangeLog(key) {
         changeLogContent.appendChild(spacer);
       });
     }
-
-    console.log("Updated main log:", { key, data: changeLogs[key] });
   }
 }
 
@@ -497,21 +490,12 @@ renderLibraryPaths();
 renderShortcuts();
 
 async function renderShortcuts() {
-  // Clear container
-  shortcutsContainer.innerHTML = "";
-
-  const topButtons = document.createElement("div");
-  topButtons.classList.add("top-buttons");
-
-  const seeShortcutsFiles = document.createElement("button");
-  seeShortcutsFiles.textContent = "See Shortcuts Files";
-  seeShortcutsFiles.classList.add("section-btn");
-  seeShortcutsFiles.addEventListener("click", () => {
+  const shortcutsFilePathBtn = document.getElementById(
+    "shortcuts-file-path-btn",
+  );
+  shortcutsFilePathBtn.addEventListener("click", () => {
     ipcRenderer.invoke("open-shortcuts-dir");
   });
-  topButtons.appendChild(seeShortcutsFiles);
-
-  shortcutsContainer.appendChild(topButtons);
 
   let shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
 
@@ -521,29 +505,651 @@ async function renderShortcuts() {
     return;
   }
 
+  const shortcutsDiv = document.querySelector(".shortcuts-div");
+  shortcutsDiv.innerHTML = "";
+
+  const shortcutsEdits = document.getElementById("shortcuts-edits");
+
   const currShortcut = await ipcRenderer.invoke("get-current-shortcut");
+  let hasActiveShortcut = false;
   shortcuts = [...new Set(shortcuts)];
-  console.log(shortcuts);
   shortcuts.forEach((shortcut, index) => {
     const shortcutDiv = document.createElement("div");
     shortcutDiv.classList.add("shortcut-div");
 
-    shortcutDiv.textContent = shortcut.split("/").pop().split(".json")[0];
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = shortcut.split("/").pop().split(".json")[0];
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const currShortcutOnInput = await ipcRenderer.invoke(
+          "get-current-shortcut",
+        );
+        if (currShortcutOnInput === shortcut) {
+          const newShortcutName = input.value.replace(".", " ");
 
+          fs.readFile(shortcut, "utf8", async (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+
+            try {
+              const json = JSON.parse(data);
+              await ipcRenderer.invoke("add-shortcut", newShortcutName, json);
+              await ipcRenderer.invoke(
+                "set-current-shortcut",
+                `${newShortcutName}.json`,
+              );
+              await ipcRenderer.invoke(
+                "remove-shortcut",
+                shortcut.split("/").pop().split(".json")[0],
+              );
+              renderShortcuts();
+              return;
+            } catch (err) {
+              console.error("Error parsing JSON or setting shortcut:", err);
+            }
+          });
+        }
+      } else if (e.key === "Escape" || e.key === "Tab") {
+        input.value = shortcut.split("/").pop().split(".json")[0];
+        input.blur();
+      }
+    });
+
+    input.addEventListener("blur", () => {
+      input.value = shortcut.split("/").pop().split(".json")[0];
+    });
+
+    shortcutDiv.appendChild(input);
     shortcutDiv.addEventListener("click", () => {
-      ipcRenderer.send("set-current-shortcut", shortcut.split("/").pop());
+      ipcRenderer.invoke("set-current-shortcut", shortcut.split("/").pop());
 
       const shortcuts = document.querySelectorAll(".shortcut-div");
       for (let i = 0; i < shortcuts.length; ++i) {
         shortcuts[i].classList.remove("active");
       }
       shortcutDiv.classList.add("active");
+
+      renderShortcutsInJson(shortcut, shortcutsEdits);
     });
 
     if (currShortcut === shortcut) {
       shortcutDiv.classList.add("active");
+      hasActiveShortcut = true;
+      renderShortcutsInJson(shortcut, shortcutsEdits);
     }
 
-    shortcutsContainer.appendChild(shortcutDiv);
+    shortcutsDiv.appendChild(shortcutDiv);
   });
+
+  if (!hasActiveShortcut) {
+    await ipcRenderer.invoke(
+      "set-current-shortcut",
+      shortcuts[0].split("/").pop(),
+    );
+    await renderShortcuts();
+    return;
+  }
+
+  // add the plus sign at the end
+  const plusDiv = document.createElement("div");
+  plusDiv.classList.add("shortcut-div");
+  plusDiv.style.minWidth = "35px";
+  plusDiv.textContent = "+";
+  plusDiv.style.padding = "10px";
+
+  plusDiv.addEventListener("click", async () => {
+    const allshortcuts = [];
+    shortcuts.forEach((shortcut) => {
+      allshortcuts.push(shortcut.split("/").pop().split(".json")[0]);
+    });
+    let newShortcutName = "new-shortcut";
+    let i = 1;
+    while (allshortcuts.includes(newShortcutName)) {
+      newShortcutName = `new-shortcut-${i}`;
+      i++;
+    }
+    await ipcRenderer.invoke("add-shortcut", newShortcutName);
+    renderShortcuts();
+  });
+  shortcutsDiv.appendChild(plusDiv);
+
+  shortcutsDiv.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      shortcutsDiv.scrollLeft += e.deltaY + e.deltaX;
+    },
+    { passive: false },
+  );
+
+  shortcutsContainer.appendChild(shortcutsDiv);
+  shortcutsContainer.appendChild(shortcutsEdits);
+}
+
+const funcsSaveFilePath = path.join(__dirname, "../../electron/data/func.json");
+
+// read the functions from the file
+let funcs = {};
+try {
+  const funcsRaw = fs.readFileSync(funcsSaveFilePath, "utf8");
+  const parsedFuncs = JSON.parse(funcsRaw); // { functionName: "param1, param2" }
+
+  // Sort the functions alphabetically by key
+  const sortedKeys = Object.keys(parsedFuncs).sort();
+  funcs = {};
+  sortedKeys.forEach((key) => {
+    funcs[key] = parsedFuncs[key];
+  });
+} catch (err) {
+  console.error("Could not load funcsSaveFilePath:", err);
+  funcs = {};
+}
+
+function renderShortcutsInJson(shortcutPath) {
+  // use existing containers from HTML
+  const shortcutsEdits = document.getElementById("shortcuts-edits");
+  const jsonItemsContainer = shortcutsEdits.querySelector(
+    ".shortcut-json-items-container",
+  );
+  const jsonEditDiv = shortcutsEdits.querySelector(
+    ".shortcut-json-edit-container",
+  );
+  const jsonEditItemContainer = jsonEditDiv.querySelector(
+    ".shortcut-json-edit-item-container",
+  );
+  const jsonEdit = jsonEditDiv.querySelector(".shortcut-json-edit");
+  const addValueBtn = document.getElementById("add-value");
+  const saveBtn = jsonEditDiv.querySelector("#save-shortcuts");
+  const deleteBtn = jsonEditDiv.querySelector("#delete-shortcuts");
+
+  // clear old content
+  jsonItemsContainer.innerHTML = "";
+  jsonEditItemContainer.innerHTML = "";
+  jsonEdit.innerHTML = "";
+
+  fs.readFile(shortcutPath, "utf8", async (err, data) => {
+    if (err) {
+      console.error(err);
+      confirm("File not found.");
+      const shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
+      await ipcRenderer.invoke(
+        "set-current-shortcut",
+        shortcuts[0].split("/").pop(),
+      );
+      await renderShortcuts();
+      return;
+    }
+    const json = JSON.parse(data);
+
+    saveBtn.onclick = () => {
+      fs.writeFile(
+        shortcutPath,
+        JSON.stringify(json, null, 4),
+        "utf8",
+        (err) => {
+          if (err) {
+            console.error("Error saving shortcuts:", err);
+            return;
+          }
+          console.log("Shortcuts saved successfully!");
+          ipcRenderer.invoke("set-current-shortcut");
+        },
+      );
+    };
+
+    deleteBtn.onclick = async () => {
+      if (
+        confirm(
+          `Are you sure you want to delete '${shortcutPath.split("/").pop().slice(0, -5)}'?`,
+        )
+      ) {
+        await ipcRenderer.invoke(
+          "remove-shortcut",
+          shortcutPath.split("/").pop(),
+        );
+        await renderShortcuts();
+      }
+    };
+
+    let currentKey, currentKey1, currentTableBody;
+
+    // left column keys
+    Object.entries(json).forEach(([key]) => {
+      const itemDiv = document.createElement("div");
+      itemDiv.classList.add("shortcut-json-item");
+      itemDiv.textContent = key;
+      jsonItemsContainer.appendChild(itemDiv);
+
+      itemDiv.addEventListener("click", () => {
+        document
+          .querySelectorAll(".shortcut-json-item")
+          .forEach((d) => d.classList.remove("active"));
+        itemDiv.classList.add("active");
+        jsonEditItemContainer.innerHTML = "";
+        jsonEdit.innerHTML = "";
+
+        Object.entries(json[key]).forEach(([key_1, value_1]) => {
+          const subItem = document.createElement("div");
+          subItem.classList.add("shortcut-json-edit-item");
+          subItem.textContent = key_1;
+          jsonEditItemContainer.appendChild(subItem);
+
+          subItem.addEventListener("click", () => {
+            document
+              .querySelectorAll(".shortcut-json-edit-item")
+              .forEach((d) => d.classList.remove("active"));
+            subItem.classList.add("active");
+            jsonEdit.innerHTML = "";
+
+            currentKey = key;
+            currentKey1 = key_1;
+
+            if (
+              Array.isArray(value_1) ||
+              (value_1 !== null && typeof value_1 === "object")
+            ) {
+              // header
+              const vars = document.createElement("div");
+              vars.classList.add("shortcut-json-edit-vars");
+              vars.innerHTML = `
+                <div class="var-shortcut">Keybindings</div>
+                <div class="var-action">Action</div>
+                <div class="var-params">Params</div>
+                <div class="var-delete">Del</div>
+              `;
+
+              // table
+              const table = document.createElement("table");
+              const tbody = document.createElement("tbody");
+              table.appendChild(tbody);
+              currentTableBody = tbody;
+
+              const div = document.createElement("div");
+              div.classList.add("shortcut-json-edit-table");
+              div.appendChild(table);
+
+              // rows
+              fillRows(value_1, tbody);
+
+              jsonEdit.appendChild(vars);
+              jsonEdit.appendChild(div);
+            } else {
+              const input = document.createElement("input");
+              let type = "text";
+              if (typeof value_1 === "number") {
+                type = "number";
+                input.step = 0.1;
+              } else if (typeof value_1 === "boolean") {
+                type = "checkbox";
+                input.checked = value_1;
+              }
+              input.type = type;
+              input.value = json[currentKey][currentKey1];
+
+              input.classList.add("shortcut-input-field");
+              jsonEdit.appendChild(input);
+              input.addEventListener("change", () => {
+                if (type === "checkbox") {
+                  json[currentKey][currentKey1] = input.checked;
+                } else if (type === "number") {
+                  json[currentKey][currentKey1] = parseFloat(input.value);
+                } else {
+                  json[currentKey][currentKey1] = input.value;
+                }
+              });
+            }
+          });
+        });
+      });
+    });
+
+    function fillRows(valueObj, tbody) {
+      tbody.innerHTML = "";
+      Object.entries(valueObj).forEach(([key_2, value_2]) => {
+        addRow(tbody, key_2, value_2);
+      });
+    }
+
+    function addRow(tbody, key_2, value_2) {
+      const row = document.createElement("tr");
+      const action = value_2.split("(")[0];
+      const params = value_2.split("(")[1].split(")")[0];
+
+      row.innerHTML = `
+        <td class="var-shortcut"><input id="shortcut-input" type="text" value="${key_2}"></td>
+        <td class="var-action"><input id="action-input" type="text" value="${action}"></td>
+      `;
+
+      const varParams = document.createElement("td");
+      if (funcs[action] !== undefined && funcs[action] !== "") {
+        const paramsInput = document.createElement("input");
+        paramsInput.type = "text";
+        paramsInput.value = params;
+        varParams.appendChild(paramsInput);
+      }
+
+      const varDelete = document.createElement("td");
+      varDelete.classList.add("var-delete-table", "var-delete");
+      varDelete.innerHTML = `<button>X</button>`;
+      varDelete.querySelector("button").addEventListener("click", () => {
+        row.remove();
+        delete json[currentKey][currentKey1][key_2];
+      });
+
+      row.appendChild(varParams);
+      row.appendChild(varDelete);
+      tbody.appendChild(row);
+
+      const [shortcutInput, actionInput] = row.querySelectorAll("input");
+      let paramsInput = varParams.querySelector("input");
+
+      // initial color
+      actionInput.style.color = funcs[action] === undefined ? "red" : "";
+
+      // --- keybind recorder ---
+      let recording = false;
+      let pressed = new Set();
+      let oldValue = "";
+
+      function startRecording() {
+        recording = true;
+        pressed.clear();
+        oldValue = shortcutInput.value;
+        shortcutInput.value = "";
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("mousedown", onMouseDown);
+        gamepadLoop(); // start polling gamepad
+      }
+
+      function stopRecording() {
+        recording = false;
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("mousedown", onMouseDown);
+        cancelAnimationFrame(gamepadRAF);
+        if (document.activeElement === shortcutInput) {
+          shortcutInput.blur();
+        }
+        if (shortcutInput.value === "") shortcutInput.value = oldValue; // reset
+        updateJson();
+      }
+
+      function onKeyDown(e) {
+        if (!recording) return;
+        if (e.key !== "Shift") {
+          if (e.key === " ") {
+            pressed.add("Space");
+          } else {
+            pressed.add(e.key);
+          }
+
+          if (e.key === "Escape" || e.key === "Enter") {
+            const element = document.getElementById("add-value");
+            const oldText = element.textContent;
+            element.textContent = "Press left click to stop recording";
+            if (oldText !== element.textContent) {
+              setTimeout(() => {
+                element.textContent = oldText;
+              }, 2000);
+            }
+          }
+
+          shortcutInput.value = Array.from(pressed).join("+");
+        }
+      }
+
+      function onMouseDown(e) {
+        if (!recording) return;
+        // Left click ends recording
+        if (e.button === 0) {
+          stopRecording();
+          return;
+        }
+        pressed.add(e.button);
+        shortcutInput.value = Array.from(pressed).join("+");
+      }
+
+      let gamepadRAF;
+      function gamepadLoop() {
+        if (!recording) return;
+        const gamepads = navigator.getGamepads();
+        if (gamepads) {
+          for (const gp of gamepads) {
+            if (!gp) continue;
+            gp.buttons.forEach((btn, i) => {
+              if (btn.pressed) {
+                pressed.add(i);
+              }
+            });
+          }
+          shortcutInput.value = Array.from(pressed).join("+");
+        }
+        gamepadRAF = requestAnimationFrame(gamepadLoop);
+      }
+
+      shortcutInput.addEventListener("focus", startRecording);
+      shortcutInput.addEventListener("blur", stopRecording);
+
+      // --- end keybind recorder ---
+
+      function updateJson() {
+        const oldKey = key_2;
+        const newKey = shortcutInput.value;
+        const actionVal = actionInput.value.trim();
+        renderShortcutsContextMenu(actionVal);
+
+        if (funcs[actionVal] !== undefined) {
+          actionInput.style.color = "";
+          if (!paramsInput && funcs[actionVal] !== "") {
+            paramsInput = document.createElement("input");
+            paramsInput.type = "text";
+            paramsInput.value = funcs[actionVal];
+            paramsInput.addEventListener("input", updateJson);
+            varParams.innerHTML = "";
+            varParams.appendChild(paramsInput);
+          }
+        } else {
+          actionInput.style.color = "red";
+          varParams.innerHTML = "";
+          paramsInput = null;
+        }
+
+        let newValue = `${actionVal}()`;
+        if (paramsInput) {
+          newValue = `${actionVal}(${paramsInput.value})`;
+        }
+
+        if (newKey !== oldKey) delete json[currentKey][currentKey1][oldKey];
+        json[currentKey][currentKey1][newKey] = newValue;
+        key_2 = newKey;
+      }
+      actionInput.addEventListener("input", updateJson);
+      actionInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          selectShortcutsContextMenu(0);
+        } else if (!isNaN(parseFloat(e.key))) {
+          e.preventDefault();
+          if (parseFloat(e.key) === 0) {
+            selectShortcutsContextMenu(10);
+          } else {
+            selectShortcutsContextMenu(parseFloat(e.key) - 1);
+          }
+        } else if (e.key === "Escape") {
+          actionInput.blur();
+        }
+      });
+
+      if (paramsInput) paramsInput.addEventListener("input", updateJson);
+    }
+
+    // add value button
+    addValueBtn.onclick = () => {
+      if (!currentTableBody) return;
+
+      // pick a random function from funcs
+      const funcNames = Object.keys(funcs);
+      if (funcNames.length === 0) {
+        console.warn("No functions available in funcsSaveFilePath");
+        return;
+      }
+      const randomFuncName =
+        funcNames[Math.floor(Math.random() * funcNames.length)];
+
+      // get its parameter string
+      const paramString = funcs[randomFuncName]; // e.g. "a, b"
+      // build full call
+      const newValue = `${randomFuncName}(${paramString})`;
+
+      // pick a unique shortcut key
+      const count = Object.keys(json[currentKey][currentKey1]).length;
+      const newKey = `shortcut_${count}`;
+
+      // update JSON
+      json[currentKey][currentKey1][newKey] = newValue;
+
+      // add new row visually
+      addRow(currentTableBody, newKey, newValue);
+    };
+  });
+}
+
+function selectShortcutsContextMenu(place) {
+  const allPossibleFuncs = document.querySelectorAll(".context-menu-item");
+  if (allPossibleFuncs.length === 0) {
+    return;
+  }
+  if (allPossibleFuncs.length <= place) {
+    place = allPossibleFuncs.length - 1;
+  } else if (isNaN(place) || place === undefined || place < 0) {
+    place = 0;
+  }
+  allPossibleFuncs[place].click();
+}
+
+function renderShortcutsContextMenu(action) {
+  action = action.toLowerCase().trim();
+  const contextMenu = document.getElementById(
+    "shortcut-json-edit-context-menu",
+  );
+  const focusedElement = document.activeElement;
+
+  // If not focused on the right input, hide the menu
+  if (!focusedElement || focusedElement.id !== "action-input") {
+    contextMenu.style.opacity = 0;
+    contextMenu.style.pointerEvents = "none";
+    return;
+  }
+
+  // Compute rect only once so it's in scope for mousemove
+  let rect = focusedElement.getBoundingClientRect();
+
+  // Position the menu
+  function calculateContextMenuPosition() {
+    try {
+      const parent = document.querySelector(".shortcut-json-edit");
+      const parentRect = parent.getBoundingClientRect();
+      rect = focusedElement.getBoundingClientRect();
+      if (
+        parentRect.top > rect.top - rect.height / 3 ||
+        parentRect.bottom < (rect.top + rect.bottom) / 2
+      ) {
+        contextMenu.style.opacity = 0;
+        contextMenu.style.pointerEvents = "none";
+        return false;
+      }
+      const computedStyle = getComputedStyle(contextMenu);
+      const marginTop = parseFloat(computedStyle.marginTop) || 0;
+      const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
+      const maxH =
+        window.innerHeight - rect.top - rect.height - marginTop - marginBottom;
+      contextMenu.style.top = `${rect.top + rect.height + window.scrollY}px`;
+      contextMenu.style.left = `${rect.left + window.scrollX}px`;
+      contextMenu.style.width = `${rect.width}px`;
+      contextMenu.style.setProperty("max-height", `${maxH}px`, "important");
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  // Generate menu items
+  let hasPutContextMenu = false;
+  const ul = document.createElement("ul");
+  Object.keys(funcs).forEach((funcName) => {
+    if (funcName.toLowerCase().includes(action) && funcName !== action) {
+      if (!hasPutContextMenu) {
+        if (!calculateContextMenuPosition()) return;
+        contextMenu.style.opacity = 1;
+        contextMenu.style.pointerEvents = "all";
+        hasPutContextMenu = true;
+      }
+
+      const li = document.createElement("li");
+      li.textContent = funcName;
+      li.classList.add("context-menu-item");
+      li.addEventListener("click", () => {
+        focusedElement.value = funcName;
+        focusedElement.dispatchEvent(new Event("input", { bubbles: true }));
+        contextMenu.style.opacity = 0;
+        contextMenu.style.pointerEvents = "none";
+        window.removeEventListener("mousemove", onMouseMove);
+      });
+      ul.appendChild(li);
+    }
+  });
+
+  contextMenu.innerHTML = "";
+  contextMenu.appendChild(ul);
+
+  // Hide if mouse goes outside ±marginpx horizontally of the input
+  const margin = 20;
+  function onMouseMove(e) {
+    const x = e.clientX;
+    const y = e.clientY;
+    rect = focusedElement.getBoundingClientRect();
+    if (!calculateContextMenuPosition()) return;
+    const currentRect = contextMenu.getBoundingClientRect();
+
+    if (
+      x < rect.left - margin ||
+      x > rect.right + margin ||
+      y < rect.top - margin ||
+      y > currentRect.bottom + margin
+    ) {
+      contextMenu.style.opacity = 0;
+      contextMenu.style.pointerEvents = "none";
+    } else if (getComputedStyle(contextMenu).opacity === "0") {
+      contextMenu.style.opacity = 1;
+      contextMenu.style.pointerEvents = "all";
+    }
+  }
+
+  document.addEventListener("wheel", () => {
+    if (!calculateContextMenuPosition()) return;
+  });
+  document.addEventListener("resize", () => {
+    if (!calculateContextMenuPosition()) return;
+  });
+
+  // attach mousemove only when menu is visible
+  if (hasPutContextMenu) {
+    window.addEventListener("mousemove", onMouseMove);
+  }
+
+  // Hide when the focused input loses focus
+  focusedElement.addEventListener(
+    "blur",
+    () => {
+      setTimeout(() => {
+        contextMenu.style.opacity = 0;
+        contextMenu.style.pointerEvents = "none";
+        window.removeEventListener("mousemove", onMouseMove);
+      }, 200); // give click event time to fire
+    },
+    { once: true },
+  );
 }

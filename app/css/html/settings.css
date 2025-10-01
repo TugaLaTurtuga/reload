@@ -270,15 +270,303 @@ button:active {
     margin-bottom: 10px;
 }
 
-.shortcut-div {
-    padding: 10px;
+.shortcuts-div {
+    height: 40px !important;
+    width: auto;
+    min-width: 50vw;
+    max-width: 100%;
+    padding: 0;
+    background: var(--sidebarColor);
+    overflow-x: scroll;
+    overflow-y: hidden;
+    display: block;
+    white-space: nowrap;
     border-radius: 10px;
+}
+
+.shortcut-div {
+    height: 40px !important;
+    width: auto;
     cursor: pointer;
+    pointer-events: auto;
+    background: var(--trackItemColor);
+    min-width: 100px;
+    border: none;
+    text-align: center;
+    display: inline-block;
+    vertical-align: middle;
     transition:
         background 0.15s ease-out,
         transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 .shortcut-div:hover {
-    transform: scale(1.1);
+    background: var(--sliderBgColor);
+    transition: background 0s ease;
+}
+
+.shortcut-json-items-container {
+    margin-top: 5px;
+    height: 35px;
+    width: 100vw;
+    padding: 0;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.shortcut-json-item {
+    margin: 0 5px;
+    height: 35px;
+    font-size: 0.9rem;
+    width: auto;
+    padding: 10px;
+    cursor: pointer;
+    background: var(--trackItemColor);
+    min-width: 100px;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 10px;
+    transition:
+        background 0.15s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+.shortcut-json-item:hover {
+    background: var(--sliderBgColor);
+    transition: background 0s ease;
+}
+
+.shortcut-json-edit-item-container {
+    margin-top: 5px;
+    height: 35px;
+    width: 100vw;
+    padding: 0;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background: transparent;
+}
+
+.shortcut-json-edit-item {
+    margin: 0 5px;
+    height: 35px;
+    font-size: 0.9rem;
+    width: auto;
+    padding: 10px;
+    cursor: pointer;
+    background: var(--trackItemColor);
+    min-width: 100px;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 10px;
+    transition:
+        background 0.15s ease-out,
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+}
+
+.shortcut-json-edit-item:hover {
+    background: var(--sliderBgColor);
+    transition: background 0s ease;
+}
+
+.shortcut-json-edit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.shortcut-json-edit {
+    /* table */
+    background: var(--sidebarColor);
+    border-radius: 10px;
+    margin-top: 10px;
+    width: auto;
+    min-width: 80vw;
+    max-width: calc(100vh - 10px);
+    height: 50vh;
+    overflow: hidden;
+}
+
+.shortcut-json-edit-vars {
+    display: flex;
+    flex-direction: row;
+    height: 40px !important;
+}
+
+.shortcut-json-edit-table {
+    height: calc(100% - 40px) !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+tbody td {
+    padding: 0.35rem 0.3rem;
+    vertical-align: middle;
+}
+tbody tr {
+    height: 60px !important;
+}
+tbody tr:nth-child(odd) {
+    background: var(--trackItemOddColor);
+    transition: all 0.4s ease-out;
+}
+tbody tr:nth-child(even) {
+    background: var(--trackItemColor);
+    transition: all 0.4s ease-out;
+}
+tbody tr:hover {
+    background: var(--trackItemOnHover);
+    transition: none;
+    z-index: 20;
+}
+
+.var-shortcut {
+    width: 20%;
+    padding-top: 10px;
+    padding-left: 10px;
+    text-align: left;
+}
+.var-action {
+    width: 50%;
+    padding-top: 10px;
+    padding-left: 10px;
+    text-align: left;
+}
+.var-params {
+    width: calc(30% - 50px);
+    padding-top: 10px;
+    padding-left: 10px;
+    text-align: left;
+}
+.var-delete {
+    width: 50px;
+    padding-top: 10px;
+    padding-left: 10px;
+    text-align: left;
+}
+
+.var-delete-table {
+    justify-self: center;
+    align-self: center;
+    cursor: pointer;
+}
+
+input[type="text"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--textColor);
+    font-size: 0.9rem;
+    border-radius: 5px;
+    padding: 10px;
+    height: 40px;
+    transition: background 0.2s ease;
+}
+
+input[type="text"]:hover {
+    background: var(--sidebarColor);
+    transition: none;
+}
+
+input[type="text"]:focus {
+    background: var(--sidebarColor);
+}
+
+.save-shortcuts {
+    background: var(--sliderBgColor);
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.save-shortcuts:hover {
+    background: var(--activeColor);
+    color: var(--bg-1);
+}
+
+.save-shortcuts-div {
+    display: block;
+    justify-content: stretch;
+}
+
+.shortcut-json-edit-context-menu {
+    position: fixed;
+    z-index: 20;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: var(--sidebarColor);
+    overflow-x: hidden;
+    overflow-y: scroll;
+    transition: opacity 0.2s ease;
+}
+
+.shortcut-json-edit-context-menu li {
+    list-style-type: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.shortcut-json-edit-context-menu li:hover {
+    background: var(--sidebarColor);
+    transition: none;
+}
+
+.shortcut-input-field {
+    justify-self: center;
+    align-self: center;
+    place-self: center;
+    width: 200px;
+    height: 50px;
+}
+
+#shortcuts-file-path-btn {
+    position: fixed;
+    top: 0;
+    right: 5px;
+    border-radius: 10px 0 10px 10px;
+}
+
+#add-value {
+    border-radius: 0 0 10px 10px;
+}
+
+.shortcut-div input {
+    margin: 0;
+    height: 40px !important;
+    width: auto;
+    cursor: pointer;
+    background: var(--trackItemColor);
+    border: none;
+    border-radius: none !important;
+    background: none;
+    text-align: center;
+    cursor: pointer;
+    color: inherit;
+}
+
+.shortcut-div input:focus {
+    background: none;
+}
+
+.shortcut-div input:hover {
+    background: none;
 }

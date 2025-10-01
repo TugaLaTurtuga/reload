@@ -80,4 +80,4 @@ let settings = {
   },
 };
 
-const inputsFilePath = path.join(__dirname, "js/input/reloadMainAppInp.json");
+const funcsSaveFilePath = path.join(__dirname, "../electron/data/func.json");

@@ -373,7 +373,7 @@ function loadLibraryPaths() {
       // create default settings if none exist
       fs.writeFileSync(
         libraryFilePath,
-        JSON.stringify(libraryPaths, null, 2),
+        JSON.stringify(libraryPaths, null, 4),
         "utf8",
       );
       return libraryPaths;
@@ -388,7 +388,7 @@ ipcMain.handle("get-library-paths", loadLibraryPaths);
 ipcMain.handle("save-library-paths", (event, paths) => {
   if (paths.length !== 0 && Array.isArray(paths)) {
     try {
-      fs.writeFileSync(libraryFilePath, JSON.stringify(paths, null, 2), "utf8");
+      fs.writeFileSync(libraryFilePath, JSON.stringify(paths, null, 4), "utf8");
     } catch (error) {
       console.error("Error saving library paths:", error);
     }
@@ -499,7 +499,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           try {
             fs.writeFileSync(
               confPath,
-              JSON.stringify(album.info, null, 2),
+              JSON.stringify(album.info, null, 4),
               "utf8",
             );
           } catch (err) {
@@ -540,7 +540,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           try {
             fs.writeFileSync(
               confPath,
-              JSON.stringify(album.info, null, 2),
+              JSON.stringify(album.info, null, 4),
               "utf8",
             );
           } catch (err) {
@@ -555,7 +555,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
             try {
               fs.writeFileSync(
                 confPath,
-                JSON.stringify(album.info, null, 2),
+                JSON.stringify(album.info, null, 4),
                 "utf8",
               );
             } catch (err) {
@@ -708,7 +708,7 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
 
     fs.writeFileSync(
       settingsFilePath,
-      JSON.stringify(settings, null, 2),
+      JSON.stringify(settings, null, 4),
       "utf8",
     );
 
@@ -720,7 +720,7 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
     return true;
   } catch (error) {
     if (error.message.startsWith("Unexpected end of JSON input")) {
-      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 2), "utf8");
+      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 4), "utf8");
       saveSettings(unsavedSettings, fromsystemTheme);
     }
     console.error("❌ Error saving last played info:", error);
@@ -738,7 +738,7 @@ ipcMain.handle("clean-new-settings", () => {
     settings.new = {};
     fs.writeFileSync(
       settingsFilePath,
-      JSON.stringify(settings, null, 2),
+      JSON.stringify(settings, null, 4),
       "utf8",
     );
   } catch (err) {
@@ -761,7 +761,7 @@ ipcMain.handle("get-settings", () => {
       return JSON.parse(data);
     } else {
       // create default settings if none exist
-      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 2), "utf8");
+      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 4), "utf8");
       return {};
     }
   } catch (error) {
@@ -1063,7 +1063,7 @@ async function getImgColor(imgPath) {
 
 function deleteConfPath(folderPath, confFileName) {
   const confPath = path.join(folderPath, confFileName);
-  // Delete old music.json if it exists
+  // Delete old <<>>.json if it exists
   if (fs.existsSync(confPath)) {
     try {
       fs.unlinkSync(confPath);
@@ -1077,9 +1077,10 @@ function deleteConfPath(folderPath, confFileName) {
   }
 }
 
-ipcMain.handle("get-all-user-looks", async () => {
-  const looksDir = path.join(userDataPath, "looks");
+const looksDir = path.join(userDataPath, "looks");
+const shortcutsDir = path.join(userDataPath, "shortcuts");
 
+ipcMain.handle("get-all-user-looks", async () => {
   try {
     // ensure directory exists
     await fs.promises.mkdir(looksDir, { recursive: true });
@@ -1095,20 +1096,16 @@ ipcMain.handle("get-all-user-looks", async () => {
 });
 
 ipcMain.handle("open-looks-dir", async () => {
-  const looksDir = path.join(userDataPath, "looks");
   await shell.openPath(looksDir);
   return looksDir;
 });
 
 ipcMain.handle("open-shortcuts-dir", async () => {
-  const shortcutsDir = path.join(userDataPath, "shortcuts");
   await shell.openPath(shortcutsDir);
   return shortcutsDir;
 });
 
 ipcMain.handle("get-all-shortcuts", async () => {
-  const shortcutsDir = path.join(userDataPath, "shortcuts");
-
   try {
     const files = await fs.promises.readdir(shortcutsDir);
     return files
@@ -1121,7 +1118,6 @@ ipcMain.handle("get-all-shortcuts", async () => {
 });
 
 ipcMain.handle("get-current-shortcut", async () => {
-  const shortcutsDir = path.join(userDataPath, "shortcuts");
   const currTxt = path.join(shortcutsDir, "curr.txt");
 
   try {
@@ -1150,14 +1146,80 @@ ipcMain.handle("get-current-shortcut", async () => {
 });
 
 ipcMain.handle("set-current-shortcut", async (event, shortcutPath) => {
-  const shortcutsDir = path.join(userDataPath, "shortcuts");
+  if (!shortcutPath) {
+    mainWindow.webContents.send("shortcuts-updated");
+    return;
+  }
+
   const currTxt = path.join(shortcutsDir, "curr.txt");
 
   try {
     await fs.promises.writeFile(currTxt, path.basename(shortcutPath));
+    mainWindow.webContents.send("shortcuts-updated");
     return true;
   } catch (err) {
     console.error("Failed to set current shortcut:", err);
+    return false;
+  }
+});
+
+ipcMain.handle("add-shortcut", async (event, shortcutName, json = {}) => {
+  if (!shortcutName) return false;
+  if (shortcutName.endsWith(".json")) shortcutName = shortcutName.slice(0, -5);
+  const DEFAULT_INPUTS = {
+    opts: { logKeyPress: false, gamepadDeadzone: 0.1 },
+    keyboard: {
+      whenPressed: {},
+      whenUnpressed: {},
+      whenDown: {},
+      whenUp: {},
+      whenUnpressed: {},
+    },
+    gamepad: {
+      whenPressed: {},
+      whenUnpressed: {},
+      whenDown: {},
+      whenUp: {},
+    },
+    mouse: {
+      whenPressed: {},
+      whenUnpressed: {},
+      whenDown: {},
+      whenUp: {},
+    },
+  };
+
+  if (Object.keys(json).length === 0) {
+    json = DEFAULT_INPUTS;
+  }
+
+  const newShortcutPath = path.join(shortcutsDir, `${shortcutName}.json`);
+
+  try {
+    await fs.promises.writeFile(
+      newShortcutPath,
+      JSON.stringify(json, null, 4),
+      "utf8",
+    );
+    return true;
+  } catch (err) {
+    console.error("Failed to add new shortcut:", err);
+    return false;
+  }
+});
+
+ipcMain.handle("remove-shortcut", async (event, shortcutName) => {
+  if (shortcutName.endsWith(".json")) shortcutName = shortcutName.slice(0, -5);
+  const newShortcutPath = path.join(shortcutsDir, `${shortcutName}.json`);
+  if (!shortcutName) {
+    return false;
+  }
+
+  try {
+    await fs.promises.unlink(newShortcutPath);
+    return true;
+  } catch (err) {
+    console.error("Failed to remove shortcut:", err);
     return false;
   }
 });

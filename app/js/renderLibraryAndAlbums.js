@@ -281,13 +281,6 @@ async function moveVirtualCursor(x, y) {
   let nodes = elements[i][1][elements[i][1].pop()];
   const allNodes = elements[i][1][0];
 
-  console.log(
-    document.querySelectorAll("#album-art-container .track-number"),
-    allAlbums,
-    nodes,
-    allNodes,
-  );
-
   const gridXSize = getGridXSize(nodes);
   const gridYSize = Math.ceil(allAlbums.length / gridXSize);
   const [cursorPos, isInCard] = await getCurrentGridPosition(allNodes);
@@ -324,7 +317,7 @@ async function moveVirtualCursor(x, y) {
           pos = cursorPos - gridXSize;
         }
       } else {
-        pos = gridPosX + (gridPosY - gridYSize) * gridXSize;
+        pos = gridPosX;
       }
       if (pos < 0) {
         pos += gridXSize;
@@ -337,7 +330,6 @@ async function moveVirtualCursor(x, y) {
   if (typeof pos !== "number" || Number.isNaN(pos)) pos = 0;
   pos = Math.min(Math.max(0, pos), maxIndex);
   const album = allAlbums[pos];
-  console.log(album, pos, allAlbums);
 
   const playerControlsRect = playerControls.getBoundingClientRect();
   const albumRect = album.getBoundingClientRect();

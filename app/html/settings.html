@@ -23,7 +23,23 @@
                 <div id="library-paths-container"></div>
                 <button id="addLibraryBtn">Add folder</button>
             </div>
-            <div id="shortcuts" class="container"></div>
+            <div id="shortcuts" class="container">
+                <button id="shortcuts-file-path-btn">See Shortcuts Files</button>
+                <div class="shortcuts-div"></div>
+                <div id="shortcuts-edits" class="shortcuts-edits">
+                    <div class="shortcut-json-items-container"></div>
+                    <div class="shortcut-json-edit-container">
+                        <div class="shortcut-json-edit-item-container"></div>
+                        <div class="shortcut-json-edit"></div>
+                        <button id="add-value">Add Value</button>
+                        <div class="save-shortcuts-div">
+                            <button class="save-shortcuts" id="save-shortcuts">Save</button>
+                            <button class="save-shortcuts" id="delete-shortcuts">Delete</button>
+                        </div>
+                    </div>
+                    <div class="shortcut-json-edit-context-menu" id="shortcut-json-edit-context-menu">
+                </div>
+            </div>
         </div>
 
         <div class="overlay" isVisible="false" style="display: none">
@@ -48,7 +64,6 @@
         <script src="../js/html/settings/settingsScript.js"></script>
 
         <!-- input -->
-        <script src="../js/input/inputs.js"></script>
         <script src="../js/css/tooltip.js"></script>
     </body>
 </html>

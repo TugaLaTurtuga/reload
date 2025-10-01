@@ -286,7 +286,7 @@ async function saveMusicData() {
     try {
       await fs.writeFileSync(
         jsonPath,
-        JSON.stringify(musicData, null, 2),
+        JSON.stringify(musicData, null, 4),
         "utf8",
       );
       ipcRenderer.invoke("changed-json-data");
