@@ -1,0 +1,78 @@
+{
+  "opts": {
+    "logKeyPress": false,
+    "gamepadDeadzone": 0.1
+  },
+  "keyboard": {
+    "whenPressed": {
+      " ": "togglePlayPause()",
+      "b": "clickVirtualCursor(0)",
+      "f10": "toggleMute()",
+      "v": "playPrevious()",
+      "n": "playNext()",
+      "ArrowLeft": "moveVirtualCursor(-1, 0)",
+      "ArrowRight": "moveVirtualCursor(1, 0)",
+      "ArrowUp": "moveVirtualCursor(0, 1)",
+      "ArrowDown": "moveVirtualCursor(0, -1)",
+      "s": "moveVirtualCursor(-1, 0)",
+      "f": "moveVirtualCursor(1, 0)",
+      "j": "moveVirtualCursor(0, 1)",
+      "l": "moveVirtualCursor(0, -1)",
+      "enter": "clickVirtualCursor(0)",
+      "backspace": "goBack()",
+      "escape": "backToLibrary()",
+      "home": "backToLibrary()"
+    },
+    "whenUnpressed": {},
+    "whenDown": {
+      "f11": "addVolume(-.02)",
+      "f12": "addVolume(.02)",
+      "g": "addVolume(-.02)",
+      "h": "addVolume(.02)",
+      "c": "addProgress(-2)",
+      "m": "addProgress(2)",
+      "<": "addProgress(-2)",
+      ">": "addProgress(2)"
+    },
+    "whenUp": {}
+  },
+
+  "gamepad": {
+    "whenPressed": {
+      "17": "togglePlayPause()",
+      "10": "togglePlayPause()",
+      "3": "openAlbum(settings.currentPlayingAlbum)",
+      "8": "toggleMute()",
+      "4": "playPrevious()",
+      "5": "playNext()",
+      "14": "moveVirtualCursor(-1, 0)",
+      "15": "moveVirtualCursor(1, 0)",
+      "12": "moveVirtualCursor(0, 1)",
+      "13": "moveVirtualCursor(0, -1)",
+      "1": "goBack()",
+      "6": "goBack()",
+      "7": "goBack()",
+      "16": "backToLibrary()",
+      "9": "openExternalHtml('html/settings.html')",
+      "0": "stickyClickVirtualCursor(0, true)"
+    },
+    "whenUnpressed": {
+      "0": "stickyClickVirtualCursor(0, false)"
+    },
+    "whenDown": {
+      "axes[0]": "moveCursor(value.x, value.y)",
+      "axes[1]": "scroll(value.x, value.y)"
+    },
+    "whenUp": {}
+  },
+
+  "mouse": {
+    "whenPressed": {
+      "3": "goBack()",
+      "4": "goForward()"
+    },
+    "whenUnpressed": {},
+    "whenDown": {},
+    "whenUp": {}
+  }
+}

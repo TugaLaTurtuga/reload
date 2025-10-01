@@ -1,0 +1,211 @@
+:root {
+    --border-radius: 30px;
+    --sidebar-padding: 16px;
+}
+
+.window-controls {
+    top: calc(var(--border-radius) / 5);
+    height: calc(13px - var(--border-radius) / 40);
+    gap: calc(13px - var(--border-radius) / 5);
+}
+
+.window-controls button {
+    width: calc(13px - var(--border-radius) / 10);
+    height: calc(13px - var(--border-radius) / 40);
+    border-radius: calc(13px - var(--border-radius) / 10);
+}
+
+#close-btn {
+    background-color: transparent;
+}
+
+#min-btn {
+    background-color: transparent;
+}
+
+#max-btn {
+    background-color: transparent;
+}
+
+#close-btn:hover {
+    background-color: red;
+}
+
+#min-btn:hover {
+    background-color: yellow;
+}
+
+#max-btn:hover {
+    background-color: green;
+}
+
+#sidebar {
+    border-radius: var(--border-radius);
+    bottom: var(--sidebar-padding);
+    top: auto;
+    height: calc(100vh - var(--sidebar-padding) * 2);
+    left: calc(var(--sidebar-padding));
+    padding: var(--sidebar-padding);
+}
+
+.album-artist {
+    margin-left: calc(var(--border-radius) / 8);
+}
+
+#now-playing-small {
+    position: absolute;
+    bottom: calc(var(--sidebar-padding) / 2);
+    left: calc(var(--sidebar-padding) / 2);
+    width: calc(100% - var(--sidebar-padding));
+    aspect-ratio: 1;
+    align-items: center;
+}
+
+#now-playing-art-small {
+    border-radius: calc(var(--border-radius) / 1.5);
+}
+
+#player-controls {
+    border-radius: var(--border-radius);
+    left: calc(var(--sidebar-padding) * 2 + 80px);
+    width: calc(100vw - 80px - var(--sidebar-padding) * 3);
+    bottom: var(--sidebar-padding);
+}
+
+#main-content {
+    left: calc(var(--sidebar-padding) * 2 + 75px);
+    width: calc(100vw - 75px - var(--sidebar-padding) * 3);
+    padding: calc(var(--sidebar-padding) * 2);
+}
+
+#buffer {
+    height: calc(var(--sidebar-padding) * 2 + 80px);
+}
+
+#progress-bar {
+    border-radius: var(--border-radius);
+}
+
+#progress-filled {
+    border-radius: var(--border-radius);
+}
+
+#volume-slider {
+    border-radius: var(--border-radius);
+}
+
+#volume-filled {
+    border-radius: var(--border-radius);
+}
+
+.album-card {
+    border-radius: calc(var(--border-radius) / 1.5);
+}
+
+#player-header {
+    position: fixed;
+    border-radius: var(--border-radius);
+    top: calc(var(--sidebar-padding) / 1);
+    right: calc(var(--sidebar-padding) / 1);
+}
+
+#album-art {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+#track-list {
+    border-radius: min(var(--border-radius), 30px);
+}
+
+.custom-tooltip {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+.slider {
+    border-radius: var(--border-radius);
+}
+
+.slider::-webkit-slider-runnable-track {
+    border-radius: var(--border-radius);
+}
+
+.slider::-moz-range-track {
+    border-radius: var(--border-radius);
+}
+
+.modal {
+    border-radius: var(--border-radius);
+}
+
+.modal .modal-input {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+.modal .modal-cancel-btn {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+.modal .modal-create-btn {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+button,
+select,
+input,
+textarea {
+    border-radius: var(--border-radius);
+}
+
+#color,
+#text,
+#number {
+    border-radius: var(--border-radius);
+}
+
+.theme-item {
+    border-radius: calc(var(--border-radius) / 1.4);
+}
+
+.preview .chip {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+code.inline {
+    border-radius: var(--border-radius);
+}
+
+section.editor {
+    border-radius: min(var(--border-radius), 30px);
+}
+
+aside {
+    border-radius: min(var(--border-radius), 30px);
+}
+
+.input-wrapper {
+    border-radius: var(--border-radius);
+}
+
+input[type="checkbox"] {
+    border-radius: calc(var(--border-radius) / 2);
+}
+
+#change-container {
+    border-radius: 0 0 min(var(--border-radius), 30px) 0;
+}
+
+.top-buttons {
+    border-radius: 0 0 0 min(var(--border-radius), 30px);
+}
+
+.change-logs-container {
+    border-radius: 0 var(--border-radius) 0 0;
+}
+
+.change-log-content {
+    border-radius: var(--border-radius) 0 0 0;
+}
+
+#library-paths-container .library-path {
+    border-radius: var(--border-radius);
+}
