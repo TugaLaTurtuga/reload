@@ -272,7 +272,7 @@ function renderThemesList() {
     item.innerHTML = `<div class="theme-item-title">${name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, " ")}</div>`;
     item.addEventListener("click", () => {
       selected = name;
-      playSoundAffect("click", (volume = 0.15));
+      playSoundAffect("click", (sfxVolume = 0.15));
       renderThemesList();
       renderVarsTable();
       refreshButtons();
@@ -510,7 +510,7 @@ async function renderVarsTable() {
         const hex = colorInput.value;
         const a = alphaSlider ? parseFloat(alphaSlider.value) : 1;
         const newVal = a < 1 ? hexToRgba(hex, a) : hex;
-        playSoundAffect("click", (volume = 0.35));
+        playSoundAffect("click", (sfxVolume = 0.35));
         themes.get(selected).set(key, newVal);
         if (alphaLabel) alphaLabel.textContent = a.toFixed(2);
         applyTheme();
@@ -662,7 +662,7 @@ async function saveToDisk() {
 }
 
 function setThememode(mode) {
-  playSoundAffect("jobPurchase", (volume = 0.8));
+  playSoundAffect("jobPurchase", (sfxVolume = 0.8));
   $(`#${settings.themeMode}Btn`).classList.remove("active");
   $(`#${mode}Btn`).classList.add("active");
   settings.themeMode = mode;
@@ -675,7 +675,7 @@ function setThememode(mode) {
 }
 
 function setSystemTheme() {
-  playSoundAffect("jobPurchase", (volume = 1));
+  playSoundAffect("jobPurchase", (sfxVolume = 1));
   settings.getSystemTheme = !settings.getSystemTheme;
   if (settings.getSystemTheme) {
     $("#systemThemeBtn").classList.add("active");
@@ -861,7 +861,7 @@ async function applyTheme() {
 // ---------- Settings loader (Electron) ----------
 let settings = {
   theme: { dark: "", light: "" },
-  volume: 1,
+  sfxVolume: 0.8,
   themeMode: "dark",
   getSystemTheme: true,
   showNotifications: true,

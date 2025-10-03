@@ -11,6 +11,7 @@ let musicData = {
     color: "#AAAAAA",
     rating: 5,
     copyrightFree: false,
+    favourite: false,
   },
 };
 
@@ -36,6 +37,7 @@ async function loadSettings() {
   let settings = {
     theme: { dark: "", light: "" },
     themeMode: "dark",
+    sfxVolume: 0.8,
   };
   try {
     let newSettings = (await ipcRenderer.invoke("get-settings")) || {};

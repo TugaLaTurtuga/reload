@@ -176,6 +176,11 @@ async function openAlbum(album) {
   libraryContainer.classList.add("hidden");
   playerContainer.classList.remove("hidden");
   mainContent.scrollTo(0, 0);
+
+  try {
+    updateFavouriteBtn();
+  } catch (err) {}
+
   return true;
 }
 

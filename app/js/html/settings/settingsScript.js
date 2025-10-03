@@ -14,6 +14,7 @@ const changeLogsSidebar = document.querySelector(".change-logs-container");
 
 let settings = {
   volume: 0.5,
+  sfxVolume: 0.8,
   showFeatures: true,
   controller: {
     keepMouseBetweenBounds: true,
@@ -21,6 +22,10 @@ let settings = {
     cursorSensitifity: 20,
     scrollSensitifity: 20,
     cursorAceleration: 1.2,
+  },
+  favourites: {
+    openAlbum: true,
+    startPlaying: false,
   },
 };
 
@@ -211,7 +216,7 @@ function createInput(path) {
       setAtPath(settings, path, e.target.checked);
     });
   } else if (typeof value === "number" || !isNaN(parseFloat(value))) {
-    if (key === "volume") {
+    if (key === "volume" || key === "sfxVolume") {
       input.type = "range";
       input.step = "0.01";
       input.min = 0;

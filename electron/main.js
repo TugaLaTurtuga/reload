@@ -447,6 +447,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               rating: 5,
               cover: null,
               copyrightFree: false,
+              favourite: false,
             },
           },
         };
@@ -510,7 +511,15 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
           try {
             const data = fs.readFileSync(confPath, "utf8");
             const parsedData = JSON.parse(data);
-            album.info = parsedData || album.info;
+            // Merge parsed data with default structure to ensure all properties exist
+            if (parsedData) {
+              album.info.description = {
+                ...album.info.description,
+                ...parsedData.description,
+              };
+              album.info.trackList =
+                parsedData.trackList || album.info.trackList;
+            }
 
             // mark for extraction only if color missing/placeholder
             if (

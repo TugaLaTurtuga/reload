@@ -49,8 +49,8 @@
   },
   "0.1.000": {
     "name": "Algorithm",
-    "logs": "-Changed playing songs to the backend, to make it possible to play songs without the main reload window opened -Made favourites, that get added into the sidebar, and can be played from there -Made it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label.",
+    "logs": "-Changed playing songs to the backend, to make it possible to play songs without the main reload window opened -Made favourites, that get added into the sidebar, and can be played from there ✔︎ -Made it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label.",
     "date": "15/10/2025",
-    "done": false
+    "done": true
   }
 }

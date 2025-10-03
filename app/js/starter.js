@@ -134,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ipcRenderer.invoke("getMuffleStatus").then((status) => {
     if (status) muffleAudio(0);
   });
+  loadFavouritesToSidebar();
 });
 
 window.addEventListener("resize", () => {

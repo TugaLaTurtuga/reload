@@ -81,7 +81,7 @@ async function playSoundAffect(eventType, distortion = 0, volume = 0) {
 
   let [_, volumeMultiplier = 1] = sfx[eventType];
   if (volume > 0) volumeMultiplier = volume;
-  volumeMultiplier *= settings.volume;
+  volumeMultiplier *= settings.sfxVolume;
 
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
