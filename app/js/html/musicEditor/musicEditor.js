@@ -9,7 +9,6 @@ let musicData = {
     year: 2024,
     genre: "",
     color: "#AAAAAA",
-    rating: 5,
     copyrightFree: false,
     favourite: false,
   },
@@ -21,12 +20,10 @@ const authorInput = document.getElementById("author");
 const labelInput = document.getElementById("label");
 const yearInput = document.getElementById("year");
 const genreInput = document.getElementById("genre");
-const albumRatingSelect = document.getElementById("albumRating");
 const descriptionInput = document.getElementById("description");
 const colorInput = document.getElementById("color");
 const copyrightFree = document.getElementById("copyrightFree");
 const tracksContainer = document.getElementById("tracks-container");
-const addTrackButton = document.getElementById("add-track");
 const sortTracksButton = document.getElementById("sort-tracks");
 const saveButton = document.getElementById("save-button");
 const loadButton = document.getElementById("load-button");
@@ -126,7 +123,6 @@ async function populateForm() {
   yearInput.value =
     description.year == "" ? new Date().getFullYear() : description.year;
   genreInput.value = description.genre || "";
-  albumRatingSelect.value = description.rating || 5;
   descriptionInput.value = description.description || "";
 
   // Colors
@@ -152,11 +148,11 @@ function addTrackToDOM(track, index) {
   trackDiv.innerHTML = `
     <input type="text" class="track-title" value="${track.title || ""}" placeholder="Track title">
     <span mode="10;1" data-slider="track-rating ${index}"></span>
-    <input type="range" class="slider" step=".1" min="0" value="5" max="10" id="track-rating ${index}">
+    <input type="range" class="slider" step=".1" min="0" value="${track.rating || 5}" max="10" id="track-rating ${index}">
     <div class="track-actions">
         <button class="move-up">↑</button>
         <button class="move-down">↓</button>
-        <button class="danger remove-track">Remove</button>
+        <!-- <button class="danger remove-track">Remove</button> -->
     </div>
 `;
 
@@ -169,10 +165,12 @@ function addTrackToDOM(track, index) {
   trackDiv.querySelector(".slider").addEventListener("input", () => {
     playSoundAffect("click", (volume = 0.35));
   });
+  /*
   trackDiv.querySelector(".remove-track").addEventListener("click", () => {
     playSoundAffect("warning", (volume = 1));
     removeTrack(trackDiv);
   });
+   */
   trackDiv
     .querySelector(".move-up")
     .addEventListener("click", () => moveTrack(trackDiv, "up"));
@@ -267,7 +265,6 @@ function updateAlbumInfo() {
   musicData.description.label = labelInput.value;
   musicData.description.year = parseInt(yearInput.value, 10);
   musicData.description.genre = genreInput.value;
-  musicData.description.rating = parseInt(albumRatingSelect.value);
   musicData.description.description = descriptionInput.value;
   musicData.description.color = colorInput.value;
   musicData.description.copyrightFree = copyrightFree.checked;
@@ -340,7 +337,6 @@ authorInput.addEventListener("input", updateAlbumInfo);
 labelInput.addEventListener("input", updateAlbumInfo);
 yearInput.addEventListener("input", updateAlbumInfo);
 genreInput.addEventListener("input", updateAlbumInfo);
-albumRatingSelect.addEventListener("change", updateAlbumInfo);
 descriptionInput.addEventListener("input", updateAlbumInfo);
 colorInput.addEventListener("change", updateColor);
 colorInput.addEventListener("input", () => {
@@ -349,7 +345,6 @@ colorInput.addEventListener("input", () => {
 
 copyrightFree.addEventListener("change", updateAlbumInfo);
 
-addTrackButton.addEventListener("click", addNewTrack);
 sortTracksButton.addEventListener("click", sortTracks);
 saveButton.addEventListener("click", saveMusicData);
 loadButton.addEventListener("click", loadMusicData);

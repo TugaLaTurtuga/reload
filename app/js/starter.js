@@ -10,15 +10,12 @@ async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
       if (updatedSettings.hasOwnProperty(key) && !onlyNewchanges) {
         settings[key] = updatedSettings[key];
       } else if (updatedSettings.new.hasOwnProperty(key) && onlyNewchanges) {
-        console.log(key, updatedSettings.new[key]);
         settings[key] = updatedSettings.new[key];
       }
     }
   } catch (error) {
     console.error("Error loading settings:", error);
   }
-  console.log("Settings loaded");
-
   console.log("Settings loaded");
 
   volumeSlider.value = settings.volume;

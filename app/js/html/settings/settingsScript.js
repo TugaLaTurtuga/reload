@@ -15,6 +15,7 @@ const changeLogsSidebar = document.querySelector(".change-logs-container");
 let settings = {
   volume: 0.5,
   sfxVolume: 0.8,
+  playFromStart: false,
   showFeatures: true,
   controller: {
     keepMouseBetweenBounds: true,
@@ -27,7 +28,27 @@ let settings = {
     openAlbum: true,
     startPlaying: false,
   },
+  algorithm: {
+    onlyPlayCopyrightFreeSongs: false,
+    preferAlbumsOverSingleTracks: 0.5,
+    preferAuthor: 0.3,
+    preferGenre: 0.2,
+    preferYear: 0.1,
+    preferLabel: 0.1,
+    ratingImportance: 0.6,
+  },
 };
+
+const useSlider = [
+  "volume",
+  "sfxVolume",
+  "preferAlbumsOverSingleTracks",
+  "preferAuthor",
+  "preferGenre",
+  "preferYear",
+  "preferLabel",
+  "ratingImportance",
+];
 
 let themeSettings = {
   themeMode: "dark",
@@ -216,7 +237,7 @@ function createInput(path) {
       setAtPath(settings, path, e.target.checked);
     });
   } else if (typeof value === "number" || !isNaN(parseFloat(value))) {
-    if (key === "volume" || key === "sfxVolume") {
+    if (useSlider.includes(key)) {
       input.type = "range";
       input.step = "0.01";
       input.min = 0;
@@ -264,24 +285,50 @@ function createInput(path) {
 
 // Show only the clicked section
 function showSection(sectionKey) {
-  const btns = document
-    .querySelector(".top-buttons")
-    .querySelectorAll("button");
-  document.querySelectorAll(".section").forEach((sectionDiv) => {
-    if (sectionDiv.dataset.section === sectionKey) {
-      sectionDiv.style.display = "block";
-      for (let i = 0; i < btns.length; ++i) {
-        if (btns[i].textContent === sectionKey) {
-          btns[i].classList.add("active");
-        } else {
-          btns[i].classList.remove("active");
-        }
+  const btns = document.querySelectorAll(".top-buttons button");
+  const sections = document.querySelectorAll(".section");
+
+  sections.forEach((sectionDiv) => {
+    const isTarget = sectionDiv.dataset.section === sectionKey;
+
+    // show/hide the section (use inline style for compatibility)
+    if (isTarget) {
+      // count the actual items inside this section
+      const itemCount = sectionDiv.querySelectorAll(".input-wrapper").length;
+
+      // reset classes then set the appropriate grid class
+      sectionDiv.classList.remove("grid-3x3", "grid-2x2", "grid-1x1");
+      if (itemCount >= 9) {
+        sectionDiv.classList.add("grid-3x3");
+      } else if (itemCount >= 5) {
+        sectionDiv.classList.add("grid-2x2");
+      } else {
+        sectionDiv.classList.add("grid-1x1");
       }
+
+      sectionDiv.style.display = ""; // let CSS class control layout (grid rules apply)
     } else {
       sectionDiv.style.display = "none";
+      sectionDiv.classList.remove("grid-3x3", "grid-2x2", "grid-1x1");
+    }
+  });
+
+  // update button active state (use trimmed lowercase compare to be robust)
+  btns.forEach((b) => {
+    const label = b.textContent.trim().toLowerCase();
+    if (label === sectionKey.trim().toLowerCase()) {
+      b.classList.add("active");
+    } else {
+      b.classList.remove("active");
     }
   });
 }
+
+// If you call showSection on start, ensure it runs after DOM loaded:
+document.addEventListener("DOMContentLoaded", () => {
+  // choose your initial section key here, e.g. "algorithm"
+  showSection("algorithm");
+});
 
 loadSettings();
 updateChangeContainer();

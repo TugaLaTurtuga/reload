@@ -97,22 +97,6 @@
                     </div>
 
                     <div class="field">
-                        <span mode="10;1" data-slider="albumRating"
-                            >Rating:
-                        </span>
-                        <input
-                            oninput="playSoundAffect('click', volume = 0.35);"
-                            type="range"
-                            class="slider"
-                            step=".1"
-                            min="0"
-                            value="5"
-                            max="10"
-                            id="albumRating"
-                        />
-                    </div>
-
-                    <div class="field">
                         <label for="description">Description</label>
                         <input
                             oninput="playSoundAffect('click', volume = 0.35);"
@@ -159,19 +143,12 @@
             </div>
 
             <div class="container" style="margin-bottom: 50px">
-                <h2 style="color: red">Track List (WORK IN PROGRESS)</h2>
+                <h2>Track List</h2>
                 <div id="tracks-container" class="track-list">
                     <!-- Tracks will be added here dynamically -->
                 </div>
 
                 <div class="actions">
-                    <button
-                        onclick="playSoundAffect('jobPurchase', volume = 1.3);"
-                        id="add-track"
-                        class="add"
-                    >
-                        Add New Track
-                    </button>
                     <button
                         onclick="playSoundAffect('jobPurchase', volume = .8);"
                         id="sort-tracks"

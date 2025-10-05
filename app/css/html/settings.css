@@ -58,6 +58,8 @@ input[type="number"] {
     height: 100vh;
     width: 100vw;
     color: var(--textColor);
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .slider {
@@ -91,6 +93,7 @@ button:active {
     min-width: 120px;
     aspect-ratio: 8/1;
     font-size: 1.2rem;
+    border-radius: 10px 10px 0 0;
 }
 
 .save-btn:hover {
@@ -264,6 +267,55 @@ button:active {
 
 .section {
     display: none; /* hidden by default */
+    width: 100%;
+}
+
+.sections-wrapper {
+    display: grid;
+    gap: 10px;
+    --distToTop: 50px;
+    margin-top: var(--distToTop);
+    height: calc(100vh - var(--distToTop));
+    width: 100vw;
+    color: var(--textColor);
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Make the visible section a grid and control layout by item count */
+.section.grid-3x3,
+.section.grid-2x2,
+.section.grid-1x1 {
+    display: grid; /* override default display:none when active */
+    gap: 12px;
+    padding: 20px; /* visual spacing inside the section */
+    box-sizing: border-box;
+    align-content: start;
+    justify-items: stretch;
+}
+
+/* 3 columns */
+.section.grid-3x3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* 2 columns */
+.section.grid-2x2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* 1 column */
+.section.grid-1x1 {
+    grid-template-columns: 1fr;
+    max-width: 60vw;
+    transform: translateX(35%);
+}
+
+/* When a section is in grid mode, let input-wrapper size be flexible */
+.section .input-wrapper {
+    width: auto !important;
+    min-width: 120px;
+    aspect-ratio: auto !important;
 }
 
 .input-wrapper {

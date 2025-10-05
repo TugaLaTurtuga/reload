@@ -149,13 +149,15 @@ async function playTrack(
         album: getCompressedInfo(settings.currentPlayingAlbum),
         index: settings.currentTrackIndex,
       });
-      settings.previousTracks = settings.previousTracks.slice(-50); // limit previousTracks size
+      settings.previousTracks = settings.previousTracks.slice(
+        -settings.maxSavedTracks,
+      ); // limit previousTracks size
     } else if (pushPrev !== null) {
       settings.nextTracks.unshift({
         album: getCompressedInfo(settings.currentPlayingAlbum),
         index: settings.currentTrackIndex,
       });
-      settings.nextTracks = settings.nextTracks.slice(-50); // limit nextTracks size
+      settings.nextTracks = settings.nextTracks.slice(-settings.maxSavedTracks); // limit nextTracks size
     }
   }
 
@@ -518,24 +520,6 @@ function setNextTracksFromAlbum(album, startIndex) {
   }
 }
 
-//// TODO: Make a algorithm that bases the next song based on track rating, current track genre, and other factors
-async function playRandomSong() {
-  let previousAlbumIndex = -1;
-  if (settings.currentPlayingAlbum?.tracks?.length > 0) {
-    previousAlbumIndex = songs.findIndex(
-      (a) => a.jsonPath === settings.currentPlayingAlbum.jsonPath,
-    );
-  }
-
-  let randomIndex = Math.floor(Math.random() * songs.length);
-  if (randomIndex === previousAlbumIndex && songs.length > 1) {
-    randomIndex = (randomIndex + 1) % songs.length; // pick next album if same as previous
-  }
-
-  setNextTracksFromAlbum(songs[randomIndex], 0);
-  playTrack(0, songs[randomIndex], { pushPrev: true });
-}
-
 // When user changes slider
 let hasReachedEndOfProgressBar = false;
 function seek() {
@@ -571,13 +555,37 @@ function unseek() {
 // Toggle mute
 function toggleMute() {
   audioPlayer.muted = !audioPlayer.muted;
-  muteButton.textContent = audioPlayer.muted ? "🔇" : "🔊";
+  console.log(audioPlayer.muted);
+  updateVolumeIcon();
 }
 
 // Set volume
 function setVolume() {
   audioPlayer.volume = easeIn(volumeSlider.value);
   settings.volume = volumeSlider.value;
+  updateVolumeIcon();
+}
+
+function updateVolumeIcon() {
+  const icons = ["Mute", "None", "Low", "Normal", "High"];
+  icons.forEach((icon) => {
+    const el = document.getElementById(`volumeIcon${icon}`);
+    el.classList.remove("visible");
+    el.classList.add("hidden");
+  });
+
+  let activeIcon = "Mute";
+  if (!audioPlayer.muted) {
+    const value = +volumeSlider.value;
+    if (value === 0) activeIcon = "None";
+    else if (value <= 0.3) activeIcon = "Low";
+    else if (value <= 0.7) activeIcon = "Normal";
+    else activeIcon = "High";
+  }
+
+  const activeEl = document.getElementById(`volumeIcon${activeIcon}`);
+  activeEl.classList.add("visible");
+  activeEl.classList.remove("hidden");
 }
 
 function addVolume(plus) {

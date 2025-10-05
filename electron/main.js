@@ -167,11 +167,28 @@ function createWindow() {
       }
     }, 50); // Small delay to ensure focus has transferred
   });
+
+  mainWindow.on("close", (e) => {
+    if (!app.isQuiting) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
+  app.on("activate", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+      } else {
+        mainWindow.focus();
+      }
+    }
+  });
 }
 
 ipcMain.on("window-minimize", (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
-  win.minimize();
+  win.close();
 });
 
 ipcMain.on("window-toggle-maximize", (event) => {
@@ -183,9 +200,13 @@ ipcMain.on("window-toggle-maximize", (event) => {
   }
 });
 
-ipcMain.on("window-close", (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  win.close();
+ipcMain.on("window-close", () => {
+  app.isQuiting = true;
+  app.quit();
+});
+
+app.on("before-quit", () => {
+  app.isQuiting = true;
 });
 
 app.whenReady().then(() => {
@@ -444,7 +465,6 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               year: "year",
               genre: fromExternalProvider ? "from external provider." : "genre",
               color: "#AAAAAA",
-              rating: 5,
               cover: null,
               copyrightFree: false,
               favourite: false,

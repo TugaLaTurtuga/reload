@@ -63,6 +63,7 @@ class InputManager {
       }
 
       if (this.logKeyPress) console.log(`Key "${key}" pressed`);
+      if (key === " ") e.preventDefault();
       this.lastPressedKeys.add(key);
     });
 

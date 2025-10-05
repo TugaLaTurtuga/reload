@@ -72,6 +72,7 @@ let settings = {
   themeMode: "dark", // dark or light
   getSystemTheme: false, // if true, the theme will be set to the system theme
   showFeatures: true, // shows features from a track, if false hides this: (feat: someone)
+  maxSavedTracks: 50,
   controller: {
     cursorSensitifity: 20,
     keepMouseBetweenBounds: true,
@@ -82,6 +83,15 @@ let settings = {
   favourites: {
     openAlbum: true,
     startPlaying: true,
+  },
+  algorithm: {
+    onlyPlayCopyrightFreeSongs: false,
+    preferAlbumsOverSingleTracks: 0.5,
+    preferAuthor: 0.3,
+    preferGenre: 0.2,
+    preferYear: 0.1,
+    preferLabel: 0.1,
+    ratingImportance: 0.6,
   },
 };
 
