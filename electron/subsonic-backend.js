@@ -37,7 +37,6 @@ function saveConfig(cfg) {
 }
 
 let config = loadConfig();
-console.log(config);
 
 function getActiveServer() {
   return config.servers.find((s) => s.id === config.activeServerId);

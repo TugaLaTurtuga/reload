@@ -2,7 +2,8 @@ async function playLoadedAudioFromSettings() {
   if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
     const opts = {
       pushPrev: null,
-      playFromStart: settings.playFromStart,
+      startTrackFromBeginningOnStartUp:
+        settings.startTrackFromBeginningOnStartUp,
       firstLoad: true,
     };
     await playTrack(
@@ -78,7 +79,11 @@ async function playTrack(
   album = settings.currentPlayingAlbum,
   opts = {},
 ) {
-  const { pushPrev = true, playFromStart = true, firstLoad = false } = opts;
+  const {
+    pushPrev = true,
+    startTrackFromBeginningOnStartUp = true,
+    firstLoad = false,
+  } = opts;
 
   if (!album) return;
 
@@ -187,7 +192,7 @@ async function playTrack(
   for (let i = 0; i < sources.length; ++i) {
     if (sources[i] === 1) {
       if (!sourcesToUpdate[i]) {
-        loadTrack(currTrack, playFromStart, firstLoad);
+        loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad);
         alreadyLoadedTrack = true;
       } else {
         break;
@@ -232,7 +237,7 @@ async function playTrack(
       // load track to audioSource
       loadTrackToAudioSource(track, albumPathAndIndex, audioSources[i]);
       if (track === currTrack && !alreadyLoadedTrack) {
-        loadTrack(currTrack, playFromStart, firstLoad);
+        loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad);
       }
     }
   }
@@ -240,7 +245,7 @@ async function playTrack(
   getAudioSource();
 }
 
-function loadTrack(currTrack, playFromStart, firstLoad) {
+function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
   audioSource = audioPlayer.querySelector("#curr");
   audioPlayer.src = audioSource.src;
 
@@ -249,7 +254,7 @@ function loadTrack(currTrack, playFromStart, firstLoad) {
   audioPlayer.load();
 
   // if it ins't playing from the start, put the tracked time from settings to the audio player.
-  if (!playFromStart && !isNaN(settings.tracksTimer)) {
+  if (!startTrackFromBeginningOnStartUp && !isNaN(settings.tracksTimer)) {
     audioPlayer.currentTime = settings.tracksTimer;
     currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
   }
@@ -555,7 +560,6 @@ function unseek() {
 // Toggle mute
 function toggleMute() {
   audioPlayer.muted = !audioPlayer.muted;
-  console.log(audioPlayer.muted);
   updateVolumeIcon();
 }
 
@@ -596,7 +600,6 @@ function addVolume(plus) {
   newVal = Math.max(0, Math.min(1, newVal));
 
   volumeSlider.value = newVal;
-  console.log(newVal, plus);
   setVolume();
   sController.updateSlider(volumeSlider);
 }

@@ -50,9 +50,9 @@ function updateCSSContent(look, lookCssContent, lookCssOptions) {
   // save to file
   try {
     fs.writeFileSync(look.path, updatedCss, "utf-8");
-    console.log(`✅ CSS updated and saved to ${look.path}`);
+    console.log(`CSS updated and saved to ${look.path}`);
   } catch (err) {
-    console.error(`❌ Failed to write CSS to ${look.path}:`, err);
+    console.error(`Failed to write CSS to ${look.path}:`, err);
   }
 
   return updatedCss;
@@ -199,12 +199,8 @@ async function loadLooks() {
     let lookCssOptions = getRootFromCSS(lookCssContent);
 
     if (lookCssOptions) {
-      console.log(lookCssOptions);
-
       // iterate over Map entries
       for (const [name, data] of lookCssOptions.entries()) {
-        console.log(name, data);
-
         // add input fields for each option
         const input = document.createElement("input");
         input.type = "text";

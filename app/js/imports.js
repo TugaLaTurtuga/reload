@@ -1,19 +1,3 @@
-const { ipcRenderer, BrowserWindow } = require("electron");
-const path = require("path");
-const fs = require("fs");
-
-function easeInOut(t) {
-  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-}
-
-function easeIn(t) {
-  return t * t;
-}
-
-function easeOut(t) {
-  return t * (2 - t);
-}
-
 // DOM Elements
 const audioPlayer = document.getElementById("audio-player");
 let audioSources = null; // go to starter.js to see what this is
@@ -63,7 +47,7 @@ let settings = {
   previousTracks: [], // stack of { album, index }
   nextTracks: [], // queue of { album, index }
   tracksTimer: null, // the current time of the music being played (only changed on exit)
-  playFromStart: false, // if true, when opeing the app, the latest music played will start from the start, else if starts from the tracksTimer
+  startTrackFromBeginningOnStartUp: false, // if true, when opening the app, the latest music played will start from the start, else if starts from the tracksTimer
   isPlayingMusic: false, // is the audio being played
   currentAlbum: null, // the album thats currently opened
   volume: 0.8, // audio volume
@@ -87,10 +71,10 @@ let settings = {
   algorithm: {
     onlyPlayCopyrightFreeSongs: false,
     preferAlbumsOverSingleTracks: 0.5,
-    preferAuthor: 0.3,
-    preferGenre: 0.2,
-    preferYear: 0.1,
-    preferLabel: 0.1,
+    authorImportance: 0.3,
+    genreImportance: 0.2,
+    yearImportance: 0.1,
+    labelImportance: 0.1,
     ratingImportance: 0.6,
   },
 };

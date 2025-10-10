@@ -854,8 +854,8 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   const win = new BrowserWindow({
     width: 950,
     height: 700,
-    minWidth: 600,
-    minHeight: 300,
+    minWidth: 800,
+    minHeight: 400,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

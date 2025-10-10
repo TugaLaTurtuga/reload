@@ -109,6 +109,7 @@ button.primary {
 }
 button.danger {
     background: var(--ControlsBtnsColor);
+    color: var(--trackItemOddColor);
     border: none;
 }
 button:disabled {

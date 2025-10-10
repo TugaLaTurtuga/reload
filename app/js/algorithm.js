@@ -37,16 +37,16 @@ async function playRandomSong() {
       const songDescription = song.album.info.description;
 
       if (currentDescription.artist !== songDescription.artist) {
-        score *= 1 - settings.algorithm.preferAuthor;
+        score *= 1 - settings.algorithm.authorImportance;
       }
       if (currentDescription.genre !== songDescription.genre) {
-        score *= 1 - settings.algorithm.preferGenre;
+        score *= 1 - settings.algorithm.yearImportance;
       }
       if (currentDescription.year !== songDescription.year) {
-        score *= 1 - settings.algorithm.preferYear;
+        score *= 1 - settings.algorithm.yearImportance;
       }
       if (currentDescription.label !== songDescription.label) {
-        score *= 1 - settings.algorithm.preferLabel;
+        score *= 1 - settings.algorithm.labelImportance;
       }
     }
 
@@ -55,7 +55,7 @@ async function playRandomSong() {
       song.album.info.description.rating * settings.algorithm.ratingImportance;
 
     // Reduce score for recently played songs
-    // grath in some grapths/previousTracksReduction.ggb
+    // grath in some graths/previousTracksReduction.ggb
     for (let i = settings.previousTracks.length - 1; i >= 0; --i) {
       if (settings.previousTracks[i].album.path === song.album.path) {
         score *= 1 - reducer * clamper * Math.pow(i + 1, 4);

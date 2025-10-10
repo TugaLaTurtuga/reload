@@ -16,15 +16,17 @@ async function loadSound(eventType) {
   if (!fileName) return null;
 
   if (!audioBuffers[eventType]) {
-    const filePath = path.join(__dirname, sfxAudioPath, fileName);
+    const fileUrl = `file://${path.join(__dirname, sfxAudioPath, fileName)}`;
 
-    const fileData = await fs.promises.readFile(filePath);
-    const arrayBuffer = fileData.buffer.slice(
-      fileData.byteOffset,
-      fileData.byteOffset + fileData.byteLength,
-    );
-    const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-    audioBuffers[eventType] = decoded;
+    try {
+      const response = await fetch(fileUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+      audioBuffers[eventType] = decoded;
+    } catch (error) {
+      console.error(`Failed to load sound "${fileName}":`, error);
+      return null;
+    }
   }
 
   return audioBuffers[eventType];
@@ -81,7 +83,7 @@ async function playSoundAffect(eventType, distortion = 0, volume = 0) {
 
   let [_, volumeMultiplier = 1] = sfx[eventType];
   if (volume > 0) volumeMultiplier = volume;
-  volumeMultiplier *= settings.sfxVolume;
+  volumeMultiplier *= easeIn(settings.sfxVolume);
 
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;

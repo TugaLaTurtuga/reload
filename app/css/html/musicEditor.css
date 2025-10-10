@@ -100,9 +100,6 @@ button.danger {
     background-color: var(--ControlsBtnsColor);
     color: var(--trackItemOddColor);
 }
-button.danger:hover {
-    background-color: var(--ControlsBtnsColor);
-}
 button.add {
     background-color: var(--ControlsBtnsColor);
     color: var(--trackItemOddColor);

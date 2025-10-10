@@ -44,12 +44,12 @@
   "0.0.500": {
     "name": "keyboards controls settings",
     "logs": "-Can add and remove shortcuts in settings -Able to change, add and remove keybindings in the settings, and not by editing the JSON file manually -Fixed some math problems when moving down on a grid with keys, now it should have the same properties as up -fixed some css problems in themes -Fixed the light or dark theme btns not change the active state when expected",
-    "date": "1/10/2025",
+    "date": "01/10/2025",
     "done": true
   },
   "0.1.000": {
-    "name": "Algorithm",
-    "logs": "-made it Possible to play songs without the main reload window opened -Made favourites, that get added into the sidebar, and can be played from there -Made it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label. -Changed how the settings in settings windows looks and feels, now using a grid layout -Fixed a bug of the music editor not loading the data correctly to the tracks. -Remove the add track and remove track buttons from the music editor -Made the volume icon be more interactive by using 5 svgs instead of two emojis",
+    "name": "This was meant to just be a algorithm update 🗿",
+    "logs": "-Made it Possible to play songs without the main reload window opened (this happens when you click the yellow button, that hides the window instead of minimizing it) -Made favourites, that get added into the sidebar, and can be played from there -Made it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label. -Changed how the settings in settings windows looks and feels, now using a grid layout -Fixed a bug of the music editor not loading the data correctly to the tracks. -Remove the add track and remove track buttons from the music editor -Made the volume icon be more interactive by using 5 svgs instead of two emojis (this ones: 🔊, 🔇) -Fixed a bug where the sfx didn't load -Fixed some problems with sfx not playing as expected -Added sfx Volume -Added sfx the settings and looks window -Fixed change_log_content (this part from the change logs that you reading) to show everything inside of it -Changed the date of change_log_date placement to be on the bottom right and the change_log_title to be centered on the top",
     "date": "15/10/2025",
     "done": true
   }

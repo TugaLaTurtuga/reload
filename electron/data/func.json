@@ -28,7 +28,7 @@
     "getUncompressedInfo": "album, index",
     "check": "album",
     "playTrack": "index, album, opts",
-    "loadTrack": "currTrack, playFromStart, firstLoad",
+    "loadTrack": "currTrack, startTrackFromBeginningOnStartUp, firstLoad",
     "handleCanPlay": "",
     "loadTrackToAudioSource": "track, albumPathAndIndex, src",
     "initAudioGraph": "",

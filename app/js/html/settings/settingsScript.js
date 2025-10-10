@@ -1,7 +1,3 @@
-const { ipcRenderer, BrowserWindow } = require("electron");
-const path = require("path");
-const fs = require("fs");
-
 const changeContainer = document.getElementById("change-container");
 const settingsContainer = document.getElementById("settings");
 const libraryPathsContainer = document.getElementById(
@@ -13,9 +9,9 @@ const containers = document.querySelectorAll(".container");
 const changeLogsSidebar = document.querySelector(".change-logs-container");
 
 let settings = {
-  volume: 0.5,
+  volume: 0.8,
   sfxVolume: 0.8,
-  playFromStart: false,
+  startTrackFromBeginningOnStartUp: false,
   showFeatures: true,
   controller: {
     keepMouseBetweenBounds: true,
@@ -31,10 +27,10 @@ let settings = {
   algorithm: {
     onlyPlayCopyrightFreeSongs: false,
     preferAlbumsOverSingleTracks: 0.5,
-    preferAuthor: 0.3,
-    preferGenre: 0.2,
-    preferYear: 0.1,
-    preferLabel: 0.1,
+    authorImportance: 0.3,
+    genreImportance: 0.2,
+    yearImportance: 0.1,
+    labelImportance: 0.1,
     ratingImportance: 0.6,
   },
 };
@@ -43,10 +39,10 @@ const useSlider = [
   "volume",
   "sfxVolume",
   "preferAlbumsOverSingleTracks",
-  "preferAuthor",
-  "preferGenre",
-  "preferYear",
-  "preferLabel",
+  "authorImportance",
+  "genreImportance",
+  "yearImportance",
+  "labelImportance",
   "ratingImportance",
 ];
 
@@ -82,8 +78,6 @@ async function loadSettings(onlyNewchanges = false) {
     console.error("Error loading settings:", error);
   }
   console.log("Settings loaded");
-
-  setLook();
 }
 
 function setLook() {
@@ -164,7 +158,10 @@ function renderSettingsEditor() {
     const btn = document.createElement("button");
     btn.textContent = "general";
     btn.classList.add("section-btn");
-    btn.addEventListener("click", () => showSection("general"));
+    btn.addEventListener("click", () => {
+      playSoundAffect("buy");
+      showSection("general");
+    });
     topButtonsWrapper.appendChild(btn);
   }
 
@@ -174,7 +171,10 @@ function renderSettingsEditor() {
       const btn = document.createElement("button");
       btn.textContent = k;
       btn.classList.add("section-btn");
-      btn.addEventListener("click", () => showSection(k));
+      btn.addEventListener("click", () => {
+        playSoundAffect("buy");
+        showSection(k);
+      });
       topButtonsWrapper.appendChild(btn);
     }
   });
@@ -219,6 +219,7 @@ function renderSettingsEditor() {
   saveBtn.textContent = "Save Settings";
   saveBtn.classList.add("save-btn");
   saveBtn.addEventListener("click", () => {
+    playSoundAffect("buy");
     saveSettings();
   });
   settingsContainer.appendChild(saveBtn);
@@ -228,6 +229,9 @@ function createInput(path) {
   const key = path[path.length - 1];
   const value = getAtPath(settings, path);
   const input = document.createElement("input");
+  input.addEventListener("input", (e) => {
+    playSoundAffect("click", (volume = 0.35));
+  });
 
   if (typeof value === "boolean") {
     input.type = "checkbox";
@@ -330,9 +334,10 @@ document.addEventListener("DOMContentLoaded", () => {
   showSection("algorithm");
 });
 
-loadSettings();
-updateChangeContainer();
 document.addEventListener("DOMContentLoaded", async () => {
+  await loadSettings();
+  updateChangeContainer();
+  updateSettings();
   renderSettingsEditor();
   sController.updateSliders();
 
@@ -463,6 +468,7 @@ function updateChangeContainer() {
       .replace(/ (.)/g, (m, c) => " " + c.toLowerCase());
     button.classList.add("container-change-btn");
     button.addEventListener("click", () => {
+      playSoundAffect("buy");
       openContainer(container, button);
     });
 

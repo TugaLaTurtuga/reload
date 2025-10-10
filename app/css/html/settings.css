@@ -145,7 +145,7 @@ button:active {
 }
 
 .change-logs-container {
-    width: 20% !important;
+    width: 135px !important;
     overflow-y: auto;
     height: auto;
     margin: 0;
@@ -184,37 +184,45 @@ button:active {
 }
 
 .change-log {
-    width: 80% !important;
+    width: calc(100% - 135px) !important;
 }
 
 .change-log-header {
     width: 100%;
-    height: 10%;
-    min-height: 100px;
+    height: 110px !important;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .change-log-title {
     font-weight: 800;
     text-align-last: center;
-    height: 60%;
     font-size: 2rem;
-    margin-top: 15px;
-    margin-bottom: -2px;
     color: var(--activeColor);
 }
 
 .change-log-date {
     margin-top: -2px;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background: var(--sidebarColor);
+    border-left: 2px solid var(--sliderBgColor);
+    border-top: 2px solid var(--sliderBgColor);
+    backdrop-filter: blur(2px);
+    padding: 5px 10px;
+    border-radius: 10px 0 0 0;
     font-weight: 400;
     text-align-last: center;
-    height: 40%;
     font-size: 1rem;
 }
 
 .change-log-content {
     width: 100%;
-    height: 90%;
-    min-height: 100px;
+    height: calc(100% - 110px) !important;
     border-radius: 10px 0 0 0;
     padding: 10px;
     padding-left: 15px;

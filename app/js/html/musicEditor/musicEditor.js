@@ -28,14 +28,16 @@ const sortTracksButton = document.getElementById("sort-tracks");
 const saveButton = document.getElementById("save-button");
 const loadButton = document.getElementById("load-button");
 const notification = document.getElementById("notification");
+const background = document.getElementById("app");
 let jsonPath = null;
 
+let settings = {
+  theme: { dark: "", light: "" },
+  themeMode: "dark",
+  sfxVolume: 0.8,
+};
+
 async function loadSettings() {
-  let settings = {
-    theme: { dark: "", light: "" },
-    themeMode: "dark",
-    sfxVolume: 0.8,
-  };
   try {
     let newSettings = (await ipcRenderer.invoke("get-settings")) || {};
 
@@ -89,7 +91,6 @@ async function loadMusicData() {
     musicData = await response.json();
 
     await populateForm();
-    console.log(musicData.description.name, musicData);
     if (!musicData.description.name) {
       if (musicData.name) {
         musicData.description.name = musicData.name; // this is the folder's name

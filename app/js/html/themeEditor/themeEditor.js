@@ -1,7 +1,3 @@
-const { ipcRenderer } = require("electron");
-const path = require("path");
-const fs = require("fs");
-
 function updateOverflows() {
   const themeItems = document.querySelectorAll(".theme-item");
 
@@ -662,7 +658,7 @@ async function saveToDisk() {
 }
 
 function setThememode(mode) {
-  playSoundAffect("jobPurchase", (sfxVolume = 0.8));
+  playSoundAffect("buy", (sfxVolume = 0.8));
   $(`#${settings.themeMode}Btn`).classList.remove("active");
   $(`#${mode}Btn`).classList.add("active");
   settings.themeMode = mode;
@@ -675,7 +671,7 @@ function setThememode(mode) {
 }
 
 function setSystemTheme() {
-  playSoundAffect("jobPurchase", (sfxVolume = 1));
+  playSoundAffect("buy", (sfxVolume = 1));
   settings.getSystemTheme = !settings.getSystemTheme;
   if (settings.getSystemTheme) {
     $("#systemThemeBtn").classList.add("active");

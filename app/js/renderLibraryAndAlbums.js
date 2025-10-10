@@ -115,7 +115,6 @@ async function openAlbum(album) {
     )
       albumArt.style.backgroundImage = "none";
   } else {
-    console.log("No cover found for album:", album.name);
     albumArt.style.backgroundImage = "none";
   }
 
@@ -296,7 +295,6 @@ async function moveVirtualCursor(x, y) {
     if (pos < 0) {
       if (x !== 0) {
         pos = gridXSize - 1;
-        console.log(pos);
       } else {
         let gridPosY = Math.floor(cursorPos / gridXSize);
         let gridPosX = cursorPos % gridXSize;
@@ -315,7 +313,6 @@ async function moveVirtualCursor(x, y) {
       let gridPosY = Math.floor(cursorPos / gridXSize);
       let gridPosX = cursorPos % gridXSize;
       if (x !== 0) {
-        console.log(gridPosX, gridXSize);
         if (gridPosX + 1 === gridXSize) {
           pos = cursorPos - gridXSize + 1;
         } else {
