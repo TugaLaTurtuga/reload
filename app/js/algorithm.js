@@ -1,10 +1,11 @@
-const clamper = 1 / Math.pow(settings.maxSavedTracks, 4);
-const reducer = 2;
-
 async function playRandomSong() {
   settings.previousTracks = settings.previousTracks.slice(
     -settings.maxSavedTracks,
   );
+
+  const clamper = 1 / Math.pow(settings.previousTracks.length, 4);
+  const reducer = 2;
+
   settings.nextTracks = settings.nextTracks.slice(-settings.maxSavedTracks);
 
   let possibleSongs = songs.flatMap((album) =>
@@ -19,9 +20,16 @@ async function playRandomSong() {
     console.log("Filtered copyright-free songs");
   }
 
+  for (let i = settings.previousTracks.length - 1; i >= 0; --i) {
+    console.log(settings.previousTracks[i].album.path, i);
+  }
+
   const scoredSongs = possibleSongs.map((song) => {
-    if (song.album.jsonPath === settings.currentPlayingAlbum.jsonPath)
+    if (song.album.path === settings.currentPlayingAlbum.path)
       return { song, score: 0 };
+    else {
+      console.log(song.album.path, settings.currentPlayingAlbum.path);
+    }
 
     let score = 1;
     const currentTrack =

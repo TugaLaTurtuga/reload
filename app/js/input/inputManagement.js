@@ -37,6 +37,16 @@ class InputManager {
 
     this._setupEventListeners();
     this._startGamepadLoop();
+
+    this.preventDefaultOnKey = [
+      " ",
+      "tab",
+      "escape",
+      "arrowup",
+      "arrowdown",
+      "arrowleft",
+      "arrowright",
+    ];
   }
 
   // Set up event listeners for tracking keyboard & mouse inputs
@@ -63,7 +73,7 @@ class InputManager {
       }
 
       if (this.logKeyPress) console.log(`Key "${key}" pressed`);
-      if (key === " ") e.preventDefault();
+      if (this.preventDefaultOnKey.includes(key)) e.preventDefault();
       this.lastPressedKeys.add(key);
     });
 

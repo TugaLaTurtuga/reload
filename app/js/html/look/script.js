@@ -1,7 +1,3 @@
-const { ipcRenderer } = require("electron");
-const path = require("path");
-const fs = require("fs");
-
 let htmls = [null, null];
 let settings = {
   theme: { dark: "", light: "light" }, // app's theme

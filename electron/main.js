@@ -133,6 +133,34 @@ function createAppMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+function getMacIconPath() {
+  const basePath = path.join(__dirname, "images/reloadIconApple");
+
+  // Determine appearance
+  const isDark = nativeTheme.shouldUseDarkColors;
+  const appearance = nativeTheme.themeSource;
+
+  const mode = process.env.MAC_ICON_MODE || "default";
+
+  // Build the filename pattern
+  let iconName = "reloadIcon-iOS-Default-1024x1024@1x.png";
+
+  if (mode === "clear") {
+    iconName = isDark
+      ? "reloadIcon-iOS-ClearDark-1024x1024@1x.png"
+      : "reloadIcon-iOS-ClearLight-1024x1024@1x.png";
+  } else if (mode === "tinted") {
+    iconName = isDark
+      ? "reloadIcon-iOS-TintedDark-1024x1024@1x.png"
+      : "reloadIcon-iOS-TintedLight-1024x1024@1x.png";
+  } else if (isDark) {
+    iconName = "reloadIcon-iOS-Dark-1024x1024@1x.png";
+  }
+
+  const iconPath = path.join(basePath, iconName);
+  return fs.existsSync(iconPath) ? iconPath : null;
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -154,6 +182,34 @@ function createWindow() {
       mainWindow.webContents.send("unmuffleAudio");
     }
   });
+
+  // Set app icon
+  if (process.platform === "darwin") {
+    const macIcon = getMacIconPath();
+    if (macIcon) {
+      app.dock.setIcon(macIcon);
+      mainWindow.icon = macIcon;
+    } else {
+      const iconPath = path.join(__dirname, "images/reloadIcon.png");
+      if (fs.existsSync(iconPath)) {
+        app.dock.setIcon(macIcon);
+        mainWindow.icon = iconPath;
+      }
+    }
+
+    nativeTheme.on("updated", () => {
+      const newIcon = getMacIconPath();
+      if (newIcon !== macIcon && fs.existsSync(newIcon)) {
+        mainWindow.icon = newIcon;
+        app.dock.setIcon(newIcon);
+      }
+    });
+  } else {
+    const iconPath = path.join(__dirname, "images/reloadIcon.png");
+    if (fs.existsSync(iconPath)) {
+      options.icon = iconPath;
+    }
+  }
 
   mainWindow.on("blur", () => {
     // Check if focus is moving to one of our external windows

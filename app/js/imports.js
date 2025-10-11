@@ -66,7 +66,7 @@ let settings = {
   },
   favourites: {
     openAlbum: true,
-    startPlaying: true,
+    startPlaying: false,
   },
   algorithm: {
     onlyPlayCopyrightFreeSongs: false,
@@ -78,5 +78,24 @@ let settings = {
     ratingImportance: 0.6,
   },
 };
+
+function getCurrenrVirtualCursorElements() {
+  const moveVirtualCursorElements = [
+    [
+      libraryContainer,
+      [libraryContainer.querySelectorAll(".album-card"), 0],
+      libraryContainer.querySelectorAll(".album-cover"),
+    ],
+    [
+      playerContainer,
+      [
+        playerContainer.querySelectorAll(".track-item, .track-item.odd-color"),
+        0,
+      ],
+      playerContainer.querySelectorAll(".track-number"),
+    ],
+  ];
+  return moveVirtualCursorElements;
+}
 
 const funcsSaveFilePath = path.join(__dirname, "../electron/data/func.json");

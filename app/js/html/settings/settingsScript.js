@@ -552,6 +552,7 @@ async function renderShortcuts() {
     "shortcuts-file-path-btn",
   );
   shortcutsFilePathBtn.addEventListener("click", () => {
+    playSoundAffect("click");
     ipcRenderer.invoke("open-shortcuts-dir");
   });
 
@@ -630,6 +631,7 @@ async function renderShortcuts() {
       }
       shortcutDiv.classList.add("active");
 
+      playSoundAffect("click", 1, 0.35);
       renderShortcutsInJson(shortcut, shortcutsEdits);
     });
 
@@ -659,6 +661,7 @@ async function renderShortcuts() {
   plusDiv.style.padding = "10px";
 
   plusDiv.addEventListener("click", async () => {
+    playSoundAffect("click");
     const allshortcuts = [];
     shortcuts.forEach((shortcut) => {
       allshortcuts.push(shortcut.split("/").pop().split(".json")[0]);
@@ -731,7 +734,6 @@ function renderShortcutsInJson(shortcutPath) {
   fs.readFile(shortcutPath, "utf8", async (err, data) => {
     if (err) {
       console.error(err);
-      confirm("File not found.");
       const shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
       await ipcRenderer.invoke(
         "set-current-shortcut",
@@ -743,6 +745,7 @@ function renderShortcutsInJson(shortcutPath) {
     const json = JSON.parse(data);
 
     saveBtn.onclick = () => {
+      playSoundAffect("click");
       fs.writeFile(
         shortcutPath,
         JSON.stringify(json, null, 4),
@@ -764,11 +767,14 @@ function renderShortcutsInJson(shortcutPath) {
           `Are you sure you want to delete '${shortcutPath.split("/").pop().slice(0, -5)}'?`,
         )
       ) {
+        playSoundAffect("error");
         await ipcRenderer.invoke(
           "remove-shortcut",
           shortcutPath.split("/").pop(),
         );
         await renderShortcuts();
+      } else {
+        playSoundAffect("click");
       }
     };
 
@@ -782,6 +788,7 @@ function renderShortcutsInJson(shortcutPath) {
       jsonItemsContainer.appendChild(itemDiv);
 
       itemDiv.addEventListener("click", () => {
+        playSoundAffect("buy");
         document
           .querySelectorAll(".shortcut-json-item")
           .forEach((d) => d.classList.remove("active"));
@@ -796,6 +803,7 @@ function renderShortcutsInJson(shortcutPath) {
           jsonEditItemContainer.appendChild(subItem);
 
           subItem.addEventListener("click", () => {
+            playSoundAffect("buy");
             document
               .querySelectorAll(".shortcut-json-edit-item")
               .forEach((d) => d.classList.remove("active"));
@@ -850,6 +858,7 @@ function renderShortcutsInJson(shortcutPath) {
               input.classList.add("shortcut-input-field");
               jsonEdit.appendChild(input);
               input.addEventListener("change", () => {
+                playSoundAffect("buy");
                 if (type === "checkbox") {
                   json[currentKey][currentKey1] = input.checked;
                 } else if (type === "number") {
@@ -893,8 +902,13 @@ function renderShortcutsInJson(shortcutPath) {
       varDelete.classList.add("var-delete-table", "var-delete");
       varDelete.innerHTML = `<button>X</button>`;
       varDelete.querySelector("button").addEventListener("click", () => {
-        row.remove();
-        delete json[currentKey][currentKey1][key_2];
+        if (confirm("Are you sure you want to delete this row?")) {
+          playSoundAffect("error");
+          row.remove();
+          delete json[currentKey][currentKey1][key_2];
+        } else {
+          playSoundAffect("buy");
+        }
       });
 
       row.appendChild(varParams);
@@ -1004,7 +1018,10 @@ function renderShortcutsInJson(shortcutPath) {
             paramsInput = document.createElement("input");
             paramsInput.type = "text";
             paramsInput.value = funcs[actionVal];
-            paramsInput.addEventListener("input", updateJson);
+            paramsInput.addEventListener("input", () => {
+              playSoundAffect("click", 1, 0.2);
+              updateJson();
+            });
             varParams.innerHTML = "";
             varParams.appendChild(paramsInput);
           }
@@ -1023,7 +1040,10 @@ function renderShortcutsInJson(shortcutPath) {
         json[currentKey][currentKey1][newKey] = newValue;
         key_2 = newKey;
       }
-      actionInput.addEventListener("input", updateJson);
+      actionInput.addEventListener("input", () => {
+        playSoundAffect("click", 1, 0.2);
+        updateJson();
+      });
       actionInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1040,12 +1060,17 @@ function renderShortcutsInJson(shortcutPath) {
         }
       });
 
-      if (paramsInput) paramsInput.addEventListener("input", updateJson);
+      if (paramsInput)
+        paramsInput.addEventListener("input", () => {
+          playSoundAffect("click", 1, 0.2);
+          updateJson();
+        });
     }
 
     // add value button
     addValueBtn.onclick = () => {
       if (!currentTableBody) return;
+      playSoundAffect("buy");
 
       // pick a random function from funcs
       const funcNames = Object.keys(funcs);
@@ -1211,3 +1236,21 @@ function renderShortcutsContextMenu(action) {
     { once: true },
   );
 }
+
+// this is for cursor.js to work
+/*
+function getCurrenrVirtualCursorElements() {
+  const moveVirtualCursorElements = [
+    [
+      document.getElementById("shortcut-json-edit-context-menu"),
+      [document.querySelectorAll(".context-menu-item"), 0],
+      document.querySelectorAll(".context-menu-item"),
+    ],
+  ];
+  return moveVirtualCursorElements;
+}
+
+
+const playerControls = document.getElementById("hahah-fake-player-controls");
+const mainContent = document.getElementById("app");
+*/
