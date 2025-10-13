@@ -102,6 +102,12 @@ function sanitizeName(n) {
   return nn;
 }
 
+// helper to deep-clone a Map-of-strings (safe because values are strings)
+function cloneThemeMap(original) {
+  if (!original) return new Map();
+  return new Map(Array.from(original.entries()));
+}
+
 // ---------- Parsing & Serialization ----------
 let firstParsed = true;
 function parseThemesCSS(cssText) {
@@ -138,7 +144,7 @@ function parseThemesCSS(cssText) {
     }
 
     // Ensure all root vars exist in every theme
-    // And no more then the root values
+    // And no more than the root values
     if (name !== "root" && themes.has("root")) {
       const rootVars = themes.get("root");
       for (const [rootKey, rootVal] of rootVars.entries()) {
@@ -170,22 +176,23 @@ function serializeThemesCSS(allThemesToSerialize = themes) {
     const sel =
       key === "root" ? ":root" : `[theme="${key.replace(/ /g, "-")}"]`;
     let vars = Array.from(map.entries());
-    for (let i = vars.length; i > 0; --i) {
-      try {
-        let [key, value] = vars[i];
 
-        if (key === undefined || !key.startsWith("--")) {
-          // impossible key
+    // FIX: previous loop used wrong indexing and could access out-of-bounds.
+    // Iterate correctly and remove invalid entries safely.
+    for (let i = vars.length - 1; i >= 0; --i) {
+      try {
+        let [k, v] = vars[i];
+        if (k === undefined || !k.startsWith("--")) {
           vars.splice(i, 1); // delete var
-        } else if (value === undefined) {
-          // impossible value
-          vars[i].value = ""; // reset value
+        } else if (v === undefined) {
+          // impossible value -> set empty string
+          vars[i][1] = "";
         }
       } catch (err) {
-        // a very broken var
-        vars.splice(i, 1); // delete var
+        vars.splice(i, 1);
       }
     }
+
     const cssVars = vars // turns vars to css
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([k, v]) => `  ${k}: ${v};`)
@@ -201,7 +208,7 @@ function serializeThemesCSS(allThemesToSerialize = themes) {
 
 function getCSSVarInRGB(value) {
   // If it's already rgb()
-  if (value.startsWith("rgb")) {
+  if (value && value.startsWith("rgb")) {
     const match = value.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
     if (match) {
       return [
@@ -213,7 +220,7 @@ function getCSSVarInRGB(value) {
   }
 
   // If it's hex (#rrggbb or #rgb)
-  if (value.startsWith("#")) {
+  if (value && value.startsWith("#")) {
     if (value.length === 7) {
       return [
         parseInt(value.substr(1, 2), 16),
@@ -234,8 +241,8 @@ function getCSSVarInRGB(value) {
 }
 
 function isLightTheme(data) {
-  const [r1, g1, b1] = getCSSVarInRGB(data.get("--bg-1"));
-  const [r2, g2, b2] = getCSSVarInRGB(data.get("--bg-2"));
+  const [r1, g1, b1] = getCSSVarInRGB(data.get("--bg-1") || "");
+  const [r2, g2, b2] = getCSSVarInRGB(data.get("--bg-2") || "");
 
   const luminance1 = (0.299 * r1 + 0.587 * g1 + 0.114 * b1) / 255;
   const luminance2 = (0.299 * r2 + 0.587 * g2 + 0.114 * b2) / 255;
@@ -369,9 +376,9 @@ async function renderVarsTable() {
       // Build default inputs
       inputHTML = `<input type="${type}" value="${val}" spellcheck="false" class="var-input" id="${type}"/>`;
       if (type === "color") {
-        const hslaMatch = val.match(
-          /^hsla?\([^,]+,\s*([^,]+),\s*([^,]+),\s*([\d.]+)\)/i,
-        );
+        const hslaMatch =
+          val &&
+          val.match(/^hsla?\([^,]+,\s*([^,]+),\s*([^,]+),\s*([\d.]+)\)/i);
         if (hslaMatch) alpha = parseFloat(hslaMatch[3]);
         inputHTML += `<input type="range" min="0" max="1" step="0.01" value="${alpha}" class="slider" title="Alpha">`;
       }
@@ -440,12 +447,15 @@ async function renderVarsTable() {
         let primary = fontSelect.value;
         const fallback = fallbackSelect.value || "sans-serif";
         const final = `${quoteIfNeeded(primary)}, ${fallback}`;
-        themes.get(selected).set(key, final);
+        const themeMap = themes.get(selected) || new Map();
+        themeMap.set(key, final);
+        themes.set(selected, themeMap); // ensure the map is present
         applyTheme();
         applyThemeToBtn();
         updateCSS();
         // update preview
-        preview.style.fontFamily = final;
+        const preview = document.getElementById("preview");
+        if (preview) preview.style.fontFamily = final;
       };
 
       fontSelect.addEventListener("change", commitFontChange);
@@ -471,12 +481,8 @@ async function renderVarsTable() {
         document.head.appendChild(style);
       }
 
-      // If the preselected choice is packaged Rubik, inject its @font-face (assumes you ship it under app://assets/fonts/)
-      // e.g. app://assets/fonts/Rubik-Regular.woff2 (you can tweak filename)
       (function maybeInjectPackagedRubik() {
-        // assume you ship woff2 at this path; change if different
         const packagedUrl = "app://assets/fonts/Rubik-Regular.woff2";
-        // we only inject if current primary is 'Rubik' or user selected packaged option
         if (
           parseFontVar(val).primary &&
           parseFontVar(val).primary.toLowerCase() === "rubik"
@@ -494,7 +500,9 @@ async function renderVarsTable() {
 
     if (genericInput && type !== "color") {
       genericInput.addEventListener("input", () => {
-        themes.get(selected).set(key, genericInput.value);
+        const themeMap = themes.get(selected) || new Map();
+        themeMap.set(key, genericInput.value);
+        themes.set(selected, themeMap);
         applyTheme();
         applyThemeToBtn();
         updateCSS();
@@ -507,7 +515,9 @@ async function renderVarsTable() {
         const a = alphaSlider ? parseFloat(alphaSlider.value) : 1;
         const newVal = a < 1 ? hexToRgba(hex, a) : hex;
         playSoundAffect("click", (sfxVolume = 0.35));
-        themes.get(selected).set(key, newVal);
+        const themeMap = themes.get(selected) || new Map();
+        themeMap.set(key, newVal);
+        themes.set(selected, themeMap);
         if (alphaLabel) alphaLabel.textContent = a.toFixed(2);
         applyTheme();
         applyThemeToBtn();
@@ -787,7 +797,7 @@ async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
       switch (handleCase) {
         case 0:
         case "addCustomCssTheme":
-          themesList.scrollTo(0, themesList.scrollHeight);
+          // nameInput.value is treated as CSS text for custom CSS theme
           parseThemesCSS(nameInput.value);
           updateCSS();
           renderThemesList();
@@ -799,20 +809,28 @@ async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
         case "addTheme":
           if (nameInput.value === "") nameInput.value = placeholderTXT; // fallback
           const name = sanitizeName(nameInput.value);
-          themes.set(name, themes.get(selected));
+
+          // FIX: clone the source theme map instead of referencing it.
+          // Use currently selected as base. If it doesn't exist, fallback to root or empty.
+          const baseMap =
+            themes.get(selected) || themes.get("root") || new Map();
+          const clonedMap = cloneThemeMap(baseMap);
+
+          themes.set(name, clonedMap);
           selected = name;
           updateCSS();
           renderThemesList();
           renderVarsTable();
           refreshButtons();
-          themesList.scrollTo(0, themesList.scrollHeight);
+          if (themesList) themesList.scrollTo(0, themesList.scrollHeight);
           setStatus(`Theme added`);
+          // Apply the new theme copy
           applyTheme();
           break;
       }
 
       cleanup();
-      resolve(name);
+      resolve(nameInput.value ? sanitizeName(nameInput.value) : null);
     }
 
     // Wire up buttons
@@ -834,8 +852,8 @@ async function promptUser(TitleTXT, LabelTXT, placeholderTXT, handleCase) {
 
 // Apply the currently-selected theme
 async function applyTheme() {
-  // Ensure we’re working with an array of entries
-  let theme = Array.from(themes.get(selected));
+  const themeMap = themes.get(selected) || new Map();
+  let theme = Array.from(themeMap);
 
   for (let i = theme.length - 1; i >= 0; i--) {
     try {
@@ -844,7 +862,7 @@ async function applyTheme() {
       // Skip invalid keys
       if (!key || !key.startsWith("--")) continue;
 
-      // Only set property if it ins't invalid
+      // Only set property if it isn't invalid
       if (value !== undefined)
         document.documentElement.style.setProperty(key, value);
     } catch (err) {
@@ -856,8 +874,8 @@ async function applyTheme() {
 
 // ---------- Settings loader (Electron) ----------
 let settings = {
-  theme: { dark: "", light: "" },
-  sfxVolume: 0.8,
+  theme: { dark: "", light: "light" },
+  sfxVolume: 0.4,
   themeMode: "dark",
   getSystemTheme: true,
   showNotifications: true,
@@ -871,6 +889,9 @@ async function loadSettings() {
           lastPlayedInfo &&
           Object.prototype.hasOwnProperty.call(lastPlayedInfo, key)
         ) {
+          if (lastPlayedInfo[key]?.light === "") {
+            lastPlayedInfo[key].light = "light";
+          }
           settings[key] = lastPlayedInfo[key];
         }
       }

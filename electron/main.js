@@ -52,8 +52,16 @@ const openedWindows = new Map();
 let mainWindow;
 let audioIsMuffled = false;
 
-const { startSubsonicBackend } = require("./subsonic-backend.js");
-let subsomicBackend = startSubsonicBackend();
+// Lazy-load wrapper
+let subsonicBackend = null;
+async function getSubsonicBackend() {
+  if (subsonicBackend) return subsonicBackend;
+
+  // Load only when needed
+  const { startSubsonicBackend } = require("./subsonic-backend.js");
+  subsonicBackend = startSubsonicBackend();
+  return subsonicBackend;
+}
 
 function createAppMenu() {
   const template = [
@@ -670,12 +678,36 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
             try {
               const metadata = await mm.parseFile(trackPath);
 
-              if (fromExternalProvider && metadata.common) {
-                const { artist, album: alb, year, genre } = metadata.common;
+              if (metadata.common && shouldExtractColor) {
+                const {
+                  artist,
+                  album: alb,
+                  year,
+                  genre,
+                  label,
+                  copyright,
+                  comment,
+                  description,
+                } = metadata.common;
+
                 if (artist) album.info.description.author = artist;
                 if (alb) album.name = alb;
                 if (year) album.info.description.year = year;
                 if (genre?.length) album.info.description.genre = genre[0];
+                if (label) album.info.description.label = label;
+
+                // Set copyright as true/false
+                album.info.description.copyrightFree = !(
+                  copyright && copyright.trim() !== ""
+                );
+
+                // Add description (from comment or description tag)
+                const descText = Array.isArray(comment)
+                  ? comment.join(" ")
+                  : description || null;
+
+                if (descText)
+                  album.info.description.description = descText.trim();
               }
 
               return {
@@ -685,7 +717,13 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
               };
             } catch (err) {
               console.error(`Error parsing metadata for ${rawTitle}:`, err);
-              return { title: rawTitle, path: trackPath, duration: 0 };
+              return {
+                title: rawTitle,
+                path: trackPath,
+                duration: 0,
+                label: null,
+                copyright: null,
+              };
             }
           }),
         );

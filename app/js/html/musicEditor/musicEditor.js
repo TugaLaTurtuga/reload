@@ -32,9 +32,9 @@ const background = document.getElementById("app");
 let jsonPath = null;
 
 let settings = {
-  theme: { dark: "", light: "" },
+  theme: { dark: "", light: "light" },
   themeMode: "dark",
-  sfxVolume: 0.8,
+  sfxVolume: 0.4,
 };
 
 async function loadSettings() {
