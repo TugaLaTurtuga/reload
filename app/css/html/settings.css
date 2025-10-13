@@ -1,632 +1,631 @@
 .input-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid var(--trackItemColorOnHover);
-    background: var(--sidebarColor);
-    width: 40vw;
-    min-width: 120px;
-    aspect-ratio: 4/1 !important;
-    border-radius: 10px;
-    transition:
-        background 0.15s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid var(--trackItemColorOnHover);
+  background: var(--sidebarColor);
+  width: 40vw;
+  min-width: 120px;
+  aspect-ratio: 4/1 !important;
+  border-radius: 10px;
+  transition:
+    background 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 .input-wrapper:hover {
-    background: var(--trackItemColorOnHover);
-    transform: scale(1.05);
+  background: var(--trackItemColorOnHover);
+  transform: scale(1.05);
 }
 
 input {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  gap: 10px;
 }
 
 input[type="text"] {
-    margin-right: 10px;
-    border-radius: 10px;
-    background: var(--sidebarColor);
-    color: var(--textColor);
+  margin-right: 10px;
+  border-radius: 10px;
+  background: var(--sidebarColor);
+  color: var(--textColor);
 }
 
 input[type="number"] {
-    border-radius: 10px;
-    background: var(--sidebarColor);
-    border: none;
-    padding: 10px;
-    color: var(--textColor);
+  border-radius: 10px;
+  background: var(--sidebarColor);
+  border: none;
+  padding: 10px;
+  color: var(--textColor);
 }
 
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100vw;
-    color: var(--textColor);
-    overflow-y: scroll;
-    overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  color: var(--textColor);
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .slider {
-    width: auto;
-    max-width: none;
-    min-width: none;
+  width: auto;
+  max-width: none;
+  min-width: none;
 }
 
 button {
-    border-radius: 10px;
-    padding: 0.55rem 0.7rem;
-    background: var(--sidebarColor);
-    border: 1px solid var(--trackItemColorOnHover);
-    color: var(--textColor);
-    cursor: pointer;
-    transition:
-        background 0.15s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  background: var(--sidebarColor);
+  border: 1px solid var(--trackItemColorOnHover);
+  color: var(--textColor);
+  cursor: pointer;
+  transition:
+    background 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 button:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 button:active {
-    transform: scale(1);
+  transform: scale(1);
 }
 
 .save-btn {
-    width: 40vw;
-    min-width: 120px;
-    aspect-ratio: 8/1;
-    font-size: 1.2rem;
-    border-radius: 10px 10px 0 0;
+  width: 40vw;
+  min-width: 120px;
+  aspect-ratio: 8/1;
+  font-size: 1.2rem;
+  border-radius: 10px 10px 0 0;
 }
 
 .save-btn:hover {
-    background: var(--activeColor);
-    color: var(--bg-1);
+  background: var(--activeColor);
+  color: var(--bg-1);
 }
 
 #version {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    padding: 10px;
-    color: var(--textColor);
-    font-size: 0.8rem;
-    cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 10px;
+  color: var(--textColor);
+  font-size: 0.8rem;
+  cursor: pointer;
 }
 
 #change-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 10px;
-    border-radius: 0 0 10px 0;
-    color: var(--textColor);
-    background: var(--sidebarColor);
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 10px;
+  border-radius: 0 0 10px 0;
+  color: var(--textColor);
+  background: var(--sidebarColor);
 }
 
 .container-change-btn {
-    background: var(--sliderBgColor);
-    margin: 0 5px 0 5px;
+  background: var(--sliderBgColor);
+  margin: 0 5px 0 5px;
 }
 
 .container-change-btn:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .active {
-    background: var(--activeColor) !important;
-    color: var(--bg-1) !important;
+  background: var(--activeColor) !important;
+  color: var(--bg-1) !important;
 }
 
 .modal {
-    aspect-ratio: 1/1;
-    display: flex;
-    padding: 0;
-    overflow: hidden;
-    background: var(--sidebarColor);
-    backdrop-filter: blur(4px);
+  aspect-ratio: 1/1;
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+  background: var(--sidebarColor);
+  backdrop-filter: blur(4px);
 }
 
 .change-logs-container {
-    width: 135px !important;
-    overflow-y: auto;
-    height: auto;
-    margin: 0;
-    border-radius: 0 10px 0 0;
+  width: 135px !important;
+  overflow-y: auto;
+  height: auto;
+  margin: 0;
+  border-radius: 0 10px 0 0;
 }
 
 .change-logs-item {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    text-align-last: center;
-    padding: 0.5rem 0.6rem;
-    background: var(--trackItemOddColor);
-    color: var(--textColor);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.4s ease-out;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 800;
-    height: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  text-align-last: center;
+  padding: 0.5rem 0.6rem;
+  background: var(--trackItemOddColor);
+  color: var(--textColor);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.4s ease-out;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 800;
+  height: 40px;
 }
 
 .change-logs-item:hover {
-    background: var(--trackItemOnHover);
-    transition: none;
+  background: var(--trackItemOnHover);
+  transition: none;
 }
 .change-logs-item.active {
-    background: var(--activeColor);
-    color: var(--bg-1);
+  background: var(--activeColor);
+  color: var(--bg-1);
 }
 .change-logs-item span {
-    display: inline-block;
-    padding-right: 20px; /* spacing between repeats */
+  display: inline-block;
+  padding-right: 20px; /* spacing between repeats */
 }
 
 .change-log {
-    width: calc(100% - 135px) !important;
+  width: calc(100% - 135px) !important;
 }
 
 .change-log-header {
-    width: 100%;
-    height: 110px !important;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  width: 100%;
+  height: 110px !important;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .change-log-title {
-    font-weight: 800;
-    text-align-last: center;
-    font-size: 2rem;
-    color: var(--activeColor);
+  font-weight: 800;
+  text-align-last: center;
+  font-size: 2rem;
+  color: var(--activeColor);
 }
 
 .change-log-date {
-    margin-top: -2px;
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    background: var(--sidebarColor);
-    border-left: 2px solid var(--sliderBgColor);
-    border-top: 2px solid var(--sliderBgColor);
-    backdrop-filter: blur(2px);
-    padding: 5px 10px;
-    border-radius: 10px 0 0 0;
-    font-weight: 400;
-    text-align-last: center;
-    font-size: 1rem;
+  margin-top: -2px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  background: var(--sidebarColor);
+  border-left: 2px solid var(--sliderBgColor);
+  border-top: 2px solid var(--sliderBgColor);
+  backdrop-filter: blur(2px);
+  padding: 5px 10px;
+  border-radius: 10px 0 0 0;
+  font-weight: 400;
+  text-align-last: center;
+  font-size: 1rem;
 }
 
 .change-log-content {
-    width: 100%;
-    height: calc(100% - 110px) !important;
-    border-radius: 10px 0 0 0;
-    padding: 10px;
-    padding-left: 15px;
-    border-left: 2px solid var(--sliderBgColor);
-    border-top: 2px solid var(--sliderBgColor);
-    background: var(--bg-2);
-    overflow-y: scroll;
+  width: 100%;
+  height: calc(100% - 110px) !important;
+  border-radius: 10px 0 0 0;
+  padding: 10px;
+  padding-left: 15px;
+  border-left: 2px solid var(--sliderBgColor);
+  border-top: 2px solid var(--sliderBgColor);
+  background: var(--bg-2);
+  overflow-y: scroll;
 }
 
 .change-log-content .spacer {
-    height: 0.5rem;
+  height: 0.5rem;
 }
 
 #library-paths-container .remove-btn {
-    margin-left: 20px;
+  margin-left: 20px;
 }
 
 #library-paths-container .library-path {
-    margin: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    transition:
-        all 0.1s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  transition:
+    all 0.1s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 #library-paths-container .library-path:hover {
-    background: var(--sliderBgColor);
-    transform: scale(1.15);
+  background: var(--sliderBgColor);
+  transform: scale(1.15);
 }
 
 .top-buttons {
-    position: absolute;
-    top: 0;
-    right: 0;
-    padding: 10px;
-    border-radius: 0 0 0 10px;
-    color: var(--textColor);
-    background: var(--sidebarColor);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 10px;
+  border-radius: 0 0 0 10px;
+  color: var(--textColor);
+  background: var(--sidebarColor);
 }
 
 .section-btn {
-    background: var(--sliderBgColor);
-    margin: 0 5px 0 5px;
+  background: var(--sliderBgColor);
+  margin: 0 5px 0 5px;
 }
 
 .section-btn:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .section {
-    display: none; /* hidden by default */
-    width: 100%;
+  display: none; /* hidden by default */
+  width: 100%;
 }
 
 .sections-wrapper {
-    display: grid;
-    gap: 10px;
-    --distToTop: 50px;
-    margin-top: var(--distToTop);
-    height: calc(100vh - var(--distToTop));
-    width: 100vw;
-    color: var(--textColor);
-    overflow-y: scroll;
-    overflow-x: hidden;
+  display: grid;
+  gap: 10px;
+  --distToTop: 50px;
+  margin-top: var(--distToTop);
+  height: calc(100vh - var(--distToTop));
+  width: 100vw;
+  color: var(--textColor);
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 /* Make the visible section a grid and control layout by item count */
 .section.grid-3x3,
 .section.grid-2x2,
 .section.grid-1x1 {
-    display: grid; /* override default display:none when active */
-    gap: 12px;
-    padding: 20px; /* visual spacing inside the section */
-    box-sizing: border-box;
-    align-content: start;
-    justify-items: stretch;
+  display: grid; /* override default display:none when active */
+  gap: 12px;
+  padding: 20px; /* visual spacing inside the section */
+  box-sizing: border-box;
+  align-content: start;
+  justify-items: stretch;
 }
 
 /* 3 columns */
 .section.grid-3x3 {
-    grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 /* 2 columns */
 .section.grid-2x2 {
-    grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr);
 }
 
 /* 1 column */
 .section.grid-1x1 {
-    grid-template-columns: 1fr;
-    max-width: 60vw;
-    transform: translateX(35%);
+  grid-template-columns: 1fr;
+  max-width: 60vw;
+  transform: translateX(35%);
 }
 
 /* When a section is in grid mode, let input-wrapper size be flexible */
 .section .input-wrapper {
-    width: auto !important;
-    min-width: 120px;
-    aspect-ratio: auto !important;
+  width: auto !important;
+  min-width: 120px;
+  aspect-ratio: auto !important;
 }
 
 .input-wrapper {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .shortcuts-div {
-    height: 40px !important;
-    width: auto;
-    min-width: 50vw;
-    max-width: 100%;
-    padding: 0;
-    background: var(--sidebarColor);
-    overflow-x: scroll;
-    overflow-y: hidden;
-    display: block;
-    white-space: nowrap;
-    border-radius: 10px;
+  height: 40px !important;
+  width: auto;
+  min-width: 50vw;
+  max-width: 100%;
+  padding: 0;
+  background: var(--sidebarColor);
+  overflow-x: scroll;
+  overflow-y: hidden;
+  display: block;
+  white-space: nowrap;
+  border-radius: 10px;
 }
 
 .shortcut-div {
-    height: 40px !important;
-    width: auto;
-    cursor: pointer;
-    pointer-events: auto;
-    background: var(--trackItemColor);
-    min-width: 100px;
-    border: none;
-    text-align: center;
-    display: inline-block;
-    vertical-align: middle;
-    transition:
-        background 0.15s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  height: 40px !important;
+  width: auto;
+  cursor: pointer;
+  pointer-events: auto;
+  background: var(--trackItemColor);
+  min-width: 100px;
+  border: none;
+  text-align: center;
+  display: inline-block;
+  vertical-align: middle;
+  transition:
+    background 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 .shortcut-div:hover {
-    background: var(--sliderBgColor);
-    transition: background 0s ease;
+  background: var(--sliderBgColor);
+  transition: background 0s ease;
 }
 
 .shortcut-json-items-container {
-    margin-top: 5px;
-    height: 35px;
-    width: 100vw;
-    padding: 0;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  margin-top: 5px;
+  height: 35px;
+  width: 100vw;
+  padding: 0;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .shortcut-json-item {
-    margin: 0 5px;
-    height: 35px;
-    font-size: 0.9rem;
-    width: auto;
-    padding: 10px;
-    cursor: pointer;
-    background: var(--trackItemColor);
-    min-width: 100px;
-    border: none;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 10px;
-    transition:
-        background 0.15s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  margin: 0 5px;
+  height: 35px;
+  font-size: 0.9rem;
+  width: auto;
+  padding: 10px;
+  cursor: pointer;
+  background: var(--trackItemColor);
+  min-width: 100px;
+  border: none;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 10px;
+  transition:
+    background 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 .shortcut-json-item:hover {
-    background: var(--sliderBgColor);
-    transition: background 0s ease;
+  background: var(--sliderBgColor);
+  transition: background 0s ease;
 }
 
 .shortcut-json-edit-item-container {
-    margin-top: 5px;
-    height: 35px;
-    width: 100vw;
-    padding: 0;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    background: transparent;
+  margin-top: 5px;
+  height: 35px;
+  width: 100vw;
+  padding: 0;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background: transparent;
 }
 
 .shortcut-json-edit-item {
-    margin: 0 5px;
-    height: 35px;
-    font-size: 0.9rem;
-    width: auto;
-    padding: 10px;
-    cursor: pointer;
-    background: var(--trackItemColor);
-    min-width: 100px;
-    border: none;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 10px;
-    transition:
-        background 0.15s ease-out,
-        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  margin: 0 5px;
+  height: 35px;
+  font-size: 0.9rem;
+  width: auto;
+  padding: 10px;
+  cursor: pointer;
+  background: var(--trackItemColor);
+  min-width: 100px;
+  border: none;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 10px;
+  transition:
+    background 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
 .shortcut-json-edit-item:hover {
-    background: var(--sliderBgColor);
-    transition: background 0s ease;
+  background: var(--sliderBgColor);
+  transition: background 0s ease;
 }
 
 .shortcut-json-edit-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .shortcut-json-edit {
-    /* table */
-    background: var(--sidebarColor);
-    border-radius: 10px;
-    margin-top: 10px;
-    width: auto;
-    min-width: 80vw;
-    max-width: calc(100vh - 10px);
-    height: 50vh;
-    overflow: hidden;
+  /* table */
+  background: var(--sidebarColor);
+  border-radius: 10px;
+  margin-top: 10px;
+  width: auto;
+  min-width: 80vw;
+  max-width: calc(100vh - 10px);
+  height: 50vh;
+  overflow: hidden;
 }
 
 .shortcut-json-edit-vars {
-    display: flex;
-    flex-direction: row;
-    height: 40px !important;
+  display: flex;
+  flex-direction: row;
+  height: 40px !important;
 }
 
 .shortcut-json-edit-table {
-    height: calc(100% - 40px) !important;
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: block;
+  height: calc(100% - 40px) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
 tbody td {
-    padding: 0.35rem 0.3rem;
-    vertical-align: middle;
+  padding: 0.35rem 0.3rem;
+  vertical-align: middle;
 }
 tbody tr {
-    height: 60px !important;
+  height: 60px !important;
 }
 tbody tr:nth-child(odd) {
-    background: var(--trackItemOddColor);
-    transition: all 0.4s ease-out;
+  background: var(--trackItemOddColor);
+  transition: all 0.4s ease-out;
 }
 tbody tr:nth-child(even) {
-    background: var(--trackItemColor);
-    transition: all 0.4s ease-out;
+  background: var(--trackItemColor);
+  transition: all 0.4s ease-out;
 }
 tbody tr:hover {
-    background: var(--trackItemOnHover);
-    transition: none;
-    z-index: 20;
+  background: var(--trackItemOnHover);
+  transition: none;
+  z-index: 20;
 }
 
 .var-shortcut {
-    width: 20%;
-    padding-top: 10px;
-    padding-left: 10px;
-    text-align: left;
+  width: 20%;
+  padding-top: 10px;
+  padding-left: 10px;
+  text-align: left;
 }
 .var-action {
-    width: 50%;
-    padding-top: 10px;
-    padding-left: 10px;
-    text-align: left;
+  width: 50%;
+  padding-top: 10px;
+  padding-left: 10px;
+  text-align: left;
 }
 .var-params {
-    width: calc(30% - 50px);
-    padding-top: 10px;
-    padding-left: 10px;
-    text-align: left;
+  width: calc(30% - 50px);
+  padding-top: 10px;
+  padding-left: 10px;
+  text-align: left;
 }
 .var-delete {
-    width: 50px;
-    padding-top: 10px;
-    padding-left: 10px;
-    text-align: left;
+  width: 50px;
+  padding-top: 10px;
+  padding-left: 10px;
+  text-align: left;
 }
 
 .var-delete-table {
-    justify-self: center;
-    align-self: center;
-    cursor: pointer;
+  justify-self: center;
+  align-self: center;
+  cursor: pointer;
 }
 
 input[type="text"] {
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--textColor);
-    font-size: 0.9rem;
-    border-radius: 5px;
-    padding: 10px;
-    height: 40px;
-    transition: background 0.2s ease;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--textColor);
+  font-size: 0.9rem;
+  border-radius: 5px;
+  padding: 10px;
+  height: 40px;
+  transition: background 0.2s ease;
 }
 
 input[type="text"]:hover {
-    background: var(--sidebarColor);
-    transition: none;
+  background: var(--sidebarColor);
+  transition: none;
 }
 
 input[type="text"]:focus {
-    background: var(--sidebarColor);
+  background: var(--sidebarColor);
 }
 
 .save-shortcuts {
-    background: var(--sliderBgColor);
-    border-radius: 10px;
-    margin-top: 20px;
+  background: var(--sliderBgColor);
+  margin-top: 20px;
 }
 
 .save-shortcuts:hover {
-    background: var(--activeColor);
-    color: var(--bg-1);
+  background: var(--activeColor);
+  color: var(--bg-1);
 }
 
 .save-shortcuts-div {
-    display: block;
-    justify-content: stretch;
+  display: block;
+  justify-content: stretch;
 }
 
 .shortcut-json-edit-context-menu {
-    position: fixed;
-    z-index: 20;
-    border-radius: 10px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    background: var(--sidebarColor);
-    overflow-x: hidden;
-    overflow-y: scroll;
-    transition: opacity 0.2s ease;
+  position: fixed;
+  z-index: 20;
+  border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background: var(--sidebarColor);
+  overflow-x: hidden;
+  overflow-y: scroll;
+  transition: opacity 0.2s ease;
 }
 
 .shortcut-json-edit-context-menu li {
-    list-style-type: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background 0.2s ease;
+  list-style-type: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .shortcut-json-edit-context-menu li:hover {
-    background: var(--sidebarColor);
-    transition: none;
+  background: var(--sidebarColor);
+  transition: none;
 }
 
 .shortcut-input-field {
-    justify-self: center;
-    align-self: center;
-    place-self: center;
-    width: 200px;
-    height: 50px;
+  justify-self: center;
+  align-self: center;
+  place-self: center;
+  width: 200px;
+  height: 50px;
 }
 
 #shortcuts-file-path-btn {
-    position: fixed;
-    top: 0;
-    right: 5px;
-    border-radius: 10px 0 10px 10px;
+  position: fixed;
+  top: 0;
+  right: 5px;
+  border-radius: 10px 0 10px 10px;
 }
 
 #add-value {
-    border-radius: 0 0 10px 10px;
+  border-radius: 0 0 10px 10px;
 }
 
 .shortcut-div input {
-    margin: 0;
-    height: 40px !important;
-    width: auto;
-    cursor: pointer;
-    background: var(--trackItemColor);
-    border: none;
-    border-radius: none !important;
-    background: none;
-    text-align: center;
-    cursor: pointer;
-    color: inherit;
+  margin: 0;
+  height: 40px !important;
+  width: auto;
+  cursor: pointer;
+  background: var(--trackItemColor);
+  border: none;
+  border-radius: none !important;
+  background: none;
+  text-align: center;
+  cursor: pointer;
+  color: inherit;
 }
 
 .shortcut-div input:focus {
-    background: none;
+  background: none;
 }
 
 .shortcut-div input:hover {
-    background: none;
+  background: none;
 }

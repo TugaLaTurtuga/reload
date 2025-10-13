@@ -63,7 +63,6 @@ async function moveVirtualCursor(x, y) {
     moveVirtualCursorElements[i][1][moveVirtualCursorElements[i][1].pop()];
   const allNodes = moveVirtualCursorElements[i][1][0];
 
-  console.log(nodes);
   const gridXSize = getGridXSize(nodes);
   const gridYSize = Math.ceil(allAlbums.length / gridXSize);
   const [cursorPos, isInCard] = await getCurrentGridPosition(allNodes);

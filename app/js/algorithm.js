@@ -27,9 +27,6 @@ async function playRandomSong() {
   const scoredSongs = possibleSongs.map((song) => {
     if (song.album.path === settings.currentPlayingAlbum.path)
       return { song, score: 0 };
-    else {
-      console.log(song.album.path, settings.currentPlayingAlbum.path);
-    }
 
     let score = 1;
     const currentTrack =
@@ -44,11 +41,23 @@ async function playRandomSong() {
       const currentDescription = settings.currentPlayingAlbum.info.description;
       const songDescription = song.album.info.description;
 
+      const genres = songDescription.genre
+        .split(/[\/,]/)
+        .map((g) => g.trim()) // trim each item
+        .filter(Boolean); // remove empty strings
+      const currentDescriptionGenres = currentDescription.genre
+        .split(/[\/,]/)
+        .map((g) => g.trim())
+        .filter(Boolean);
+      for (let i = 0; i < currentDescriptionGenres.length; i++) {
+        if (!genres.includes(currentDescriptionGenres[i])) {
+          score *= 1 - settings.algorithm.genreImportance / genres.length;
+          break;
+        }
+      }
+
       if (currentDescription.artist !== songDescription.artist) {
         score *= 1 - settings.algorithm.authorImportance;
-      }
-      if (currentDescription.genre !== songDescription.genre) {
-        score *= 1 - settings.algorithm.yearImportance;
       }
       if (currentDescription.year !== songDescription.year) {
         score *= 1 - settings.algorithm.yearImportance;

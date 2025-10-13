@@ -51,7 +51,7 @@ let settings = {
   isPlayingMusic: false, // is the audio being played
   currentAlbum: null, // the album thats currently opened
   volume: 0.8, // audio volume
-  sfxVolume: 0.8, // audio volume
+  sfxVolume: 0.4, // audio volume
   theme: { dark: "", light: "light" }, // app's theme
   themeMode: "dark", // dark or light
   getSystemTheme: false, // if true, the theme will be set to the system theme

@@ -10,7 +10,7 @@ const changeLogsSidebar = document.querySelector(".change-logs-container");
 
 let settings = {
   volume: 0.8,
-  sfxVolume: 0.8,
+  sfxVolume: 0.4,
   startTrackFromBeginningOnStartUp: false,
   showFeatures: true,
   controller: {

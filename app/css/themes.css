@@ -1,8 +1,8 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: var(--font);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font);
 }
 
 
@@ -86,19 +86,19 @@
 /* Catppuccin frappe mode */
 [theme="catppuccin-frappe"] {
   --activeColor: #a6d189;
-  --bg-1: #303446;
+  --bg-1: #414559;
   --bg-2: #414559;
-  --colorBlend: .5;
+  --colorBlend: 0.5;
   --ControlsBtnsColor: #af8cca;
   --font: "Fira Code", sans-serif;
-  --sidebarColor: rgba(42, 44, 60, 0.7);
-  --sliderBgColor: #626880;
-  --spinnerColor: #8caaee;
-  --textColor: rgba(198, 208, 245, 0.98);
-  --textSubColor: #838ba7;
+  --sidebarColor: rgba(42, 44, 60, 0.57);
+  --sliderBgColor: rgba(98, 104, 128, 0.85);
+  --spinnerColor: rgba(140, 170, 238, 0.32);
+  --textColor: #c6d0f5;
+  --textSubColor: #7e8ec9;
   --trackItemColor: #414559;
   --trackItemOddColor: #414559;
-  --trackItemOnHover: #4a5068;
+  --trackItemOnHover: rgba(74, 80, 104, 0.92);
 }
 
 
@@ -330,6 +330,25 @@
 }
 
 
+/* Frost mode */
+[theme="frost"] {
+  --activeColor: #a6d189;
+  --bg-1: #414559;
+  --bg-2: rgba(65, 69, 89, 0);
+  --colorBlend: 0.5;
+  --ControlsBtnsColor: #af8cca;
+  --font: "Fira Code", sans-serif;
+  --sidebarColor: rgba(42, 44, 60, 0);
+  --sliderBgColor: rgba(98, 104, 128, 0.33);
+  --spinnerColor: #8caaee;
+  --textColor: #c6d0f5;
+  --textSubColor: #7489d8;
+  --trackItemColor: rgba(65, 69, 89, 0);
+  --trackItemOddColor: rgba(65, 69, 89, 0);
+  --trackItemOnHover: rgba(74, 80, 104, 0.19);
+}
+
+
 /* Graphite mode */
 [theme="graphite"] {
   --activeColor: #9e9e9e;
@@ -555,6 +574,25 @@
   --trackItemColor: #3e3d32;
   --trackItemOddColor: #35352b;
   --trackItemOnHover: #48483e;
+}
+
+
+/* Nigger color mode */
+[theme="nigger-color"] {
+  --activeColor: #000000;
+  --bg-1: #000000;
+  --bg-2: #000000;
+  --colorBlend: 0.5;
+  --ControlsBtnsColor: rgba(0, 0, 0, 0);
+  --font: Menlo, system-ui;
+  --sidebarColor: #f50000;
+  --sliderBgColor: #3a3a3a;
+  --spinnerColor: #a277ff;
+  --textColor: #eaeaea;
+  --textSubColor: #b3b3b3;
+  --trackItemColor: #222222;
+  --trackItemOddColor: #1c1c1c;
+  --trackItemOnHover: #2a2a2a;
 }
 
 
@@ -864,13 +902,13 @@
 
 /* Twilight mode */
 [theme="twilight"] {
-  --activeColor: #82e6ce;
-  --bg-1: #141414;
-  --bg-2: #222222;
+  --activeColor: #2badee;
+  --bg-1: #171717;
+  --bg-2: #2b2b2b;
   --colorBlend: 0.5;
-  --ControlsBtnsColor: #a277ff;
-  --font: Rubik, sans-serif;
-  --sidebarColor: #141414b3;
+  --ControlsBtnsColor: #2b56ab;
+  --font: Menlo, system-ui;
+  --sidebarColor: rgba(24, 22, 22, 0.68);
   --sliderBgColor: #3a3a3a;
   --spinnerColor: #a277ff;
   --textColor: #eaeaea;
