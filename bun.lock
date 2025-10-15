@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "TugaLaTurtuga/reload",
+      "name": "Reload",
       "dependencies": {
         "@nut-tree-fork/nut-js": "^4.2.6",
         "colorthief": "^2.6.0",

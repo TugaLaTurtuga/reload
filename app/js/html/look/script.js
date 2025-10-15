@@ -4,6 +4,9 @@ let settings = {
   themeMode: "dark",
 };
 
+let selectedLooks = [];
+const mainLookPath = path.join(__dirname, "css", "look.css");
+
 function getRootFromCSS(css) {
   // Match optional comment, then :root { ... }
   const re =
@@ -32,6 +35,15 @@ function getRootFromCSS(css) {
   return null;
 }
 
+function mapsAreEqual(map1, map2) {
+  if (!(map1 instanceof Map) || !(map2 instanceof Map)) return false;
+  if (map1.size !== map2.size) return false;
+  for (const [key, val] of map1) {
+    if (map2.get(key) !== val) return false;
+  }
+  return true;
+}
+
 function updateCSSContent(look, lookCssContent, lookCssOptions) {
   // rebuild the :root { ... } block
   let newRoot = ":root {\n";
@@ -52,6 +64,56 @@ function updateCSSContent(look, lookCssContent, lookCssOptions) {
   }
 
   return updatedCss;
+}
+
+// Merge multiple Maps of CSS variables so later maps override earlier ones
+function mergeCssVarMaps(maps) {
+  const merged = new Map();
+  for (const mp of maps) {
+    if (!mp) continue;
+    for (const [k, v] of mp.entries()) {
+      merged.set(k, v);
+    }
+  }
+  return merged;
+}
+
+function combineLooksIntoBase() {
+  let newRoot = ":root {\n";
+  let oldRootNames = new Map();
+  let updatedCss = "";
+  for (let i = 0; i < selectedLooks.length; i++) {
+    const rootLook = selectedLooks[i][0];
+    console.log(selectedLooks[i]);
+    const look = selectedLooks[i][1];
+    const lookName = selectedLooks[i][2];
+    if (rootLook) {
+      let thisRoot = ":root {\n";
+      for (const [name, value] of rootLook.entries()) {
+        if (!oldRootNames.has(name)) {
+          newRoot += `  ${name}: ${value};\n`;
+          oldRootNames.set(name, value);
+        }
+        thisRoot += `  ${name}: ${value};\n`;
+      }
+      updatedCss += `\n\n/* _-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name: ${lookName} */\n${look.replace(/:root\s*{[^}]*}/, "")}\n`;
+    } else {
+      updatedCss += `\n\n/* _-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name: ${lookName} */\n${look}\n`;
+    }
+  }
+
+  newRoot += "}\n";
+  updatedCss = newRoot.trim() + updatedCss;
+
+  // save to file
+  try {
+    fs.writeFileSync(mainLookPath, updatedCss, "utf-8");
+    console.log(`CSS updated and saved to ${mainLookPath}`);
+    return true;
+  } catch (err) {
+    console.error(`Failed to write CSS to ${mainLookPath}:`, err);
+    return false;
+  }
 }
 
 async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
@@ -90,7 +152,6 @@ const openLooksFolderBtn = document.getElementById("open-looks-folder");
 // will collect blob urls we create so we can revoke them later
 const createdBlobUrls = [];
 
-const mainLookPath = path.join(__dirname, "css", "look.css");
 async function updateLookCss(css) {
   try {
     await fs.writeFileSync(mainLookPath, css, "utf8");
@@ -131,10 +192,43 @@ async function loadLooks() {
   });
 
   // Extract css/look.css content
-  let mainLookCssContent = "";
+  const lookNames = new Set();
   try {
     if (fs.existsSync(mainLookPath)) {
-      mainLookCssContent = fs.readFileSync(mainLookPath, "utf8");
+      const css = fs.readFileSync(mainLookPath, "utf8");
+
+      // Match all look names in that comment format
+      const nameRe =
+        /\/\*\s*_-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name:\s*([^*]+)\*\//g;
+      let match;
+      let foundAny = false;
+
+      const defaultLook = looks.find((look) => look.name === "default.css");
+
+      // Loop through all matches
+      while ((match = nameRe.exec(css)) !== null) {
+        foundAny = true;
+        const lookPath = match[1].trim();
+
+        if (defaultLook?.path === lookPath) continue;
+
+        const lookName = lookPath.split("/").pop();
+        lookNames.add(lookName);
+
+        if (fs.existsSync(lookPath)) {
+          const lookCssContent = fs.readFileSync(lookPath, "utf8");
+          const lookCssOptions = getRootFromCSS(lookCssContent);
+          selectedLooks.push([lookCssOptions, lookCssContent, lookPath]);
+        } else {
+          console.warn(`⚠️ Look path not found: ${lookPath}`);
+        }
+      }
+
+      // If no matches found, use default look
+      if (!foundAny && defaultLook) {
+        lookNames.add(defaultLook.name);
+        selectedLooks.push([new Map(), "", defaultLook.path]);
+      }
     }
   } catch (err) {
     console.error("Failed to read css/look.css file:", err);
@@ -166,19 +260,36 @@ async function loadLooks() {
       console.error("Failed to read look.css file:", err);
     }
 
-    if (lookCssContent === mainLookCssContent) {
-      header.style.color = "var(--activeColor)";
+    let lookCssOptions = getRootFromCSS(lookCssContent);
+    const lookIndex = selectedLooks.findIndex((sel) => sel[2] === look.path);
+    if (lookIndex !== -1 || lookNames.has(look.name)) {
+      const isDifferent =
+        lookIndex !== -1 &&
+        !mapsAreEqual(selectedLooks[lookIndex][0], lookCssOptions) &&
+        lookCssOptions !== "" &&
+        lookCssOptions !== null &&
+        lookCssOptions !== undefined;
+      header.style.color = isDifferent
+        ? "var(--ControlsBtnsColor)"
+        : "var(--activeColor)";
     }
 
     header.addEventListener("click", () => {
-      mainLookCssContent = lookCssContent;
-      const allHeaders = document.querySelectorAll(".look-header");
-      allHeaders.forEach((h) => {
-        h.style.color = "";
-      });
-      header.style.color = "var(--activeColor)";
-      updateLookCss(mainLookCssContent);
-      ipcRenderer.invoke("save-settings", {}); // this reloads every window. Stupid, I know
+      const lookIndex = selectedLooks.findIndex((sel) => sel[2] === look.path);
+
+      if (
+        header.style.color === "var(--activeColor)" ||
+        header.style.color === "var(--ControlsBtnsColor)"
+      ) {
+        header.style.color = "";
+        if (lookIndex !== -1) selectedLooks.splice(lookIndex, 1);
+      } else {
+        selectedLooks.push([lookCssOptions, lookCssContent, look.path]);
+        header.style.color = "var(--activeColor)";
+      }
+
+      combineLooksIntoBase();
+      ipcRenderer.invoke("save-settings", {}); // reloads all windows
     });
 
     const frames = [];
@@ -192,12 +303,19 @@ async function loadLooks() {
       framesDiv.appendChild(frames[i]);
     }
 
-    let lookCssOptions = getRootFromCSS(lookCssContent);
-
     if (lookCssOptions) {
       // iterate over Map entries
       for (const [name, data] of lookCssOptions.entries()) {
         // add input fields for each option
+        const label = document.createElement("label");
+
+        label.textContent = `${name
+          .slice(2)
+          .replace(/([A-Z])/g, " $1")
+          .replace(/-/g, " ")
+          .replace(/^./, (c) => c.toUpperCase())
+          .replace(/ (.)/g, (m, c) => " " + c.toLowerCase())}:`;
+
         const input = document.createElement("input");
         input.type = "text";
         input.value = data;
@@ -217,6 +335,26 @@ async function loadLooks() {
           lookCssContent = updatedCss;
           lookCssOptions = getRootFromCSS(lookCssContent);
 
+          const lookIndexOnInput = selectedLooks.findIndex(
+            (sel) => sel[2] === look.path,
+          );
+
+          if (lookIndexOnInput !== -1 || lookNames.has(look.name)) {
+            const isDifferent =
+              lookIndexOnInput !== -1 &&
+              !mapsAreEqual(
+                selectedLooks[lookIndexOnInput][0],
+                lookCssOptions,
+              ) &&
+              lookCssOptions !== "" &&
+              lookCssOptions !== null &&
+              lookCssOptions !== undefined;
+            console.log(selectedLooks[lookIndexOnInput][0], lookCssOptions);
+            header.style.color = isDifferent
+              ? "var(--ControlsBtnsColor)"
+              : "var(--activeColor)";
+          }
+
           // 🔥 live-update all iframes for this look
           frames.forEach((frame) => {
             try {
@@ -233,15 +371,13 @@ async function loadLooks() {
               console.warn("iframe update failed:", e);
             }
           });
-
-          if (lookCssContent === mainLookCssContent) {
-            header.style.color = "var(--activeColor)";
-          } else {
-            header.style.color = "";
-          }
         });
 
-        valueChanger.appendChild(input);
+        const valueDiv = document.createElement("div");
+        valueDiv.appendChild(label);
+        valueDiv.appendChild(input);
+
+        valueChanger.appendChild(valueDiv);
       }
     }
 

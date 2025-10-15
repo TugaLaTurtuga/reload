@@ -17,6 +17,7 @@ const { getFonts } = require("font-list");
 const nut = require("@nut-tree-fork/nut-js");
 const { mouse, Button } = nut;
 
+app.setName("TugaLaTurtuga/reload");
 const userDataPath = path.join(app.getPath("userData"), "user-data");
 if (!fs.existsSync(userDataPath)) {
   const defaultUserDataPath = path.join(__dirname, "user-data");
@@ -1209,9 +1210,21 @@ ipcMain.handle("get-all-user-looks", async () => {
     await fs.promises.mkdir(looksDir, { recursive: true });
 
     const files = await fs.promises.readdir(looksDir);
-    return files
+    const cssFiles = files
       .filter((file) => file.toLowerCase().endsWith(".css"))
       .map((file) => path.join(looksDir, file));
+
+    // Sort so that files ending with "default.css" come first
+    cssFiles.sort((a, b) => {
+      const aIsDefault = a.toLowerCase().endsWith("default.css");
+      const bIsDefault = b.toLowerCase().endsWith("default.css");
+
+      if (aIsDefault && !bIsDefault) return -1;
+      if (!aIsDefault && bIsDefault) return 1;
+      return 0;
+    });
+
+    return cssFiles;
   } catch (err) {
     console.error("Failed to load user looks:", err);
     return [];
