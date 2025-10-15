@@ -4,14 +4,14 @@
 }
 
 .window-controls {
-  top: calc(var(--border-radius) / 5);
-  height: calc(13px - var(--border-radius) / 40);
+  top: calc(var(--border-radius) / 4);
+  height: calc(13px - var(--border-radius) / 10);
   gap: calc(13px - var(--border-radius) / 5);
 }
 
 .window-controls button {
   width: calc(13px - var(--border-radius) / 10);
-  height: calc(13px - var(--border-radius) / 40);
+  height: calc(13px - var(--border-radius) / 10);
   border-radius: calc(13px - var(--border-radius) / 10);
 }
 
@@ -237,5 +237,13 @@ input[type="checkbox"] {
 }
 
 .shortcut-json-edit {
-  border-radius: min(calc(--border-radius), 50px) !important;
+  border-radius: min(var(--border-radius), 50px) !important;
+}
+
+.favourites-container {
+  top: 10px;
+}
+
+.favourite-item {
+  border-radius: calc(var(--border-radius) / 3);
 }
