@@ -1,17 +1,27 @@
 async function playLoadedAudioFromSettings() {
-  if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
-    const opts = {
-      pushPrev: null,
-      startTrackFromBeginningOnStartUp:
-        settings.startTrackFromBeginningOnStartUp,
-      firstLoad: true,
-    };
-    await playTrack(
-      settings.currentTrackIndex,
-      settings.currentPlayingAlbum,
-      opts,
-    );
+  const tries = 10;
+  const timeout = 50;
+  for (let i = 0; i < tries; i++) {
+    if (settings.currentPlayingAlbum && settings.currentTrackIndex >= 0) {
+      const opts = {
+        pushPrev: null,
+        startTrackFromBeginningOnStartUp:
+          settings.startTrackFromBeginningOnStartUp,
+        firstLoad: true,
+      };
+      await playTrack(
+        settings.currentTrackIndex,
+        settings.currentPlayingAlbum,
+        opts,
+      );
+      return true;
+    }
+
+    if (i < tries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+    }
   }
+  return false; // fallback
 }
 
 // Play track by index
@@ -166,7 +176,7 @@ async function playTrack(
     }
   }
 
-  settings.currentPlayingAlbum = await getUncompressedInfo(album, index);
+  settings.currentPlayingAlbum = album;
   settings.currentTrackIndex = index;
 
   // Update track highlight (works when the album view is the one currently open)
@@ -243,6 +253,7 @@ async function playTrack(
   }
 
   getAudioSource();
+  saveSettings();
 }
 
 function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {

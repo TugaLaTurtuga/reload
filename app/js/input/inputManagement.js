@@ -104,6 +104,12 @@ class InputManager {
       if (this.nonDefaultKeys.includes(key)) e.preventDefault();
       this.mouseButtons.delete(key);
     });
+
+    window.addEventListener("blur", () => {
+      this.lastPressedKeys.clear();
+      this.mouseButtons.clear();
+      this.gamepadButtons.clear();
+    });
   }
 
   // Poll gamepad input in an update loop

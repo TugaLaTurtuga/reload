@@ -37,15 +37,8 @@ async function extractAndSaveFunctions() {
 
       if (!code) continue; // nothing to scan
 
-      // ---------- better regexes (capture params directly) ----------
-      const functionDeclRe =
-        /(?:async\s+)?function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)/g;
-      const namedFuncExprRe =
-        /(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*function(?:\s+[a-zA-Z_$][\w$]*)?\s*\(([^)]*)\)/g;
-      const arrowFuncRe =
-        /(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*(?:async\s+)?(?:\(([^)]*)\)|([a-zA-Z_$][\w$]*))\s*=>/g;
-      const methodPropRe =
-        /([a-zA-Z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\(([^)]*)\)/g;
+      const topLevelFuncs = extractTopLevelFunctions(code);
+      Object.assign(functions, topLevelFuncs);
 
       let m;
 
@@ -106,6 +99,48 @@ async function extractAndSaveFunctions() {
     console.error("Error extracting functions:", error);
     return {};
   }
+}
+
+function extractTopLevelFunctions(code) {
+  const functions = {};
+
+  // Regex to match potential function starts (all types)
+  const funcRegex =
+    /(?:async\s+)?function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)|(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*function(?:\s+[a-zA-Z_$][\w$]*)?\s*\(([^)]*)\)|(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*(?:async\s+)?(?:\(([^)]*)\)|([a-zA-Z_$][\w$]*))\s*=>|([a-zA-Z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\(([^)]*)\)/g;
+
+  let braceDepth = 0;
+  let lastIndex = 0;
+
+  const normalizeParams = (raw) => {
+    if (!raw) return "";
+    return raw
+      .split(",")
+      .map((p) => p.trim().split("=")[0].trim())
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  while (true) {
+    const match = funcRegex.exec(code);
+    if (!match) break;
+
+    // Count braces between lastIndex and current match
+    for (let i = lastIndex; i < match.index; i++) {
+      if (code[i] === "{") braceDepth++;
+      else if (code[i] === "}") braceDepth--;
+    }
+
+    lastIndex = match.index;
+
+    if (braceDepth === 0) {
+      // top-level only
+      let name = match[1] || match[3] || match[5] || match[7];
+      let rawParams = match[2] || match[4] || match[6] || match[7] || "";
+      functions[name] = normalizeParams(rawParams);
+    }
+  }
+
+  return functions;
 }
 
 // Run it

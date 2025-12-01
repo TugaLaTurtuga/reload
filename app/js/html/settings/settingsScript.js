@@ -1,3 +1,5 @@
+const { ipcMain } = require("electron/main");
+
 const changeContainer = document.getElementById("change-container");
 const settingsContainer = document.getElementById("settings");
 const libraryPathsContainer = document.getElementById(
@@ -5,6 +7,7 @@ const libraryPathsContainer = document.getElementById(
 );
 const shortcutsContainer = document.getElementById("shortcuts");
 const addLibraryBtn = document.getElementById("addLibraryBtn");
+const scanLibraryBtn = document.getElementById("scanLibraryBtn");
 const containers = document.querySelectorAll(".container");
 const changeLogsSidebar = document.querySelector(".change-logs-container");
 
@@ -526,6 +529,10 @@ async function renderLibraryPaths() {
     libraryPathsContainer.appendChild(pathDiv);
   });
 }
+
+scanLibraryBtn.addEventListener("click", async () => {
+  await ipcRenderer.invoke("rescan-library");
+});
 
 addLibraryBtn.addEventListener("click", async () => {
   const { canceled, filePaths } = await ipcRenderer.invoke("show-open-dialog", {
@@ -1163,7 +1170,7 @@ function renderShortcutsContextMenu(action) {
   let hasPutContextMenu = false;
   const ul = document.createElement("ul");
   Object.keys(funcs).forEach((funcName) => {
-    if (funcName.toLowerCase().includes(action) && funcName !== action) {
+    if (funcName.toLowerCase().includes(action)) {
       if (!hasPutContextMenu) {
         if (!calculateContextMenuPosition()) return;
         contextMenu.style.opacity = 1;
@@ -1237,20 +1244,8 @@ function renderShortcutsContextMenu(action) {
   );
 }
 
-// this is for cursor.js to work
-/*
-function getCurrenrVirtualCursorElements() {
-  const moveVirtualCursorElements = [
-    [
-      document.getElementById("shortcut-json-edit-context-menu"),
-      [document.querySelectorAll(".context-menu-item"), 0],
-      document.querySelectorAll(".context-menu-item"),
-    ],
-  ];
-  return moveVirtualCursorElements;
-}
+const { shell } = require("electron");
 
-
-const playerControls = document.getElementById("hahah-fake-player-controls");
-const mainContent = document.getElementById("app");
-*/
+document.getElementById("openRepo").addEventListener("click", () => {
+  shell.openExternal("https://github.com/TugaLaTurtuga/Reload-JS");
+});

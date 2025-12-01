@@ -1,3 +1,5 @@
+const { json } = require("express");
+
 // Global variable to store the music data
 let musicData = {
   trackList: [],
@@ -133,9 +135,33 @@ async function populateForm() {
   // Clear existing tracks
   tracksContainer.innerHTML = "";
 
-  // Add tracks
+  // Add tracksconst
+  possibleFileExtNames = [
+    ".mp3",
+    ".wav",
+    ".aac",
+    ".alac",
+    ".flac",
+    ".ogg",
+    ".m4a",
+    ".m4p",
+    ".movpkg",
+  ];
+  const musicPath = jsonPath.substring(0, jsonPath.lastIndexOf("/")) + "/";
+
   musicData.trackList.forEach((track, index) => {
-    addTrackToDOM(track, index);
+    track.path = null;
+    const possibleTrackPathWithoutExtNames = musicPath + track.title;
+
+    for (let i = 0; i < possibleFileExtNames.length; ++i) {
+      const possibleTrackPath =
+        possibleTrackPathWithoutExtNames + possibleFileExtNames[i];
+      if (fs.existsSync(possibleTrackPath)) {
+        track.path = possibleTrackPath;
+        break;
+      }
+    }
+    if (track.path) addTrackToDOM(track, index);
   });
   sController.updateSliders();
 }
@@ -153,25 +179,69 @@ function addTrackToDOM(track, index) {
     <div class="track-actions">
         <button class="move-up">↑</button>
         <button class="move-down">↓</button>
-        <!-- <button class="danger remove-track">Remove</button> -->
+        <button class="danger remove-track">Remove</button>
     </div>
 `;
 
   // Add event listeners to the track
   trackDiv.querySelector(".track-title").addEventListener("input", () => {
     playSoundAffect("click", (volume = 0.35));
-    updateTrackData();
   });
+  trackDiv
+    .querySelector(".track-title")
+    .addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        const newTitle = e.target.value.trim().value.replace(/\//g, "");
+        if (!newTitle || newTitle === track.title) {
+          e.target.blur();
+          return;
+        }
+
+        const oldPath = track.path;
+        const path = require("path");
+        const fs = require("fs");
+
+        const dir = path.dirname(oldPath);
+        const ext = path.extname(oldPath);
+        const newPath = path.join(dir, `${newTitle}${ext}`);
+
+        try {
+          // rename the file
+          fs.renameSync(oldPath, newPath);
+          console.log(`Renamed track: ${oldPath} → ${newPath}`);
+
+          // update track object and save
+          track.path = newPath;
+          track.title = newTitle;
+
+          // refresh app data
+          updateTrackData();
+        } catch (err) {
+          console.error("Failed to rename track:", err);
+        }
+      } else if (e.key === "Escape") {
+        e.target.value = track.title;
+        e.target.blur();
+      } else if (e.key === "/") {
+        e.preventDefault();
+      }
+    });
   trackDiv.querySelector(".slider").addEventListener("change", updateTrackData);
   trackDiv.querySelector(".slider").addEventListener("input", () => {
     playSoundAffect("click", (volume = 0.35));
   });
-  /*
+
   trackDiv.querySelector(".remove-track").addEventListener("click", () => {
     playSoundAffect("warning", (volume = 1));
-    removeTrack(trackDiv);
+    if (
+      confirm(`Are you sure you want to delete ${track.title} from the system?`)
+    ) {
+      removeTrack(trackDiv, track);
+    }
   });
-   */
+
   trackDiv
     .querySelector(".move-up")
     .addEventListener("click", () => moveTrack(trackDiv, "up"));
@@ -218,10 +288,18 @@ function addNewTrack() {
 }
 
 // Function to remove a track
-function removeTrack(trackElement) {
-  if (confirm("Are you sure you want to remove this track?")) {
-    trackElement.remove();
-    updateTrackData();
+function removeTrack(trackElement, track) {
+  if (track.path) {
+    // Remove the track from the file system
+    fs.unlink(track.path, (err) => {
+      if (err) {
+        console.error("Error removing track:", err);
+      } else {
+        saveMusicData();
+        trackElement.remove();
+        updateTrackData();
+      }
+    });
   }
 }
 
