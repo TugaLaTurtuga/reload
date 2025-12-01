@@ -1247,5 +1247,5 @@ function renderShortcutsContextMenu(action) {
 const { shell } = require("electron");
 
 document.getElementById("openRepo").addEventListener("click", () => {
-  shell.openExternal("https://github.com/TugaLaTurtuga/Reload-JS");
+  shell.openExternal("https://github.com/TugaLaTurtuga/reload");
 });
