@@ -26,7 +26,7 @@ async function updateLibrary() {
     // Reload the library
     songs = await ipcRenderer.invoke("get-library");
     songsMap = new Map(songs.map((song) => [song.path, song]));
-    await renderLibrary();
+    renderLibrary();
 
     //                  Update tracks                  //
     settings.nextTracks = updateTracks(settings.nextTracks);
@@ -93,6 +93,60 @@ function renderLibrary() {
   }
 }
 
+window.addEventListener("resize", () => {
+  checkAlbumArtSize();
+});
+
+function checkAlbumArtSize() {
+  const el = document.getElementById("album-art-container");
+  el.style.display = "block"; // this is to calculate the size of the album art container correctly
+  const w = el.clientWidth;
+  const h = el.clientHeight;
+
+  const aba = document.getElementById("album-back-art");
+
+  if (w < h) {
+    el.style.display = "none";
+    aba.style.display = "none";
+  } else {
+    el.style.display = "block";
+  }
+}
+
+function putAlbumBackArtInPlace(e) {
+  const aa = document.getElementById("album-art-container");
+  const aba = document.getElementById("album-back-art");
+
+  if (
+    aa.style.display === "none" ||
+    e === null ||
+    document.getElementById("player-container").classList.contains("hidden")
+  ) {
+    aba.style.display = "none";
+    return;
+  } else {
+    aba.style.display = "block";
+  }
+
+  // Center aba inside aa
+  const rect = aa.getBoundingClientRect();
+  let left =
+    rect.width / 2 +
+    aa.offsetLeft +
+    document.getElementById("main-content").offsetLeft;
+  let top = rect.height / 2 + aa.offsetTop;
+
+  let cursorXdiff = Math.min(30, Math.max(-30, (e.clientX - left) / 20));
+  let cursorYdiff = Math.min(30, Math.max(-30, (e.clientY - top) / 20));
+
+  aba.style.left = left - cursorXdiff + "px";
+  aba.style.top = top - cursorYdiff + "px";
+}
+
+document.addEventListener("mousemove", (e) => {
+  putAlbumBackArtInPlace(e);
+});
+
 // Open album view
 async function openAlbum(album) {
   if (!album) return;
@@ -117,6 +171,9 @@ async function openAlbum(album) {
   } else {
     albumArt.style.backgroundImage = "none";
   }
+
+  document.getElementById("album-back-art").style.backgroundImage =
+    albumArt.style.backgroundImage;
 
   albumArt.addEventListener("click", () => {
     setNextTracksFromAlbum(album, 0);
@@ -180,6 +237,8 @@ async function openAlbum(album) {
     updateFavouriteBtn();
   } catch (err) {}
 
+  checkAlbumArtSize();
+
   return true;
 }
 
@@ -191,6 +250,7 @@ async function backToLibrary() {
   const color = await tryGetComputedStyle("--bg-2");
   changeBackgroundGradient(color);
   settings.currentAlbum = null;
+  putAlbumBackArtInPlace(null);
   return true;
 }
 

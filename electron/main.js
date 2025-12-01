@@ -48,6 +48,8 @@ const settingsFilePath = path.join(userDataPath, "settings.json");
 const libraryFilePath = path.join(userDataPath, "library.json");
 let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
+const albumsPathData = path.join(userDataPath, "albumsPath.json");
+const nonAlbumsPathData = path.join(userDataPath, "nonAlbumsPath.json");
 const openedWindows = new Map();
 
 let mainWindow;
@@ -67,13 +69,12 @@ async function getSubsonicBackend() {
 function createAppMenu() {
   const template = [
     {
-      label: app.name,
+      label: "Reload",
       submenu: [
         {
           label: "Settings",
           accelerator: "CmdOrCtrl+,",
           click: () => {
-            // open settings page
             const settingsPath = path.join(
               __dirname,
               "../app/html/settings.html",
@@ -81,11 +82,22 @@ function createAppMenu() {
             openExternal(settingsPath, true);
           },
         },
+        { type: "separator" },
         {
-          label: "Themes Editor",
+          label: "Mini player",
+          accelerator: "CmdOrCtrl+m",
+          click: () => {
+            const musicWatcherPath = path.join(
+              __dirname,
+              "../app/html/musicWatcher.html",
+            );
+            openExternal(musicWatcherPath, true);
+          },
+        },
+        {
+          label: "Themes",
           accelerator: "CmdOrCtrl+T",
           click: () => {
-            // open theme editor page
             const themePath = path.join(
               __dirname,
               "../app/html/themeEditor.html",
@@ -97,7 +109,6 @@ function createAppMenu() {
           label: "CSS",
           accelerator: "CmdOrCtrl+L",
           click: () => {
-            // open theme editor page
             const themePath = path.join(__dirname, "../app/look.html");
             openExternal(themePath, true);
           },
@@ -112,15 +123,12 @@ function createAppMenu() {
         { type: "separator" },
         {
           role: "quit",
+          label: "Quit",
         },
       ],
     },
     {
-      label: "Edit",
-      submenu: [{ role: "cut" }, { role: "copy" }, { role: "paste" }],
-    },
-    {
-      label: "View",
+      label: "Dev tools",
       submenu: [
         {
           label: "Toggle Debug Mode",
@@ -132,7 +140,15 @@ function createAppMenu() {
             }
           },
         },
-        { role: "reload" },
+        { role: "reload", label: "Reload (the window)" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
         { role: "togglefullscreen" },
       ],
     },
@@ -436,6 +452,35 @@ ipcMain.handle("get-system-fonts", async () => {
 // Get music library
 ipcMain.handle("get-library", async () => {
   try {
+    const startTime = Date.now();
+    albums = [];
+    albumsPathLoaded.clear();
+    loadAlbumsPath();
+    // Try to get libraries
+    libraryPaths = await loadLibraryPaths();
+    for (const path of libraryPaths) {
+      await scanMusicFolder(path);
+    }
+    saveAlbumsPath();
+    console.log(
+      "Time to load all songs reload.json:",
+      Date.now() - startTime + "ms",
+    );
+    return albums;
+  } catch (error) {
+    console.error("Error scanning music library:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("rescan-library", async () => {
+  try {
+    const startTime = Date.now();
+    albums = [];
+    albumsPathLoaded.clear();
+    albumsPath = new Map();
+    nonAlbumsPath = new Set();
+
     // Try to get libraries
     libraryPaths = await loadLibraryPaths();
     let songs = [];
@@ -443,7 +488,13 @@ ipcMain.handle("get-library", async () => {
       const music = await scanMusicFolder(path);
       if (music.length > 0) songs.push(...music);
     }
-    return songs;
+    saveAlbumsPath();
+    console.log(
+      "Time to scan all songs reload.json:",
+      Date.now() - startTime + "ms",
+    );
+    mainWindow.reload();
+    return;
   } catch (error) {
     console.error("Error scanning music library:", error);
     return [];
@@ -481,282 +532,354 @@ ipcMain.handle("save-library-paths", (event, paths) => {
   }
 });
 
-async function scanMusicFolder(rootPath, fromExternalProvider = false) {
-  const albums = [];
+let albums = [];
+let albumsPathLoaded = new Set();
+let albumsPath = new Map();
+let nonAlbumsPath = new Set();
 
+function loadAlbumsPath() {
+  if (fs.existsSync(albumsPathData)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(albumsPathData, "utf8"));
+      albumsPath = new Map(data); // Convert [key,value] pairs → Map
+    } catch (err) {
+      console.error("Failed to load albumsPath:", err);
+      albumsPath = new Map();
+    }
+  }
+  if (fs.existsSync(nonAlbumsPathData)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(nonAlbumsPathData, "utf8"));
+      nonAlbumsPath = new Set(data); // Convert array → Set
+    } catch (err) {
+      console.error("Failed to load nonAlbumsPath:", err);
+      nonAlbumsPath = new Set();
+    }
+  }
+}
+
+function saveAlbumsPath() {
+  try {
+    const arrayData0 = [...albumsPath]; // Map → array of [key,value]
+    fs.writeFileSync(albumsPathData, JSON.stringify(arrayData0, null, 2));
+
+    const arrayData1 = [...nonAlbumsPath]; // Set → array
+    fs.writeFileSync(nonAlbumsPathData, JSON.stringify(arrayData1, null, 2));
+  } catch (err) {
+    console.error("Failed to save albumsPath:", err);
+  }
+}
+
+async function processMusicFolder(folderPath) {
+  folderPath = folderPath.toLowerCase();
+  if (albumsPath.has(folderPath)) {
+    if (!albumsPathLoaded.has(folderPath)) {
+      albums.push(albumsPath.get(folderPath));
+      albumsPathLoaded.add(folderPath);
+    }
+    return;
+  } else if (nonAlbumsPath.has(folderPath)) return;
+  const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+  const files = entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name);
+
+  // Look for audio files in this folder
+  let audioFiles = files.filter((file) => {
+    const ext = path.extname(file).toLowerCase();
+    return [
+      ".mp3",
+      ".wav",
+      ".aac",
+      ".alac",
+      ".flac",
+      ".ogg",
+      ".m4a",
+      ".m4p",
+      ".movpkg",
+    ].includes(ext);
+  });
+  if (audioFiles.length === 0) {
+    nonAlbumsPath.add(folderPath);
+    return;
+  }
+
+  // Sort audio files by the leading number in the filename
+  audioFiles.sort((a, b) => {
+    const numA = parseInt(a.match(/^\d+/)?.[0], 10) || Infinity;
+    const numB = parseInt(b.match(/^\d+/)?.[0], 10) || Infinity;
+    return numA - numB;
+  });
+
+  const album = {
+    name: path.basename(folderPath),
+    path: folderPath,
+    tracks: [],
+    info: {
+      trackList: [],
+      description: {
+        name: path.basename(folderPath),
+        author: path.basename(path.dirname(folderPath)),
+        label: "none",
+        description: "",
+        year: "year",
+        genre: "genre",
+        color: "#AAAAAA",
+        palette: null,
+        cover: null,
+        copyrightFree: false,
+        favourite: false,
+      },
+    },
+  };
+
+  // Initialize or read music.json
+  const confPath = path.join(folderPath, "reload.json");
+  //deleteConfPath(folderPath, 'reload1.json')
+
+  let shouldExtractColor = false;
+
+  if (!fs.existsSync(confPath)) {
+    // no json → build new
+    album.info.trackList = audioFiles.map((file) => ({
+      title: path.basename(file, path.extname(file)).trim(),
+      rating: 5,
+    }));
+
+    const possible_txts = [
+      ["Author.txt", "author"],
+      ["Genre.txt", "genre"],
+      ["Year.txt", "year"],
+      ["color.txt", "color"],
+    ];
+    for (const [txtFile, key] of possible_txts) {
+      const txtPath = path.join(folderPath, txtFile);
+      if (fs.existsSync(txtPath)) {
+        try {
+          let content = fs.readFileSync(txtPath, "utf8").trim();
+          if (content) {
+            content = content.trim();
+            const contentToLowerCase = content.toLowerCase();
+            // ignore unknown values from python
+            if (
+              !(
+                contentToLowerCase === "unknown" ||
+                contentToLowerCase === "n/a" ||
+                contentToLowerCase === "0000"
+              )
+            ) {
+              album.info.description[key] = content;
+            }
+          }
+        } catch (err) {
+          console.error(`Error reading ${txtFile}:`, err);
+        }
+      }
+    }
+    shouldExtractColor = true; // the python code might be shit.
+
+    try {
+      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
+    } catch (err) {
+      console.error("Error creating json:", err);
+    }
+  } else {
+    // json exists → load it
+    try {
+      const data = fs.readFileSync(confPath, "utf8");
+      const parsedData = JSON.parse(data);
+      // Merge parsed data with default structure to ensure all properties exist
+      if (parsedData) {
+        album.info.description = {
+          ...album.info.description,
+          ...parsedData.description,
+        };
+        album.info.trackList = parsedData.trackList || album.info.trackList;
+      }
+
+      // mark for extraction only if color missing/placeholder
+      if (
+        !album.info.description.color ||
+        ["#AAAAAA", "#FFFFFF"].includes(album.info.description.color)
+      ) {
+        shouldExtractColor = true;
+      }
+    } catch (err) {
+      console.error("Error reading or parsing json:", err);
+      shouldExtractColor = true;
+    }
+  }
+
+  if (album.info.description.cover && shouldExtractColor) {
+    album.info.description.color = await getImgColor(
+      album.info.description.cover,
+    );
+    try {
+      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
+    } catch (err) {
+      console.error("Error updating json with color:", err);
+    }
+  } else if (!album.info.description.cover) {
+    album.info.description.cover = lookForCover(folderPath, files);
+    if (album.info.description.cover) {
+      album.info.description.color = await getImgColor(
+        album.info.description.cover,
+      );
+      try {
+        fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
+      } catch (err) {
+        console.error("Error updating json with color:", err);
+      }
+    }
+  }
+
+  if (true) {
+    album.info.description.palette = await getImgPalette(
+      album.info.description.cover,
+    );
+    try {
+      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
+    } catch (err) {
+      console.error("Error updating json with palette:", err);
+    }
+  }
+
+  // Utility functions
+  const cleanTrackTitle = (title) => title.replace(/^\d+\s*\.?\s*/, "").trim();
+
+  const clearTitle = (title) => title.toLowerCase().trim();
+
+  const sortByTrackNumber = (a, b) => {
+    const numA = parseInt(a.title.match(/^\d+/)?.[0] || Infinity, 10);
+    const numB = parseInt(b.title.match(/^\d+/)?.[0] || Infinity, 10);
+    return numA - numB;
+  };
+
+  // Process audio files
+  const ungarnizedTracks = await Promise.all(
+    audioFiles.map(async (audioFile) => {
+      const trackPath = path.join(folderPath, audioFile);
+      const rawTitle = path.basename(audioFile, path.extname(audioFile));
+
+      try {
+        const metadata = await mm.parseFile(trackPath);
+
+        if (metadata.common && shouldExtractColor) {
+          const {
+            artist,
+            album: alb,
+            year,
+            genre,
+            label,
+            copyright,
+            comment,
+            description,
+          } = metadata.common;
+
+          if (artist) album.info.description.author = artist;
+          if (alb) album.name = alb;
+          if (year) album.info.description.year = year;
+          if (genre?.length) album.info.description.genre = genre[0];
+          if (label) album.info.description.label = label;
+
+          // Set copyright as true/false
+          album.info.description.copyrightFree = !(
+            copyright && copyright.trim() !== ""
+          );
+
+          // Add description (from comment or description tag)
+          const descText = Array.isArray(comment)
+            ? comment.join(" ")
+            : description || null;
+
+          if (descText) album.info.description.description = descText.trim();
+        }
+
+        return {
+          title: rawTitle,
+          path: trackPath,
+          duration: metadata.format.duration || 0,
+        };
+      } catch (err) {
+        console.error(`Error parsing metadata for ${rawTitle}:`, err);
+        return {
+          title: rawTitle,
+          path: trackPath,
+          duration: 0,
+          label: null,
+          copyright: null,
+        };
+      }
+    }),
+  );
+
+  // Build lookup map for efficient matching
+  const trackMap = new Map(
+    ungarnizedTracks.map((t) => [clearTitle(t.title), t]),
+  );
+
+  // Match with trackList
+  const matchedTracks = album.info.trackList
+    .map((track) => {
+      const key = clearTitle(track.title);
+      const match = trackMap.get(key);
+      if (match) {
+        return {
+          title: cleanTrackTitle(match.title),
+          path: match.path,
+          duration: match.duration,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  // Add missing tracks from trackMap that aren’t in album.info.trackList
+  const missingTracks = [];
+  const missingTrackList = [];
+  for (const [key, track] of trackMap.entries()) {
+    const exists = album.info.trackList.some(
+      (t) => clearTitle(t.title) === key,
+    );
+    if (!exists) {
+      missingTrackList.push({
+        title: clearTitle(track.title),
+        rating: 5,
+      });
+      missingTracks.push({
+        title: cleanTrackTitle(track.title),
+        path: track.path,
+        duration: track.duration,
+      });
+    }
+  }
+
+  // Combine both
+  album.tracks = [...matchedTracks, ...missingTracks];
+  album.info.trackList = [...album.info.trackList, ...missingTrackList];
+
+  // Sort both arrays
+  album.info.trackList.sort(sortByTrackNumber);
+  album.tracks.sort(sortByTrackNumber);
+
+  album.jsonPath = confPath;
+
+  if (album.tracks.length > 0) {
+    albums.push(album);
+    albumsPath.set(folderPath, album);
+    albumsPathLoaded.add(folderPath);
+  } else {
+    nonAlbumsPath.add(folderPath);
+  }
+}
+
+async function scanMusicFolder(rootPath) {
   async function processFolder(folderPath) {
     try {
-      const entries = fs.readdirSync(folderPath, { withFileTypes: true });
-      const files = entries
-        .filter((entry) => entry.isFile())
-        .map((entry) => entry.name);
-      const dirs = entries.filter((entry) => entry.isDirectory());
-
-      // Look for audio files in this folder
-      let audioFiles = files.filter((file) => {
-        const ext = path.extname(file).toLowerCase();
-        return [
-          ".mp3",
-          ".wav",
-          ".aac",
-          ".alac",
-          ".flac",
-          ".ogg",
-          ".m4a",
-          ".m4p",
-          ".movpkg",
-        ].includes(ext);
-      });
-
-      // Sort audio files by the leading number in the filename
-      audioFiles.sort((a, b) => {
-        const numA = parseInt(a.match(/^\d+/)?.[0], 10) || Infinity;
-        const numB = parseInt(b.match(/^\d+/)?.[0], 10) || Infinity;
-        return numA - numB;
-      });
-
-      if (audioFiles.length > 0) {
-        const album = {
-          name: path.basename(folderPath),
-          path: folderPath,
-          tracks: [],
-          info: {
-            trackList: [],
-            description: {
-              name: path.basename(folderPath),
-              author: path.basename(path.dirname(folderPath)),
-              label: "none",
-              description: "",
-              year: "year",
-              genre: fromExternalProvider ? "from external provider." : "genre",
-              color: "#AAAAAA",
-              cover: null,
-              copyrightFree: false,
-              favourite: false,
-            },
-          },
-        };
-
-        // Initialize or read music.json
-        const confPath = path.join(folderPath, "reload.json");
-        //deleteConfPath(folderPath, 'reload1.json')
-
-        let shouldExtractColor = false;
-
-        if (!fromExternalProvider && !fs.existsSync(confPath)) {
-          // no json → build new
-          album.info.trackList = audioFiles.map((file) => ({
-            title: path.basename(file, path.extname(file)).trim(),
-            rating: 5,
-          }));
-
-          const possible_txts = [
-            ["Author.txt", "author"],
-            ["Genre.txt", "genre"],
-            ["Year.txt", "year"],
-            ["color.txt", "color"],
-          ];
-          for (const [txtFile, key] of possible_txts) {
-            const txtPath = path.join(folderPath, txtFile);
-            if (fs.existsSync(txtPath)) {
-              try {
-                let content = fs.readFileSync(txtPath, "utf8").trim();
-                if (content) {
-                  content = content.trim();
-                  const contentToLowerCase = content.toLowerCase();
-                  // ignore unknown values from python
-                  if (
-                    !(
-                      contentToLowerCase === "unknown" ||
-                      contentToLowerCase === "n/a" ||
-                      contentToLowerCase === "0000"
-                    )
-                  ) {
-                    album.info.description[key] = content;
-                  }
-                }
-              } catch (err) {
-                console.error(`Error reading ${txtFile}:`, err);
-              }
-            }
-          }
-          shouldExtractColor = true; // the python code might be shit.
-
-          try {
-            fs.writeFileSync(
-              confPath,
-              JSON.stringify(album.info, null, 4),
-              "utf8",
-            );
-          } catch (err) {
-            console.error("Error creating json:", err);
-          }
-        } else if (!fromExternalProvider) {
-          // json exists → load it
-          try {
-            const data = fs.readFileSync(confPath, "utf8");
-            const parsedData = JSON.parse(data);
-            // Merge parsed data with default structure to ensure all properties exist
-            if (parsedData) {
-              album.info.description = {
-                ...album.info.description,
-                ...parsedData.description,
-              };
-              album.info.trackList =
-                parsedData.trackList || album.info.trackList;
-            }
-
-            // mark for extraction only if color missing/placeholder
-            if (
-              !album.info.description.color ||
-              ["#AAAAAA", "#FFFFFF"].includes(album.info.description.color)
-            ) {
-              shouldExtractColor = true;
-            }
-          } catch (err) {
-            console.error("Error reading or parsing json:", err);
-            shouldExtractColor = true;
-          }
-        } else {
-          // external provider fallback
-          album.info.trackList = audioFiles.map((file) => ({
-            title: path.basename(file, path.extname(file)).trim(),
-            rating: 5,
-          }));
-          shouldExtractColor = true;
-        }
-
-        // ✅ only rasterize cover if needed
-        if (album.info.description.cover && shouldExtractColor) {
-          album.info.description.color = await getImgColor(
-            album.info.description.cover,
-          );
-          try {
-            fs.writeFileSync(
-              confPath,
-              JSON.stringify(album.info, null, 4),
-              "utf8",
-            );
-          } catch (err) {
-            console.error("Error updating json with color:", err);
-          }
-        } else if (!album.info.description.cover) {
-          album.info.description.cover = await lookForCover(folderPath, files);
-          if (album.info.description.cover) {
-            album.info.description.color = await getImgColor(
-              album.info.description.cover,
-            );
-            try {
-              fs.writeFileSync(
-                confPath,
-                JSON.stringify(album.info, null, 4),
-                "utf8",
-              );
-            } catch (err) {
-              console.error("Error updating json with color:", err);
-            }
-          }
-        }
-
-        // Utility functions
-        const cleanTrackTitle = (title) =>
-          title.replace(/^\d+\s*\.?\s*/, "").trim();
-
-        const clearTitle = (title) => title.toLowerCase().trim();
-
-        const sortByTrackNumber = (a, b) => {
-          const numA = parseInt(a.title.match(/^\d+/)?.[0] || Infinity, 10);
-          const numB = parseInt(b.title.match(/^\d+/)?.[0] || Infinity, 10);
-          return numA - numB;
-        };
-
-        // Process audio files
-        const ungarnizedTracks = await Promise.all(
-          audioFiles.map(async (audioFile) => {
-            const trackPath = path.join(folderPath, audioFile);
-            const rawTitle = path.basename(audioFile, path.extname(audioFile));
-
-            try {
-              const metadata = await mm.parseFile(trackPath);
-
-              if (metadata.common && shouldExtractColor) {
-                const {
-                  artist,
-                  album: alb,
-                  year,
-                  genre,
-                  label,
-                  copyright,
-                  comment,
-                  description,
-                } = metadata.common;
-
-                if (artist) album.info.description.author = artist;
-                if (alb) album.name = alb;
-                if (year) album.info.description.year = year;
-                if (genre?.length) album.info.description.genre = genre[0];
-                if (label) album.info.description.label = label;
-
-                // Set copyright as true/false
-                album.info.description.copyrightFree = !(
-                  copyright && copyright.trim() !== ""
-                );
-
-                // Add description (from comment or description tag)
-                const descText = Array.isArray(comment)
-                  ? comment.join(" ")
-                  : description || null;
-
-                if (descText)
-                  album.info.description.description = descText.trim();
-              }
-
-              return {
-                title: rawTitle,
-                path: trackPath,
-                duration: metadata.format.duration || 0,
-              };
-            } catch (err) {
-              console.error(`Error parsing metadata for ${rawTitle}:`, err);
-              return {
-                title: rawTitle,
-                path: trackPath,
-                duration: 0,
-                label: null,
-                copyright: null,
-              };
-            }
-          }),
-        );
-
-        // Build lookup map for efficient matching
-        const trackMap = new Map(
-          ungarnizedTracks.map((t) => [clearTitle(t.title), t]),
-        );
-
-        // Match with trackList
-        album.tracks = album.info.trackList
-          .map((track) => {
-            const match = trackMap.get(clearTitle(track.title));
-            if (match) {
-              return {
-                title: cleanTrackTitle(match.title),
-                path: match.path,
-                duration: match.duration,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
-
-        // Sort both arrays
-        album.info.trackList.sort(sortByTrackNumber);
-        album.tracks.sort(sortByTrackNumber);
-
-        album.jsonPath = confPath;
-
-        if (album.tracks.length > 0) albums.push(album);
-      }
+      await processMusicFolder(folderPath);
+      const dirs = fs
+        .readdirSync(folderPath, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory());
 
       // Recurse into subdirectories
       for (const dir of dirs) {
@@ -773,7 +896,7 @@ async function scanMusicFolder(rootPath, fromExternalProvider = false) {
     console.error(`Music library path does not exist: ${rootPath}`);
   }
 
-  return albums;
+  return true;
 }
 
 function getSystemTheme() {
@@ -958,13 +1081,18 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 
   win.loadFile(absolutePath);
-  openedWindows.set(absolutePath, win);
+  win.webContents.on("did-finish-load", () => {
+    const title = win.getTitle();
 
-  // Handle focus events for external windows
-  win.on("focus", () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("muffleAudio");
-      audioIsMuffled = true;
+    // Handle focus events for external windows
+    if (title !== "reload - Mini player") {
+      openedWindows.set(absolutePath, win);
+      win.on("focus", () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("muffleAudio");
+          audioIsMuffled = true;
+        }
+      });
     }
   });
 
@@ -1095,7 +1223,7 @@ ipcMain.handle("reload-main-page", () => {
   return false; // failed
 });
 
-function rbgToHex(rgb) {
+function rgbToHex(rgb) {
   let r, g, b;
   if (Array.isArray(rgb)) {
     [r, g, b] = rgb;
@@ -1173,7 +1301,24 @@ async function getImgColor(imgPath) {
   if (imgPath && fs.existsSync(imgPath)) {
     try {
       const color = await ColorThief.getColor(imgPath);
-      return rbgToHex(color);
+      return rgbToHex(color);
+    } catch (error) {
+      console.error(
+        "\x1b[38;5;160mError extracting color from image:\x1b[38;5;38m",
+        error,
+      );
+      return "#AAAAAA"; // default color on error
+    }
+  }
+  return "#AAAAAA"; // default color if no image
+}
+
+async function getImgPalette(imgPath) {
+  if (imgPath && fs.existsSync(imgPath)) {
+    try {
+      const arrColors = await ColorThief.getPalette(imgPath, 10);
+      const colors = arrColors.map((color) => rgbToHex(color));
+      return colors;
     } catch (error) {
       console.error(
         "\x1b[38;5;160mError extracting color from image:\x1b[38;5;38m",

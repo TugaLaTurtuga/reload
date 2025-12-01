@@ -12,6 +12,8 @@
     "updateLibrary": "",
     "loadLibrary": "",
     "renderLibrary": "",
+    "checkAlbumArtSize": "",
+    "putAlbumBackArtInPlace": "e",
     "openAlbum": "album",
     "backToLibrary": "",
     "editAlbum": "",

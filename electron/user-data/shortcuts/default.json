@@ -7,6 +7,8 @@
     "whenPressed": {
       " ": "togglePlayPause()",
       "b": "clickVirtualCursor(0)",
+      "d": "clickVirtualCursor(0)",
+      "k": "clickVirtualCursor(0)",
       "f10": "toggleMute()",
       "v": "playPrevious()",
       "n": "playNext()",

@@ -41,6 +41,8 @@ const playerControls = document.getElementById("player-controls");
 let songs = []; // the fetched albums/comps/eps/singles
 let songsMap = new Map();
 
+let settingsUpdatedByItself = false;
+
 let settings = {
   currentPlayingAlbum: null, // the album the music is currently playing from
   currentTrackIndex: -1, // the place on the album where the track is

@@ -57,6 +57,8 @@ async function saveSettings() {
   } else {
     settings.tracksTimer = audioPlayer.currentTime;
   }
+
+  settingsUpdatedByItself = true;
   await ipcRenderer.invoke("save-settings", settings);
 }
 
@@ -90,7 +92,10 @@ window.addEventListener("beforeunload", async (e) => {
 // this saves correctly on exit.
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
   await loadSettings(true, updatedSettings);
-  updateSettings();
+  if (!settingsUpdatedByItself) {
+    updateSettings();
+  }
+  settingsUpdatedByItself = false;
 });
 
 ipcRenderer.on("music-json-updated", updateLibrary);
@@ -122,15 +127,17 @@ navItems.forEach((item) => {
 });
 
 loadSettings();
-loadLibrary();
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("load", () => {
+  loadLibrary();
   playLoadedAudioFromSettings();
   setVolume();
   sController.updateSliders();
   document.getElementById("spinner")?.remove();
+
   ipcRenderer.invoke("getMuffleStatus").then((status) => {
     if (status) muffleAudio(0);
   });
+
   loadFavouritesToSidebar();
 });
 
