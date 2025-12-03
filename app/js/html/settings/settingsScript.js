@@ -438,7 +438,7 @@ function changeChangeLog(key) {
     if (changeLogDate) changeLogDate.textContent = changeLogs[key].date || "";
     if (changeLogContent) {
       changeLogContent.innerHTML = "";
-      const logs = changeLogs[key].logs.split("-");
+      const logs = changeLogs[key].logs.split("\n");
       logs.forEach((log) => {
         let text = log.trim();
         if (!text) return; // skip empty entries
