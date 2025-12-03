@@ -1,7 +1,4 @@
 node_modules/
-.gitattributes
-.gitignore
-.git
 bun.lock
 .Ds_Store
-.packgage-lock.json
+packgage-lock.json
