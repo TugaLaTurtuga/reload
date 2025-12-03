@@ -24,7 +24,7 @@ function updateTracks(trackList) {
 async function updateLibrary() {
   try {
     // Reload the library
-    songs = await ipcRenderer.invoke("get-library");
+    songs = await ipcRenderer.invoke("rescan-library");
     songsMap = new Map(songs.map((song) => [song.path, song]));
     renderLibrary();
 
@@ -79,7 +79,7 @@ function renderLibrary() {
     albumCard.innerHTML = `
       <div class="album-cover" style="background-image: url('${album.info.description.cover}')"></div>
       <div class="album-info">
-        <div class="album-title">${album.info.description.title || album.name}</div>
+        <div class="album-title">${album.info.description.name || album.name}</div>
         <div class="album-artist">${album.info.description.author}</div>
       </div>
     `;
@@ -150,13 +150,15 @@ document.addEventListener("mousemove", (e) => {
 // Open album view
 async function openAlbum(album) {
   if (!album) return;
+  if (!fs.existsSync(album.path)) {
+    // doesn't exist
+    backToLibrary();
+    return;
+  }
 
-  if (!album.info.trackList) {
-    // get the uncompressed album
-    const fullAlbum = songsMap.get(album.path);
-    if (fullAlbum) {
-      album = fullAlbum;
-    }
+  const fullAlbum = songsMap.get(album.path);
+  if (fullAlbum) {
+    album = fullAlbum;
   }
   settings.currentAlbum = album;
 
@@ -172,8 +174,12 @@ async function openAlbum(album) {
     albumArt.style.backgroundImage = "none";
   }
 
-  document.getElementById("album-back-art").style.backgroundImage =
-    albumArt.style.backgroundImage;
+  if (!settings.currentAlbum.info.description.cover.endsWith(".gif")) {
+    document.getElementById("album-back-art").style.backgroundImage =
+      albumArt.style.backgroundImage;
+  } else {
+    document.getElementById("album-back-art").style.backgroundImage = "none";
+  }
 
   albumArt.addEventListener("click", () => {
     setNextTracksFromAlbum(album, 0);

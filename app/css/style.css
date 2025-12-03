@@ -522,6 +522,7 @@ nav ul {
 #album-back-art {
   position: absolute;
   display: none;
+  background: none;
   top: 0;
   left: 0;
   width: 310px;

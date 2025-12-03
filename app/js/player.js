@@ -411,7 +411,11 @@ function updateMediaSessionMetadata(track, albumDescription) {
   let mimeType = "image/*";
 
   if (albumDescription?.cover) {
-    // If you wrote getImgBase64AndMimeType(filePath) to return [dataUrl, mime]
+    if (!fs.existsSync(settings.currentPlayingAlbum.info.description.cover)) {
+      const fullAlbum = songsMap.get(settings.currentPlayingAlbum.path);
+      settings.currentPlayingAlbum = fullAlbum;
+      albumDescription = fullAlbum.info.description;
+    }
     [cover, mimeType] = getImgBase64AndMimeType(albumDescription.cover);
   }
 
@@ -470,13 +474,23 @@ if ("mediaSession" in navigator) {
 }
 
 // Apply muffling effect
-function muffleAudio(time = 0.5) {
-  if (isMuffled || !audioCtx) return;
-  const now = audioCtx.currentTime;
-  filterNode.frequency.cancelScheduledValues(now);
-  filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
-  filterNode.frequency.linearRampToValueAtTime(175, now + time);
-  isMuffled = true;
+async function muffleAudio(time = 0.5) {
+  if (isMuffled) return;
+  const tries = 10;
+  const timeout = 50;
+  for (let i = 0; i < tries; i++) {
+    if (audioCtx) {
+      const now = audioCtx.currentTime;
+      filterNode.frequency.cancelScheduledValues(now);
+      filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
+      filterNode.frequency.linearRampToValueAtTime(175, now + time);
+      isMuffled = true;
+    }
+
+    if (i < tries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+    }
+  }
 }
 
 // Remove muffling effect

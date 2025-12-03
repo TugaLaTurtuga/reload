@@ -52,6 +52,18 @@ async function extractAndSaveFunctions() {
           .join(", ");
       };
 
+      const functionDeclRe =
+        /(?:async\s+)?function\s+([a-zA-Z_$][\w$]*)\s*\(([^)]*)\)/g;
+
+      const namedFuncExprRe =
+        /(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*function(?:\s+[a-zA-Z_$][\w$]*)?\s*\(([^)]*)\)/g;
+
+      const arrowFuncRe =
+        /(?:var|let|const)\s+([a-zA-Z_$][\w$]*)\s*=\s*(?:async\s+)?(?:\(([^)]*)\)|([a-zA-Z_$][\w$]*))\s*=>/g;
+
+      const methodPropRe =
+        /([a-zA-Z_$][\w$]*)\s*:\s*(?:async\s+)?function\s*\(([^)]*)\)/g;
+
       // function declarations
       while ((m = functionDeclRe.exec(code)) !== null) {
         const name = m[1];

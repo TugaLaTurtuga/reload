@@ -494,7 +494,7 @@ ipcMain.handle("rescan-library", async () => {
       Date.now() - startTime + "ms",
     );
     mainWindow.reload();
-    return;
+    return albums;
   } catch (error) {
     console.error("Error scanning music library:", error);
     return [];
@@ -612,13 +612,19 @@ async function processMusicFolder(folderPath) {
   });
 
   const album = {
-    name: path.basename(folderPath),
+    name: (() => {
+      const base = path.basename(folderPath);
+      return base.charAt(0).toUpperCase() + base.slice(1);
+    })(),
     path: folderPath,
     tracks: [],
     info: {
       trackList: [],
       description: {
-        name: path.basename(folderPath),
+        name: (() => {
+          const base = path.basename(folderPath);
+          return base.charAt(0).toUpperCase() + base.slice(1);
+        })(),
         author: path.basename(path.dirname(folderPath)),
         label: "none",
         description: "",
@@ -710,8 +716,11 @@ async function processMusicFolder(folderPath) {
     }
   }
 
-  if (album.info.description.cover && shouldExtractColor) {
+  if (fs.existsSync(album.info.description.cover) && shouldExtractColor) {
     album.info.description.color = await getImgColor(
+      album.info.description.cover,
+    );
+    album.info.description.palette = await getImgPalette(
       album.info.description.cover,
     );
     try {
@@ -719,10 +728,13 @@ async function processMusicFolder(folderPath) {
     } catch (err) {
       console.error("Error updating json with color:", err);
     }
-  } else if (!album.info.description.cover) {
+  } else {
     album.info.description.cover = lookForCover(folderPath, files);
     if (album.info.description.cover) {
       album.info.description.color = await getImgColor(
+        album.info.description.cover,
+      );
+      album.info.description.palette = await getImgPalette(
         album.info.description.cover,
       );
       try {
@@ -730,17 +742,6 @@ async function processMusicFolder(folderPath) {
       } catch (err) {
         console.error("Error updating json with color:", err);
       }
-    }
-  }
-
-  if (true) {
-    album.info.description.palette = await getImgPalette(
-      album.info.description.cover,
-    );
-    try {
-      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
-    } catch (err) {
-      console.error("Error updating json with palette:", err);
     }
   }
 
@@ -970,7 +971,7 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
       fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 4), "utf8");
       saveSettings(unsavedSettings, fromsystemTheme);
     }
-    console.error("❌ Error saving last played info:", error);
+    console.error("Error saving last played info:", error);
     return false;
   }
 }
@@ -1081,16 +1082,27 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 
   win.loadFile(absolutePath);
+
+  win.on("focus", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("muffleAudio");
+      audioIsMuffled = true;
+    }
+  });
+  openedWindows.set(absolutePath, win);
+
   win.webContents.on("did-finish-load", () => {
     const title = win.getTitle();
 
     // Handle focus events for external windows
-    if (title !== "reload - Mini player") {
-      openedWindows.set(absolutePath, win);
+    if (title === "reload - Mini player") {
+      if (openedWindows.has(absolutePath)) {
+        openedWindows.delete(absolutePath);
+      }
       win.on("focus", () => {
         if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send("muffleAudio");
-          audioIsMuffled = true;
+          mainWindow.webContents.send("unmuffleAudio");
+          audioIsMuffled = false;
         }
       });
     }
@@ -1262,25 +1274,27 @@ function lookForCover(folderPath, files) {
     let leading_candidate = -1;
     let leading_candidate_score = -1;
     for (let i = 0; i < coverFiles.length; i++) {
-      const file = coverFiles[i];
+      const file = coverFiles[i].toLowerCase();
       let score = 0;
       let nameHasCoverInit = false;
-      if (file.toLowerCase().includes("cover")) {
+
+      if (file.endsWith(".gif")) score += 15;
+      if (file.includes("cover")) {
         score += 10;
         nameHasCoverInit = true;
       }
 
-      if (file.toLowerCase().includes("front")) {
+      if (file.includes("front")) {
         if (nameHasCoverInit)
           score -= 3; // this allows to have 'Cover.png' to win over 'FrontCover.png'
         else score += 5;
-      } else if (file.toLowerCase().includes("back")) {
+      } else if (file.includes("back")) {
         if (nameHasCoverInit) score -= 4;
         else score += 4;
-      } else if (file.toLowerCase().includes("album")) {
+      } else if (file.includes("album")) {
         if (nameHasCoverInit) score -= 2;
         else score += 3;
-      } else if (file.toLowerCase().includes("folder")) {
+      } else if (file.includes("folder")) {
         if (nameHasCoverInit) score -= 1;
         else score += 2;
       }
