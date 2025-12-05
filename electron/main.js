@@ -11,6 +11,7 @@ const {
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const mm = require("music-metadata");
 const ColorThief = require("colorthief");
 const { getFonts } = require("font-list");
@@ -1517,4 +1518,111 @@ ipcMain.handle("remove-shortcut", async (event, shortcutName) => {
     console.error("Failed to remove shortcut:", err);
     return false;
   }
+});
+
+// Path to pywal theme
+const pywalThemePath = path.join(os.homedir(), ".cache", "wal", "colors.json");
+
+// Read current theme
+function loadPywalTheme() {
+  try {
+    const data = fs.readFileSync(pywalThemePath, "utf8");
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Failed to read Pywal theme:", err);
+    return null;
+  }
+}
+
+// Watch for Pywal theme changes
+function watchPywalTheme() {
+  // Send theme on startup
+  let theme = loadPywalTheme();
+  if (theme) {
+    transformPywalTheme(theme);
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send("settings-updated");
+    });
+  }
+
+  // Watch for changes
+  fs.watch(pywalThemePath, { persistent: true }, () => {
+    theme = loadPywalTheme();
+    if (theme) {
+      transformPywalTheme(theme);
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send("settings-updated");
+      });
+    }
+  });
+}
+
+function extractVarFromBlock(block, varName) {
+  const regex = new RegExp(`${varName}:\\s*([^;]+);`);
+  const match = block.match(regex);
+  return match ? match[1].trim() : null;
+}
+
+function transformPywalTheme(theme) {
+  const themeCSSPath = path.join(__dirname, "../app/css/themes.css");
+
+  fs.readFile(themeCSSPath, "utf8", (err, css) => {
+    if (err) {
+      console.error("Failed to read theme CSS:", err);
+      return;
+    }
+
+    // --- 1. Extract ONLY the current Pywal block ---
+    const pywalBlockRegex =
+      /\/\* Pywal mode \*\/[\s\S]*?\[theme="pywal"\][\s\S]*?}/i;
+
+    const oldPywalBlock = css.match(pywalBlockRegex)?.[0] || "";
+
+    // Extract old values (if they exist)
+    const oldColorBlend = extractVarFromBlock(oldPywalBlock, "--colorBlend");
+    const oldFont = extractVarFromBlock(oldPywalBlock, "--font");
+
+    const colorBlend = oldColorBlend ?? "0.5"; // default fallback
+    const font = oldFont ?? "Rubik, sans-serif";
+
+    // --- 2. Remove the old block completely ---
+    const cssWithoutOld = css.replace(pywalBlockRegex, "").trim();
+
+    // --- 3. Generate the new Pywal theme block ---
+    const newPywalBlock = `
+/* Pywal mode */
+[theme="pywal"] {
+  --activeColor: ${theme.colors.color1};
+  --bg-1: ${theme.colors.color1}22;
+  --bg-2: ${theme.colors.color0};
+  --colorBlend: ${colorBlend};
+  --ControlsBtnsColor: ${theme.colors.color2};
+  --font: ${font};
+  --sidebarColor: ${theme.colors.color3}33;
+  --sliderBgColor: ${theme.colors.color3};
+  --spinnerColor: ${theme.colors.color1};
+  --textColor: ${theme.colors.color7};
+  --textSubColor: ${theme.colors.color15};
+  --trackItemColor: ${theme.colors.color3}77;
+  --trackItemOddColor: ${theme.colors.color3}55;
+  --trackItemOnHover: ${theme.colors.color4}77;
+}
+`.trim();
+
+    const finalCSS = cssWithoutOld + "\n\n" + newPywalBlock + "\n";
+
+    // --- 4. Save back to file ---
+    fs.writeFile(themeCSSPath, finalCSS, (err) => {
+      if (err) {
+        console.error("Failed to write theme CSS:", err);
+      }
+    });
+  });
+}
+
+app.whenReady().then(() => {
+  // Watch the theme file after window is ready
+  mainWindow.webContents.on("did-finish-load", () => {
+    watchPywalTheme();
+  });
 });

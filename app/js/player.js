@@ -317,6 +317,7 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
       src.type = "audio/mpeg";
       break;
     case "m4a":
+    case "mov":
     case "aac":
       src.type = "audio/mp4";
       break;

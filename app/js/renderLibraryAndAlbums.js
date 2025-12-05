@@ -140,10 +140,14 @@ function putAlbumBackArtInPlace(e) {
   let cursorYdiff = Math.min(30, Math.max(-30, (e.clientY - top) / 20));
 
   aba.style.left = left - cursorXdiff + "px";
-  aba.style.top = top - cursorYdiff + "px";
+  aba.style.top = top - cursorYdiff - mainContent.scrollTop + "px";
 }
 
 document.addEventListener("mousemove", (e) => {
+  putAlbumBackArtInPlace(e);
+});
+
+document.addEventListener("wheel", (e) => {
   putAlbumBackArtInPlace(e);
 });
 

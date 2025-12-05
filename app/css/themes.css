@@ -748,6 +748,9 @@
 }
 
 
+
+
+
 /* Retro wave mode */
 [theme="retro-wave"] {
   --activeColor: #ff6ec7;
@@ -916,4 +919,22 @@
   --trackItemColor: #222222;
   --trackItemOddColor: #1c1c1c;
   --trackItemOnHover: #2a2a2a;
+}
+
+/* Pywal mode */
+[theme="pywal"] {
+  --activeColor: #DB283E;
+  --bg-1: #DB283E22;
+  --bg-2: #080C11;
+  --colorBlend: 1;
+  --ControlsBtnsColor: #31468A;
+  --font: Rubik, sans-serif;
+  --sidebarColor: #7A7C8233;
+  --sliderBgColor: #7A7C82;
+  --spinnerColor: #DB283E;
+  --textColor: #cdcdcf;
+  --textSubColor: #cdcdcf;
+  --trackItemColor: #7A7C8277;
+  --trackItemOddColor: #7A7C8255;
+  --trackItemOnHover: #8B7F8577;
 }
