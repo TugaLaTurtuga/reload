@@ -2,3 +2,5 @@ node_modules/
 bun.lock
 .Ds_Store
 packgage-lock.json
+.vscode
+.github
