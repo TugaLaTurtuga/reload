@@ -23,7 +23,8 @@
       ";": "clickVirtualCursor(0)",
       "backspace": "goBack()",
       "escape": "backToLibrary()",
-      "home": "backToLibrary()"
+      "home": "backToLibrary()",
+      "/": "toggleFinder()"
     },
     "whenUnpressed": {},
     "whenDown": {

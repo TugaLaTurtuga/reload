@@ -47,40 +47,31 @@ class InputManager {
       "arrowleft",
       "arrowright",
     ];
+
+    this.isUsingInputBox = false;
   }
 
   // Set up event listeners for tracking keyboard & mouse inputs
   _setupEventListeners() {
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
-      if (this.nonDefaultKeys.includes(key)) e.preventDefault();
 
-      if (e.metaKey) {
-        this.lastPressedKeys.add("cmd");
-        if (this.logKeyPress) console.log(`super/command/windows key pressed`);
-      }
-      if (e.ctrlKey) {
-        this.lastPressedKeys.add("ctrl");
-        if (this.logKeyPress) console.log(`key "ctrl" pressed`);
-      }
-      if (e.shiftKey) {
-        this.lastPressedKeys.add("shift");
-        if (this.logKeyPress) console.log(`key "shift" pressed`);
-      }
-      if (e.altKey) {
-        this.lastPressedKeys.add("alt");
-        if (this.logKeyPress) console.log(`key "alt" pressed`);
-      }
+      if (e.metaKey) this.lastPressedKeys.add("meta");
+      if (e.ctrlKey) this.lastPressedKeys.add("ctrl");
+      if (e.altKey) this.lastPressedKeys.add("alt");
+      if (e.shiftKey) this.lastPressedKeys.add("shift");
+      if (this.preventDefaultOnKey.includes(key) && !this.isUsingInputBox)
+        e.preventDefault();
+      if (this.nonDefaultKeys.includes(key) && !this.isUsingInputBox)
+        e.preventDefault();
 
-      if (this.logKeyPress) console.log(`Key "${key}" pressed`);
-      if (this.preventDefaultOnKey.includes(key)) e.preventDefault();
       this.lastPressedKeys.add(key);
     });
 
     document.addEventListener("keyup", (e) => {
       const key = e.key.toLowerCase();
       this.lastPressedKeys.delete(key);
-      if (!e.metaKey) this.lastPressedKeys.delete("cmd");
+      if (!e.metaKey) this.lastPressedKeys.delete("meta");
       if (!e.ctrlKey) this.lastPressedKeys.delete("ctrl");
       if (!e.shiftKey) this.lastPressedKeys.delete("shift");
       if (!e.altKey) this.lastPressedKeys.delete("alt");
@@ -172,8 +163,20 @@ class InputManager {
 
     // Check keyboard input
     if (input.includes("+")) {
-      const keys = input.split(" + ").map((key) => key.trim());
-      return keys.every((key) => this.lastPressedKeys.has(key));
+      const keys = input.split("+").map((key) => key.trim());
+      if (this.isUsingInputBox) {
+        if (
+          (input.includes("ctrl") && this.lastPressedKeys.has("ctrl")) ||
+          (input.includes("alt") && this.lastPressedKeys.has("alt")) ||
+          (input.includes("meta") && this.lastPressedKeys.has("meta"))
+        ) {
+          return keys.every((key) => this.lastPressedKeys.has(key));
+        } else {
+          return;
+        }
+      } else {
+        return keys.every((key) => this.lastPressedKeys.has(key));
+      }
     }
 
     // Check mouse buttons (e.g., "mouse0" for left click)
@@ -186,7 +189,8 @@ class InputManager {
       return this.gamepadButtons.has(input);
     }
 
-    return this.lastPressedKeys.has(input);
+    if (!this.isUsingInputBox) return this.lastPressedKeys.has(input);
+    else return;
   }
 
   // Get current mouse position
@@ -228,5 +232,15 @@ class InputManager {
 
       targetElement.dispatchEvent(new MouseEvent("mouseup", eventOptions));
     }
+  }
+
+  beginInputChange() {
+    this.isUsingInputBox = true;
+    this.lastPressedKeys.clear();
+  }
+
+  finishInputChange() {
+    this.isUsingInputBox = false;
+    this.lastPressedKeys.clear();
   }
 }

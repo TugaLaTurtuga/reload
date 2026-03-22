@@ -79,6 +79,14 @@ let settings = {
     labelImportance: 0.1,
     ratingImportance: 0.6,
   },
+  organization: {
+    seperateAlbumsFromSingles: false,
+    organizeByArtist: false,
+    organizeByGenre: false,
+    organizeByYear: false,
+    organizeByMostListened: false,
+    showOrganizationName: false,
+  },
 };
 
 function getCurrenrVirtualCursorElements() {

@@ -154,6 +154,7 @@ document.addEventListener("wheel", (e) => {
 // Open album view
 async function openAlbum(album) {
   if (!album) return;
+  console.log(album);
   if (!fs.existsSync(album.path)) {
     // doesn't exist
     backToLibrary();
