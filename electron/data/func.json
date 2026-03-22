@@ -68,6 +68,7 @@
     "openExternalHtml": "relativePathFromHtml",
     "goBack": "",
     "goForward": "",
+    "toggleFinder": "fromInput",
     "extractAndSaveFunctions": "",
     "extractTopLevelFunctions": "code",
     "starts": "all types",

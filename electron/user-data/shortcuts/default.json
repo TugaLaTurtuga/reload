@@ -23,7 +23,9 @@
       "enter": "clickVirtualCursor(0)",
       "backspace": "goBack()",
       "escape": "backToLibrary()",
-      "home": "backToLibrary()"
+      "home": "backToLibrary()",
+      "meta + f": "toggleFinder()",
+      "ctrl + f": "toggleFinder()"
     },
     "whenUnpressed": {},
     "whenDown": {

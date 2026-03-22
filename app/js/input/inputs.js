@@ -232,7 +232,7 @@ function executeCall(descriptor, ctx = {}) {
   }
 }
 
-// ---------------- Preprocess mappings (single helper) ----------------
+// Preprocess mappings (single helper)
 const MODES = [
   "whenPressed",
   "whenUnpressed",
@@ -259,7 +259,7 @@ function preprocessInputType(section = {}, isGamepad = false) {
 
 let normalizedInputs = {};
 
-// ---------------- Try removing default events (best-effort) ----------------
+// Try removing default events
 try {
   if (
     typeof inp !== "undefined" &&
@@ -299,7 +299,7 @@ function getActiveForKey(type, key, axes, deadzone) {
   return { active: Boolean(inp.Get(key)), value: undefined };
 }
 
-// ---------------- Main per-frame processor (single, small loop) ----------------
+// Main per-frame processor (single, small loop)
 const keyState = new Map();
 
 function processType(typeName, typeDesc) {
@@ -316,6 +316,7 @@ function processType(typeName, typeDesc) {
     const D = typeDesc.modes; // descriptors per mode
     if (D.whenPressed && active && !prev)
       executeCall(D.whenPressed[key], { value, globals });
+
     if (D.whenUnpressed && !active && prev)
       executeCall(D.whenUnpressed[key], { value, globals });
     if (D.whenUp && !active && prev)
