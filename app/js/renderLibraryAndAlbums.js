@@ -71,18 +71,59 @@ async function loadLibrary() {
 // Render music library
 function renderLibrary() {
   // Render albums
+  albumOpened = false;
   albumsSection.innerHTML = "";
   songs.forEach((album) => {
+    let containsFinder = [false, false, false];
+
+    const albumName = album.info.description.name || album.name;
+    if (finderSearchWord) {
+      if (albumName.toLowerCase().includes(finderSearchWord.toLowerCase()))
+        containsFinder[0] = true;
+
+      if (
+        album.info.description.author
+          .toLowerCase()
+          .includes(finderSearchWord.toLowerCase())
+      ) {
+        containsFinder[1] = true;
+      }
+
+      for (let i = 0; i < album.tracks.length; i++) {
+        const track = album.tracks[i];
+        if (
+          getTrackName(track)
+            .toLowerCase()
+            .includes(finderSearchWord.toLowerCase())
+        ) {
+          containsFinder[2] = true;
+          break;
+        }
+      }
+
+      if (!containsFinder[0] && !containsFinder[1] && !containsFinder[2]) {
+        return;
+      }
+    }
+
     const albumCard = document.createElement("div");
     albumCard.className = "album-card";
-    //albumCard.setAttribute("title", "Open album");
     albumCard.innerHTML = `
       <div class="album-cover" style="background-image: url('${album.info.description.cover}')"></div>
       <div class="album-info">
-        <div class="album-title">${album.info.description.name || album.name}</div>
-        <div class="album-artist">${album.info.description.author}</div>
+        <div class="album-title">
+          ${_highlightMatch(albumName)}
+        </div>
+        <div class="album-artist">
+          ${_highlightMatch(album.info.description.author)}
+        </div>
       </div>
     `;
+
+    if (containsFinder[2]) {
+      albumCard.classList.add("highlight");
+    }
+
     albumCard.addEventListener("click", () => openAlbum(album));
     albumsSection.appendChild(albumCard);
   });
@@ -91,6 +132,13 @@ function renderLibrary() {
   if (settings.currentAlbum) {
     openAlbum(settings.currentAlbum);
   }
+}
+
+function _highlightMatch(text) {
+  const escaped = finderSearchWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "ig");
+
+  return text.replace(regex, `<span class="highlight">$1</span>`);
 }
 
 window.addEventListener("resize", () => {
@@ -153,14 +201,13 @@ document.addEventListener("wheel", (e) => {
 
 // Open album view
 async function openAlbum(album) {
-  if (!album) return;
-  console.log(album);
-  if (!fs.existsSync(album.path)) {
+  if (!album || !fs.existsSync(album.path)) {
     // doesn't exist
     backToLibrary();
     return;
   }
 
+  albumOpened = true;
   const fullAlbum = songsMap.get(album.path);
   if (fullAlbum) {
     album = fullAlbum;
@@ -262,16 +309,20 @@ async function backToLibrary() {
   changeBackgroundGradient(color);
   settings.currentAlbum = null;
   putAlbumBackArtInPlace(null);
+
+  renderLibrary();
   return true;
 }
 
 async function editAlbum() {
-  // for html/musicEditor.html know what file to load
-  const savePath = path.join(__dirname, "saves", "jsonToLoad.txt");
-  try {
-    await fs.writeFileSync(savePath, settings.currentAlbum.jsonPath, "utf8");
+  console.log("run");
+  const savedCorrectly = await ipcRenderer.invoke(
+    "setJsonToLoad",
+    settings.currentAlbum.jsonPath,
+  );
+
+  if (savedCorrectly) {
+    console.log("ran");
     openExternalHtml("html/musicEditor.html");
-  } catch (err) {
-    console.error("Error saving current album:", err);
   }
 }

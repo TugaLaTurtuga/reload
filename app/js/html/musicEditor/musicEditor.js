@@ -1,5 +1,3 @@
-const { json } = require("express");
-
 // Global variable to store the music data
 let musicData = {
   trackList: [],
@@ -83,11 +81,11 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
 async function loadMusicData() {
   try {
     loadSettings(); // for theme
-    jsonPath = await fetch("../saves/jsonToLoad.txt").then((res) => res.text());
+    jsonPath = await ipcRenderer.invoke("getJsonToLoad");
     console.log("Loading music data from:", jsonPath);
     const response = await fetch(jsonPath);
     if (!response.ok) {
-      throw new Error("Failed to load music data");
+      console.error("Failed to load music data");
     }
 
     musicData = await response.json();
