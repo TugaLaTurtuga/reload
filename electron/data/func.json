@@ -12,6 +12,7 @@
     "updateLibrary": "",
     "loadLibrary": "",
     "renderLibrary": "",
+    "_highlightMatch": "text",
     "checkAlbumArtSize": "",
     "putAlbumBackArtInPlace": "e",
     "openAlbum": "album",

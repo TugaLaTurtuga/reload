@@ -36,12 +36,16 @@ const trackList = document.getElementById("track-list");
 const background = document.getElementById("app");
 const mainContent = document.getElementById("main-content");
 const playerControls = document.getElementById("player-controls");
+const finder = document.querySelector(".finder");
+const finderInput = finder.querySelector("input");
 
 // App State
 let songs = []; // the fetched albums/comps/eps/singles
 let songsMap = new Map();
+let albumOpened = false;
 
 let settingsUpdatedByItself = false;
+let finderSearchWord = "";
 
 let settings = {
   currentPlayingAlbum: null, // the album the music is currently playing from

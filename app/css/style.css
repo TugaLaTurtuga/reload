@@ -108,6 +108,8 @@ nav ul {
     width: calc(100% - 16px);
     aspect-ratio: 1;
     align-items: center;
+    -webkit-app-region: no-drag;
+    cursor: pointer;
 }
 
 .img {
@@ -347,7 +349,7 @@ nav ul {
 }
 
 .album-card {
-    background-color: var(--sidebarColor);
+    background: var(--sidebarColor);
     backdrop-filter: blur(10px);
     border-radius: 8px;
     overflow: hidden;
@@ -355,6 +357,19 @@ nav ul {
         transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 3),
         background-color 0.2s ease-in;
     cursor: pointer;
+}
+
+.highlight {
+    color: var(--activeColor);
+}
+
+.album-card.highlight {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--activeColor) 20%, var(--sidebarColor)),
+        var(--sidebarColor),
+        color-mix(in srgb, var(--activeColor) 20%, var(--sidebarColor))
+    );
 }
 
 .album-card:hover {
@@ -378,6 +393,7 @@ nav ul {
 .album-title {
     font-weight: 600;
     margin-bottom: 5px;
+    color: var(--textColor);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

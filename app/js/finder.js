@@ -1,13 +1,13 @@
-const finder = document.querySelector(".finder");
-const finderInput = finder.querySelector("input");
 let hasAlreadyToogled = false;
 let wasAlbumOpenedFinder = null;
 
 function toggleFinder(fromInput = false) {
+  finderSearchWord = "";
   if (hasAlreadyToogled && fromInput) {
-    hasAlreadyToogled = !hasAlreadyToogled;
+    hasAlreadyToogled = false;
     return;
   }
+
   if (finder.classList.contains("hide")) {
     finder.classList.remove("hide");
     finder.classList.add("show");
@@ -17,7 +17,7 @@ function toggleFinder(fromInput = false) {
     }, 100);
     inp.beginInputChange();
 
-    if (settings.currentAlbum) {
+    if (settings.currentAlbum && albumOpened) {
       wasAlbumOpenedFinder = settings.currentAlbum;
       backToLibrary();
     } else {
@@ -30,7 +30,7 @@ function toggleFinder(fromInput = false) {
     finderInput.blur();
     inp.finishInputChange();
 
-    if (wasAlbumOpenedFinder !== null) {
+    if (wasAlbumOpenedFinder !== null && !fromInput) {
       setTimeout(() => {
         console.log(wasAlbumOpenedFinder);
         openAlbum(wasAlbumOpenedFinder);
@@ -42,6 +42,23 @@ function toggleFinder(fromInput = false) {
 finderInput.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     e.preventDefault();
+    e.stopPropagation();
     toggleFinder(true);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFinder(true);
+    const albumsDiv = document.querySelectorAll(".album-card");
+    // simulate a click in the first album
+    albumsDiv[0].click();
   }
+});
+
+finderInput.addEventListener("input", () => {
+  finderSearchWord = finderInput.value;
+  renderLibrary();
+});
+
+document.querySelector("#now-playing-small").addEventListener("click", () => {
+  openAlbum(settings.currentPlayingAlbum);
 });

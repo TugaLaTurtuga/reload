@@ -66,6 +66,7 @@ async function extractAndSaveFunctions() {
 
       // function declarations
       while ((m = functionDeclRe.exec(code)) !== null) {
+        if (m[1].startsWith("_")) continue;
         const name = m[1];
         const params = normalizeParams(m[2]);
         functions[name] = params;
@@ -73,6 +74,7 @@ async function extractAndSaveFunctions() {
 
       // named function expressions: const foo = function(...) { }
       while ((m = namedFuncExprRe.exec(code)) !== null) {
+        if (m[1].startsWith("_")) continue;
         const name = m[1];
         const params = normalizeParams(m[2]);
         functions[name] = params;
@@ -80,6 +82,7 @@ async function extractAndSaveFunctions() {
 
       // arrow functions: const foo = (a,b) => {}  OR const foo = x => {}
       while ((m = arrowFuncRe.exec(code)) !== null) {
+        if (m[1].startsWith("_")) continue;
         const name = m[1];
         // params might be in group 2 (parenthesized) or group 3 (single identifier)
         const rawParams = m[2] !== undefined ? m[2] : m[3] || "";
@@ -89,6 +92,7 @@ async function extractAndSaveFunctions() {
 
       // object properties: foo: function(...) { }
       while ((m = methodPropRe.exec(code)) !== null) {
+        if (m[1].startsWith("_")) continue;
         const name = m[1];
         const params = normalizeParams(m[2]);
         functions[name] = params;

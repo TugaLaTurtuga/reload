@@ -47,6 +47,7 @@ if (!fs.existsSync(userDataPath)) {
 
 const settingsFilePath = path.join(userDataPath, "settings.json");
 const libraryFilePath = path.join(userDataPath, "library.json");
+const jsonToLoadPath = path.join(userDataPath, "jsonToLoad.txt");
 let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const albumsPathData = path.join(userDataPath, "albumsPath.json");
@@ -1626,3 +1627,38 @@ app.whenReady().then(() => {
     watchPywalTheme();
   });
 });
+
+ipcMain.handle("getJsonToLoad", () => {
+  return getJsonToLoad();
+});
+
+ipcMain.handle("setJsonToLoad", (event, json) => {
+  return setJsonToLoad(json);
+});
+
+function getJsonToLoad() {
+  // load json
+  if (fs.existsSync(jsonToLoadPath)) {
+    return fs.readFileSync(jsonToLoadPath, "utf8");
+  } else {
+    return null;
+  }
+}
+
+function setJsonToLoad(json) {
+  return new Promise((resolve, reject) => {
+    if (typeof json !== "string") {
+      reject(new TypeError("json must be a string"));
+      return;
+    }
+
+    fs.writeFile(jsonToLoadPath, json, (err) => {
+      if (err) {
+        console.error("Failed to write JSON:", err);
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+}
