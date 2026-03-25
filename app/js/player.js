@@ -133,8 +133,7 @@ async function playTrack(
           audioPlayer.play().catch((err) => {
             console.error("Playback error:", err);
           });
-          playPauseButton.textContent = "⏸";
-          settings.isPlayingMusic = true;
+          setPlaybackState(true);
           return; // no need to update anything (as coded for now)
         }
         case 2: {
@@ -274,13 +273,12 @@ function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
     audioPlayer.removeEventListener("canplay", handleCanPlay); // cleanup
     if (!settings.isPlayingMusic && firstLoad) {
       audioPlayer.pause();
-      playPauseButton.textContent = "▶";
+      setPlaybackState(false, false);
     } else {
       audioPlayer.play().catch((err) => {
         console.error("Playback error:", err);
       });
-      settings.isPlayingMusic = true;
-      playPauseButton.textContent = "⏸";
+      setPlaybackState(true, false);
     }
   });
 
@@ -504,42 +502,74 @@ function unmuffleAudio() {
   isMuffled = false;
 }
 
-// Toggle play/pause
-function togglePlayPause() {
-  if (settings.isPlayingMusic) {
-    audioPlayer.pause();
-    playPauseButton.textContent = "▶";
-  } else {
-    if (settings.currentTrackIndex === -1) {
-      playRandomSong();
-      settings.isPlayingMusic = !settings.isPlayingMusic; // this makes sense... (that how you know it wasn't AI generated)
-    }
-    audioPlayer.play();
-    playPauseButton.textContent = "⏸";
+function setPlaybackState(isPlaying, persist = true) {
+  settings.isPlayingMusic = Boolean(isPlaying);
+  playPauseButton.textContent = settings.isPlayingMusic ? "⏸" : "▶";
+
+  if (persist && typeof saveSettings === "function") {
+    void saveSettings();
   }
 
-  settings.isPlayingMusic = !settings.isPlayingMusic;
+  return settings.isPlayingMusic;
+}
+
+// Toggle play/pause
+async function togglePlayPause() {
+  if (settings.isPlayingMusic) {
+    audioPlayer.pause();
+    return setPlaybackState(false);
+  }
+
+  if (settings.currentTrackIndex === -1 || !audioPlayer.src) {
+    await playRandomSong();
+    return settings.isPlayingMusic;
+  }
+
+  try {
+    await audioPlayer.play();
+  } catch (error) {
+    console.error("Playback error:", error);
+    return false;
+  }
+
+  return setPlaybackState(true);
 }
 
 // Play previous track (uses history stack)
-function playPrevious() {
-  if (settings.previousTracks.length === 0) return;
+async function playPrevious() {
+  if (settings.previousTracks.length === 0) return false;
   const prev = settings.previousTracks.pop();
-  if (!prev || !prev.album || prev.index == null) return;
+  if (!prev || !prev.album || prev.index == null) return false;
 
-  playTrack(prev.index, prev.album, { pushPrev: false });
+  await playTrack(prev.index, prev.album, { pushPrev: false });
+  return true;
 }
 
 // Play next track (uses upcoming queue; random fallback)
-function playNext() {
+async function playNext() {
   if (settings.nextTracks.length > 0) {
     const { album, index } = settings.nextTracks.shift();
-    playTrack(index, album, { pushPrev: true });
-  } else {
-    // Nothing queued — pick a random song
-    playRandomSong();
+    await playTrack(index, album, { pushPrev: true });
+    return true;
   }
+
+  await playRandomSong();
+  return true;
 }
+
+window.handlePlayerCommand = async function handlePlayerCommand(command) {
+  switch (command) {
+    case "toggle-playpause":
+      return togglePlayPause();
+    case "next":
+      return playNext();
+    case "prev":
+      return playPrevious();
+    default:
+      console.warn("Unknown player command:", command);
+      return false;
+  }
+};
 
 // ---------- NEW QUEUE/STACK HELPERS ----------
 function setNextTracksFromAlbum(album, startIndex) {

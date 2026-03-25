@@ -1,0 +1,201 @@
+root {
+    --0-color: red;
+    --1-color: green;
+    --2-color: blue;
+}
+
+#album-art {
+    position: relative;
+    margin-top: 10vh;
+    margin-left: 5vw;
+    width: min(45vw, 80vh) !important;
+    border-radius: 50px;
+    height: auto;
+    aspect-ratio: 1;
+    background-size: cover;
+    object-fit: cover;
+    background-position: center;
+    z-index: 2;
+    box-shadow: -10px 10px 0px 0px
+        color-mix(in srgb, var(--0-color) 50%, transparent);
+}
+
+#background-wrapper {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+#app-background {
+    position: absolute;
+    inset: -20%;
+    width: max(130vw, 130vh);
+    height: max(130vw, 130vh);
+    filter: blur(10px) saturate(2) brightness(0.8);
+    transform: scale(1.2);
+    will-change: transform;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(-10%, -10%) scale(1.25);
+    }
+    100% {
+        transform: translate(10%, 10%) scale(1.2);
+    }
+}
+
+@keyframes subtle-rotate {
+    0% {
+        transform: rotate(0deg) scale(1.22);
+    }
+    100% {
+        transform: rotate(360deg) scale(1.22);
+    }
+}
+
+#app-background {
+    animation:
+        float 1s ease-in-out infinite alternate,
+        subtle-rotate 40s linear infinite;
+}
+
+#track-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-right: 10vw;
+}
+
+#mini-controls {
+    position: relative;
+    padding: 1vh 0px;
+    margin: 2vh 2vw 0;
+    height: 10vw;
+    text-align-last: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+    background: color-mix(in srgb, var(--1-color) 30%, transparent);
+    border-radius: 30px;
+    transition: opacity 0.2s ease;
+}
+
+#mini-controls:hover {
+    opacity: 1;
+}
+
+#mini-controls button {
+    position: relative;
+    font-size: 7vw;
+    aspect-ratio: 1;
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition:
+        transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2),
+        color 0.1s ease-in;
+}
+
+#mini-controls button:hover {
+    transform: scale(1.2);
+    color: var(--0-color);
+}
+
+#mini-controls button:active {
+    transform: scale(0.9);
+}
+
+.sub-sub {
+    color: var(--2-color);
+}
+
+.sub {
+    color: var(--1-color);
+}
+
+.main {
+    color: var(--0-color);
+}
+
+#mini-player {
+    position: relative;
+    margin-top: calc(10vh + 10px);
+    margin-left: -10px;
+    padding: 2vh calc(4vw + 10px);
+    border-radius: 0 50px 50px 0;
+    width: calc(45vw + 10px) !important;
+    height: min(45vw, 80vh) !important;
+    justify-content: center;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+#mini-player:hover {
+    background: color-mix(in srgb, var(--0-color) 50%, transparent);
+}
+
+#track-title {
+    font-size: 8vw;
+    font-weight: 900;
+
+    line-height: 0.9;
+    margin: none;
+    overflow: visible;
+}
+
+#track-artist,
+#track-album {
+    font-size: 3vw;
+    font-weight: 700;
+    line-height: 0.9;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: visible;
+}
+
+#track-album {
+    -webkit-line-clamp: 2;
+    font-size: 2.5vw;
+    font-weight: 600;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+#mini-player #fillment-1 {
+    position: absolute;
+    top: 0;
+    left: -20px;
+    width: 20px;
+    height: 20px;
+    background: inherit;
+}
+
+#mini-player #fillment-2 {
+    position: absolute;
+    bottom: 0;
+    left: -50px;
+
+    width: 50px;
+    height: 100px;
+
+    background: inherit;
+
+    -webkit-mask: radial-gradient(
+        circle at 0% 50%,
+        transparent 50px,
+        black 49px
+    );
+    mask: radial-gradient(circle at 0% 50%, transparent 50px, black 49px);
+}

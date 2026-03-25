@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>reload - Mini player</title>
+
+        <link rel="stylesheet" href="../css/font-renderer.css" />
+        <link
+            rel="stylesheet"
+            href="../css/themes.css"
+            id="themes-stylesheet"
+        />
+        <link rel="stylesheet" href="../css/style.css" />
+        <link rel="stylesheet" href="../css/html/miniPlayer.css" />
+        <link rel="stylesheet" href="../css/slider.css" />
+        <link rel="stylesheet" href="../css/overlay.css" />
+        <link rel="stylesheet" href="../css/toolTip.css" />
+    </head>
+    <body>
+        <img id="album-art" />
+        <div id="mini-player">
+            <div id="fillment-1"></div>
+            <div id="fillment-2"></div>
+            <div id="track-info">
+                <div id="track-album" class="sub"></div>
+                <div id="track-title" class="main"></div>
+                <div id="track-artist" class="sub"></div>
+            </div>
+            <div id="mini-controls">
+                <button id="prev-btn" class="sub-sub">⏮</button>
+                <button id="play-btn" class="sub">▶</button>
+                <button id="next-btn" class="sub-sub">⏭</button>
+            </div>
+        </div>
+
+        <div id="background-wrapper">
+            <div id="app-background"></div>
+        </div>
+
+        <script src="../js/maths.js"></script>
+        <script src="../js/sound/sfx.js"></script>
+        <script src="../js/css/sliders.js"></script>
+        <script src="../js/css/gradientHelper.js"></script>
+        <script src="../js/css/status.js"></script>
+        <script src="../js/css/tooltip.js"></script>
+        <script src="../js/html/miniPlayer/miniPlayer.js"></script>
+    </body>
+</html>
