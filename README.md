@@ -58,10 +58,28 @@ app/js/                 Playback, library rendering, finder, favourites, UI logi
 ### Requirements
 
 - bun
-- `ffmpeg` available on your `PATH` if you want M4P decoding support
 
-### Install
+### Installation
 
+#### Install bun ( if you don't have it )
+
+- MacOS or Linux
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+- Windows
+```powershell
+powershell -c "irm bun.sh/install.ps1 | iex"
+```
+
+#### Clone repository
+```bash
+git clone https://github.com/TugaLaTurtuga/reload.git
+```
+
+#### Install dependencies
+- Inside the cloned repository directory
 ```bash
 ./depedenciesInstallScript.sh
 ```
