@@ -917,7 +917,7 @@ function renderShortcutsInJson(shortcutPath) {
       varDelete.classList.add("var-delete-table", "var-delete");
       varDelete.innerHTML = `<button>X</button>`;
       varDelete.querySelector("button").addEventListener("click", () => {
-        if (confirm("Are you sure you want to delete this row?")) {
+        if (confirm("Are you sure you want to delete this shortcut?")) {
           playSoundAffect("error");
           row.remove();
           delete json[currentKey][currentKey1][key_2];

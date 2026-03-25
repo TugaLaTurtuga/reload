@@ -107,6 +107,10 @@ ipcRenderer.on("unmuffleAudio", () => {
   unmuffleAudio();
 });
 
+ipcRenderer.on("player-command", async (event, command) => {
+  await window.handlePlayerCommand(command);
+});
+
 audioPlayer.addEventListener("timeupdate", updateProgress);
 audioPlayer.addEventListener("ended", playNext);
 audioSource = getAudioSource("curr");

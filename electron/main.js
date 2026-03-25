@@ -53,6 +53,9 @@ const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const albumsPathData = path.join(userDataPath, "albumsPath.json");
 const nonAlbumsPathData = path.join(userDataPath, "nonAlbumsPath.json");
 const openedWindows = new Map();
+const miniPlayerWindowPath = path.resolve(
+  path.join(__dirname, "../app/html/miniPlayer.html"),
+);
 
 let mainWindow;
 let audioIsMuffled = false;
@@ -91,7 +94,7 @@ function createAppMenu() {
           click: () => {
             const musicWatcherPath = path.join(
               __dirname,
-              "../app/html/musicWatcher.html",
+              "../app/html/miniPlayer.html",
             );
             openExternal(musicWatcherPath, true);
           },
@@ -205,9 +208,7 @@ function createWindow() {
 
   // Handle mainWindow focus events
   mainWindow.on("focus", () => {
-    if (openedWindows.size > 0) {
-      mainWindow.webContents.send("unmuffleAudio");
-    }
+    setMainWindowMuffle(false);
   });
 
   // Set app icon
@@ -241,13 +242,9 @@ function createWindow() {
   mainWindow.on("blur", () => {
     // Check if focus is moving to one of our external windows
     setTimeout(() => {
-      const focusedWin = BrowserWindow.getFocusedWindow();
-      if (
-        focusedWin &&
-        Array.from(openedWindows.values()).includes(focusedWin)
-      ) {
-        mainWindow.webContents.send("muffleAudio");
-      }
+      setMainWindowMuffle(
+        shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
+      );
     }, 50); // Small delay to ensure focus has transferred
   });
 
@@ -267,6 +264,49 @@ function createWindow() {
       }
     }
   });
+}
+
+function sendPlayerCommand(command) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    throw new Error("Main player window is not available");
+  }
+
+  mainWindow.webContents.send("player-command", command);
+  return true;
+}
+
+function isMiniPlayerPath(absolutePath) {
+  return path.resolve(absolutePath) === miniPlayerWindowPath;
+}
+
+function getOpenedWindowPath(targetWindow) {
+  for (const [windowPath, win] of openedWindows.entries()) {
+    if (win === targetWindow) {
+      return windowPath;
+    }
+  }
+
+  return null;
+}
+
+function shouldMuffleForWindow(targetWindow, absolutePath = null) {
+  if (
+    !targetWindow ||
+    targetWindow.isDestroyed() ||
+    targetWindow === mainWindow
+  ) {
+    return false;
+  }
+
+  const windowPath = absolutePath || getOpenedWindowPath(targetWindow);
+  return Boolean(windowPath) && !isMiniPlayerPath(windowPath);
+}
+
+function setMainWindowMuffle(shouldMuffle) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+
+  mainWindow.webContents.send(shouldMuffle ? "muffleAudio" : "unmuffleAudio");
+  audioIsMuffled = shouldMuffle;
 }
 
 ipcMain.on("window-minimize", (event) => {
@@ -1020,6 +1060,18 @@ ipcMain.handle("get-settings", () => {
   }
 });
 
+ipcMain.handle("player-toggle-playpause", () => {
+  return sendPlayerCommand("toggle-playpause");
+});
+
+ipcMain.handle("player-next", () => {
+  return sendPlayerCommand("next");
+});
+
+ipcMain.handle("player-prev", () => {
+  return sendPlayerCommand("prev");
+});
+
 ipcMain.handle("decode-m4p", async (event, filePath) => {
   const tempOutputPath = path.join(
     app.getPath("temp"),
@@ -1084,46 +1136,19 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 
   win.loadFile(absolutePath);
+  const shouldMuffleThisWindow = shouldMuffleForWindow(win, absolutePath);
 
   win.on("focus", () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("muffleAudio");
-      audioIsMuffled = true;
-    }
+    setMainWindowMuffle(shouldMuffleThisWindow);
   });
   openedWindows.set(absolutePath, win);
-
-  win.webContents.on("did-finish-load", () => {
-    const title = win.getTitle();
-
-    // Handle focus events for external windows
-    if (title === "reload - Mini player") {
-      if (openedWindows.has(absolutePath)) {
-        openedWindows.delete(absolutePath);
-      }
-      win.on("focus", () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send("unmuffleAudio");
-          audioIsMuffled = false;
-        }
-      });
-    }
-  });
 
   win.on("blur", () => {
     // Check if focus is moving to one of our external windows
     setTimeout(() => {
-      const focusedWin = BrowserWindow.getFocusedWindow();
-      if (
-        focusedWin &&
-        Array.from(openedWindows.values()).includes(focusedWin)
-      ) {
-        mainWindow.webContents.send("muffleAudio");
-        audioIsMuffled = true;
-      } else {
-        mainWindow.webContents.send("unmuffleAudio");
-        audioIsMuffled = false;
-      }
+      setMainWindowMuffle(
+        shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
+      );
     }, 50); // Small delay to ensure focus has transferred
   });
 
@@ -1131,14 +1156,9 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   win.on("closed", () => {
     openedWindows.delete(absolutePath);
 
-    // Check if mainWindow should be unmuffled after this window closes
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      // If no other external windows are open, unmuffle
-      if (openedWindows.size === 0) {
-        mainWindow.webContents.send("unmuffleAudio");
-        audioIsMuffled = false;
-      }
-    }
+    setMainWindowMuffle(
+      shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
+    );
   });
 }
 
