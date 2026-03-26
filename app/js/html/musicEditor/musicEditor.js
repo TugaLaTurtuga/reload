@@ -5,6 +5,7 @@ let musicData = {
     name: "",
     author: "",
     label: "",
+    isAlbum: true,
     description: "",
     year: 2024,
     genre: "",
@@ -22,6 +23,7 @@ const yearInput = document.getElementById("year");
 const genreInput = document.getElementById("genre");
 const descriptionInput = document.getElementById("description");
 const colorInput = document.getElementById("color");
+const isAlbum = document.getElementById("isAlbum");
 const copyrightFree = document.getElementById("copyrightFree");
 const tracksContainer = document.getElementById("tracks-container");
 const sortTracksButton = document.getElementById("sort-tracks");
@@ -344,6 +346,7 @@ function updateAlbumInfo() {
   musicData.description.genre = genreInput.value;
   musicData.description.description = descriptionInput.value;
   musicData.description.color = colorInput.value;
+  musicData.description.isAlbum = isAlbum.checked;
   musicData.description.copyrightFree = copyrightFree.checked;
 }
 
@@ -420,6 +423,7 @@ colorInput.addEventListener("input", () => {
   changeBackGroundColorFromNewAlbum(colorInput.value);
 });
 
+isAlbum.addEventListener("change", updateAlbumInfo);
 copyrightFree.addEventListener("change", updateAlbumInfo);
 
 sortTracksButton.addEventListener("click", sortTracks);

@@ -103,7 +103,7 @@ async function init() {
     album.info.description.author;
 
   document.getElementById("track-album").textContent =
-    album.info.description.name;
+    album.info.description.name || album.name;
 
   document.body.style.setProperty("--2-color", colors[2]);
   document.body.style.setProperty("--1-color", colors[1]);

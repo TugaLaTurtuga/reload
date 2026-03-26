@@ -89,7 +89,7 @@ let settings = {
     organizeByGenre: false,
     organizeByYear: false,
     organizeByMostListened: false,
-    showOrganizationName: false,
+    showOrganizationName: true,
   },
 };
 

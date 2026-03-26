@@ -41,8 +41,7 @@ let settings = {
     organizeByArtist: false,
     organizeByGenre: false,
     organizeByYear: false,
-    organizeByMostListened: false,
-    showOrganizationName: false,
+    showOrganizationName: true,
   },
 };
 
@@ -69,26 +68,30 @@ let changeLogs = {};
 
 async function loadSettings(onlyNewchanges = false) {
   try {
-    let updatedSettings = (await ipcRenderer.invoke("get-settings")) || {};
-    if (!updatedSettings) return;
+    const updatedSettings = (await ipcRenderer.invoke("get-settings")) ?? {};
 
-    for (const key in settings) {
-      // saver load then just putting
-      if (updatedSettings.hasOwnProperty(key) && !onlyNewchanges) {
-        settings[key] = updatedSettings[key];
-      } else if (updatedSettings.new.hasOwnProperty(key) && onlyNewchanges) {
-        settings[key] = updatedSettings.new[key];
+    const source = onlyNewchanges
+      ? (updatedSettings?.new ?? {})
+      : updatedSettings;
+
+    // Load only existing settings keys
+    for (const key of Object.keys(settings)) {
+      if (key in source) {
+        settings[key] = source[key];
       }
     }
-    for (const key in themeSettings) {
-      if (updatedSettings.hasOwnProperty(key)) {
+
+    // Load only existing themeSettings keys
+    for (const key of Object.keys(themeSettings)) {
+      if (key in updatedSettings) {
         themeSettings[key] = updatedSettings[key];
       }
     }
+
+    console.log("Settings loaded");
   } catch (error) {
     console.error("Error loading settings:", error);
   }
-  console.log("Settings loaded");
 }
 
 function setLook() {

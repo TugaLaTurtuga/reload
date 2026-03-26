@@ -414,6 +414,31 @@ nav ul {
     grid-gap: 20px;
 }
 
+#albums-section.organized-view {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.library-group {
+    display: flex;
+    flex-direction: column;
+    margin-top: 5px;
+    gap: 12px;
+}
+
+.library-group-title {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--textColor);
+}
+
+.library-group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
 .content-section.hidden {
     display: none;
 }

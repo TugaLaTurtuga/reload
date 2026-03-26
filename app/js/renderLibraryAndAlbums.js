@@ -70,45 +70,204 @@ async function loadLibrary() {
 
 // Render music library
 function renderLibrary() {
-  // Render albums
   albumOpened = false;
   albumsSection.innerHTML = "";
+  albumsSorted = {};
+
+  const filteredAlbums = [];
   songs.forEach((album) => {
-    let containsFinder = [false, false, false];
+    const finderMatch = _getFinderMatch(album);
+    if (!finderMatch.matches) return;
+    filteredAlbums.push({ album, finderMatch });
+  });
 
-    const albumName = album.info.description.name || album.name;
-    if (finderSearchWord) {
-      if (albumName.toLowerCase().includes(finderSearchWord.toLowerCase()))
-        containsFinder[0] = true;
+  const organizationLevels = _getOrganizationLevels();
+  const showOrganizationName = settings.organization.showOrganizationName;
 
-      if (
-        album.info.description.author
-          .toLowerCase()
-          .includes(finderSearchWord.toLowerCase())
-      ) {
-        containsFinder[1] = true;
+  if (organizationLevels.length === 0) {
+    albumsSection.classList.remove("organized-view");
+    filteredAlbums.forEach(({ album, finderMatch }) => {
+      albumsSection.appendChild(_createAlbumCard(album, finderMatch));
+    });
+  } else {
+    albumsSection.classList.add("organized-view");
+    const groupedAlbums = _buildAlbumGroups(filteredAlbums, organizationLevels);
+    _renderAlbumGroups(
+      albumsSection,
+      groupedAlbums,
+      organizationLevels,
+      0,
+      showOrganizationName,
+    );
+  }
+
+  if (settings.currentAlbum) {
+    openAlbum(settings.currentAlbum);
+  }
+}
+
+function _getFinderMatch(album) {
+  const containsFinder = [false, false, false];
+  const albumName = album.info.description.name || album.name;
+
+  if (!finderSearchWord) {
+    return { matches: true, containsFinder };
+  }
+
+  const search = finderSearchWord.toLowerCase();
+
+  if (albumName.toLowerCase().includes(search)) {
+    containsFinder[0] = true;
+  }
+
+  if (album.info.description.author.toLowerCase().includes(search)) {
+    containsFinder[1] = true;
+  }
+
+  for (let i = 0; i < album.tracks.length; i++) {
+    const track = album.tracks[i];
+    if (getTrackName(track).toLowerCase().includes(search)) {
+      containsFinder[2] = true;
+      break;
+    }
+  }
+
+  return {
+    matches: containsFinder[0] || containsFinder[1] || containsFinder[2],
+    containsFinder,
+  };
+}
+
+function _getOrganizationLevels() {
+  const levels = [];
+
+  if (settings.organization.seperateAlbumsFromSingles) {
+    levels.push({
+      type: "format",
+      label: "Type",
+      getGroupNames: (album) => [
+        album.info.description.isAlbum ? "Albums" : "Singles",
+      ],
+      sort: (a, b) => {
+        const order = { Album: 0, Single: 1 };
+        return (order[a] ?? 99) - (order[b] ?? 99) || a.localeCompare(b);
+      },
+    });
+  }
+
+  if (settings.organization.organizeByArtist) {
+    levels.push({
+      type: "artist",
+      label: "Artist",
+      getGroupNames: (album) => [
+        album.info.description.author || "Unknown Artist",
+      ],
+      sort: (a, b) => a.localeCompare(b),
+    });
+  }
+
+  if (settings.organization.organizeByYear) {
+    levels.push({
+      type: "year",
+      label: "Decade",
+      getGroupNames: (album) => [_getAlbumDecade(album.info.description.year)],
+      sort: (a, b) => _sortDecades(a, b),
+    });
+  }
+
+  if (settings.organization.organizeByGenre) {
+    levels.push({
+      type: "genre",
+      label: "Genre",
+      getGroupNames: (album) => _getAlbumGenres(album.info.description.genre),
+      sort: (a, b) => a.localeCompare(b),
+    });
+  }
+
+  return levels;
+}
+
+function _buildAlbumGroups(items, levels, levelIndex = 0) {
+  if (levelIndex >= levels.length) {
+    return [...items].sort((a, b) => {
+      const albumNameA = a.album.info.description.name || a.album.name;
+      const albumNameB = b.album.info.description.name || b.album.name;
+      return (
+        albumNameA.localeCompare(albumNameB) ||
+        (a.album.info.description.author || "").localeCompare(
+          b.album.info.description.author || "",
+        )
+      );
+    });
+  }
+
+  const currentLevel = levels[levelIndex];
+  const groups = new Map();
+
+  items.forEach((item) => {
+    const groupNames = currentLevel.getGroupNames(item.album);
+    groupNames.forEach((groupName) => {
+      if (!groups.has(groupName)) {
+        groups.set(groupName, []);
       }
+      groups.get(groupName).push(item);
+    });
+  });
 
-      for (let i = 0; i < album.tracks.length; i++) {
-        const track = album.tracks[i];
-        if (
-          getTrackName(track)
-            .toLowerCase()
-            .includes(finderSearchWord.toLowerCase())
-        ) {
-          containsFinder[2] = true;
-          break;
-        }
-      }
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => currentLevel.sort(a, b))
+    .map(([groupName, groupItems]) => ({
+      name: groupName,
+      children: _buildAlbumGroups(groupItems, levels, levelIndex + 1),
+    }));
+}
 
-      if (!containsFinder[0] && !containsFinder[1] && !containsFinder[2]) {
-        return;
-      }
+function _renderAlbumGroups(
+  container,
+  groups,
+  levels,
+  levelIndex,
+  showOrganizationName,
+) {
+  groups.forEach((group) => {
+    const section = document.createElement("section");
+    section.className = `library-group library-group-level-${levelIndex + 1}`;
+
+    if (showOrganizationName) {
+      const title = document.createElement("h1");
+      title.className = "library-group-title";
+      title.textContent = `${group.name}:`;
+      section.appendChild(title);
     }
 
-    const albumCard = document.createElement("div");
-    albumCard.className = "album-card";
-    albumCard.innerHTML = `
+    if (levelIndex === levels.length - 1) {
+      const grid = document.createElement("div");
+      grid.className = "library-group-grid";
+
+      group.children.forEach(({ album, finderMatch }) => {
+        grid.appendChild(_createAlbumCard(album, finderMatch));
+      });
+
+      section.appendChild(grid);
+    } else {
+      _renderAlbumGroups(
+        section,
+        group.children,
+        levels,
+        levelIndex + 1,
+        showOrganizationName,
+      );
+    }
+
+    container.appendChild(section);
+  });
+}
+
+function _createAlbumCard(album, finderMatch) {
+  const albumName = album.info.description.name || album.name;
+  const albumCard = document.createElement("div");
+  albumCard.className = "album-card";
+  albumCard.innerHTML = `
       <div class="album-cover" style="background-image: url('${album.info.description.cover}')"></div>
       <div class="album-info">
         <div class="album-title">
@@ -120,18 +279,45 @@ function renderLibrary() {
       </div>
     `;
 
-    if (containsFinder[2]) {
-      albumCard.classList.add("highlight");
-    }
-
-    albumCard.addEventListener("click", () => openAlbum(album));
-    albumsSection.appendChild(albumCard);
-  });
-  //getTooltips();
-
-  if (settings.currentAlbum) {
-    openAlbum(settings.currentAlbum);
+  if (finderMatch.containsFinder[2]) {
+    albumCard.classList.add("highlight");
   }
+
+  albumCard.addEventListener("click", () => openAlbum(album));
+  return albumCard;
+}
+
+function _getAlbumDecade(year) {
+  const numericYear = parseInt(year, 10);
+  if (Number.isNaN(numericYear)) {
+    return "Unknown Decade";
+  }
+
+  return `${Math.floor(numericYear / 10) * 10}s`;
+}
+
+function _sortDecades(a, b) {
+  if (a === "Unknown Decade") return 1;
+  if (b === "Unknown Decade") return -1;
+  return parseInt(b, 10) - parseInt(a, 10);
+}
+
+function _getAlbumGenres(genre) {
+  if (!genre) return ["Unknown Genre"];
+
+  const normalizedGenre = genre.trim();
+  if (!normalizedGenre) return ["Unknown Genre"];
+
+  const parts = normalizedGenre
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length <= 1) {
+    return [normalizedGenre];
+  }
+
+  return [...new Set([...parts, normalizedGenre])];
 }
 
 function _highlightMatch(text) {

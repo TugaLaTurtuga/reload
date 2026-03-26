@@ -508,6 +508,18 @@ ipcMain.handle("get-library", async () => {
       "Time to load all songs reload.json:",
       Date.now() - startTime + "ms",
     );
+
+    // sort albums by name
+    let albsOrganized = [];
+    try {
+      albsOrganized = albums.sort((a, b) =>
+        a.info.description.name.localeCompare(b.info.description.name),
+      );
+    } catch (error) {
+      albsOrganized = albums.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    albums = albsOrganized;
+
     return albums;
   } catch (error) {
     console.error("Error scanning music library:", error);
@@ -670,6 +682,7 @@ async function processMusicFolder(folderPath) {
         author: path.basename(path.dirname(folderPath)),
         label: "none",
         description: "",
+        isAlbum: undefined,
         year: "year",
         genre: "genre",
         color: "#AAAAAA",
@@ -900,6 +913,10 @@ async function processMusicFolder(folderPath) {
   // Combine both
   album.tracks = [...matchedTracks, ...missingTracks];
   album.info.trackList = [...album.info.trackList, ...missingTrackList];
+
+  if (album.info.description.isAlbum === undefined) {
+    album.info.description.isAlbum = album.info.trackList.length > 1;
+  }
 
   // Sort both arrays
   album.info.trackList.sort(sortByTrackNumber);

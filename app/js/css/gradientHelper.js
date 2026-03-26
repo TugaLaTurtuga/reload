@@ -1,5 +1,5 @@
 async function tryGetComputedStyle(name) {
-  const tries = 10;
+  const tries = 50;
   const timeout = 50;
   for (let i = 0; i < tries; i++) {
     const result = await getComputedStyle(document.body)
@@ -71,6 +71,10 @@ async function changeBackGroundColorFromNewAlbum(color) {
     getCSSVarRGB("--bg-2"),
     tryGetComputedStyle("--colorBlend"),
   ]);
+
+  if (!colorgepper || !bg2 || bg2.length !== 4) {
+    return;
+  }
 
   let normalizedColor = [0, 0, 0];
   let r = parseInt(color.substr(1, 2), 16);
