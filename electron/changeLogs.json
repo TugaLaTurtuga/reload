@@ -35,31 +35,31 @@
     "date": "11/09/2025",
     "done": true
   },
-  "0.0.400": {
+  "0.1.000": {
     "name": "Keyboard controls",
     "logs": "bug fixes \ncontroller and only keyboard controls fully compatible with the main reload window and some compatibility with other reload windows, for controller \ncan move cursor with a controller \nAdded controller settings to settings in the settings window (settings) \nfull compatibility with media session \nAdded default user data for looks and shortcuts \nRemoved scrollbars and consolidate shared CSS \nImproved active state styling and modal backdrop",
     "date": "25/09/2025",
     "done": true
   },
-  "0.0.500": {
+  "0.1.100": {
     "name": "keyboards controls settings",
     "logs": "Can add and remove shortcuts in settings \nAble to change, add and remove keybindings in the settings, and not by editing the JSON file manually \nFixed some math problems when moving down on a grid with keys, now it should have the same properties as up \nfixed some css problems in themes \nFixed the light or dark theme btns not change the active state when expected",
     "date": "01/10/2025",
     "done": true
   },
-  "0.1.000": {
+  "0.2.000": {
     "name": "This was meant to just be a algorithm update 🗿",
     "logs": "Made it Possible to play songs without the main reload window opened (this happens when you click the yellow button, that hides the window instead of minimizing it) \nMade favourites, that get added into the sidebar, and can be played from there \nMade it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label. \nChanged how the settings in settings windows looks and feels, now using a grid layout \nFixed a bug of the music editor not loading the data correctly to the tracks. \nRemove the add track and remove track buttons from the music editor \nMade the volume icon be more interactive by using 5 svgs instead of two emojis (this ones: 🔊, 🔇) \nFixed a bug where the sfx didn't load \nFixed some problems with sfx not playing as expected \nAdded sfx Volume \nAdded sfx the settings and looks window \nFixed change_log_content (this part from the change logs that you reading) to show everything inside of it \nChanged the date of change_log_date placement to be on the bottom right and the change_log_title to be centered on the top \nAdded app icon \nMade the backend read the metadate for the description (comment), label and copyright \nFixed the light theme not being applied correctly for the first time \nFixed the input not having css in looks \nMade looks be able to have various looks at the same time \nAdded label for inputs in looks \nMade the look color be different if it is on, off or edited and not saved.",
     "date": "15/10/2025",
     "done": true
   },
-  "0.1.100": {
+  "0.3.000": {
     "name": "It was a bad idea to make this release w/ Bully",
     "logs": "Added remove track back to edit window \nMade when a new track is added in the dir to automaticly but it in \nMade possible to change the file and thus the track name in Track List edit \nAdded a glowing effect to the album cover on player container \nMade the cover hide when there is no space for it \nSome bug fixes for the saving system \n Mini player (meta + m) \nFixed a bug that makes an input be constantly active if the user leaves the app with that input being registered, even if the user focus the app again \nMade the code not constantly scan the folders on startup, decreasing the startup time from ~290ms to ~1.5ms, but made the fetching folders from ~290ms to ~640ms but its more reliable \nfixed the settings action context menu, when wrinting the whole func and clicking enter, instead of putting the one that includes the name, puts the func with the same name \nAdded support for pywal \n Added organization to the library view \n Made find tracks (ctrl + f or meta + f)",
     "date": "27/3/2026",
     "done": true
   },
-  "0.1.101": {
+  "0.3.001": {
     "name": "Bully didn't release, but I needed to update",
     "logs": "Fix a bug that didn't allow to open an album without a cover \n Fixed a gradient error in music editor \n Fixed the setting 'is album' not loading correctly in music editor \n Fixed music editor not loading from meta + e sometimes \n Made some changes to the mini player css",
     "date": "28/3/2026",
