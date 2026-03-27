@@ -412,7 +412,10 @@ async function openAlbum(album) {
     albumArt.style.backgroundImage = "none";
   }
 
-  if (!settings.currentAlbum.info.description.cover.endsWith(".gif")) {
+  if (
+    settings.currentAlbum.info.description.cover &&
+    !settings.currentAlbum.info.description.cover.endsWith(".gif")
+  ) {
     document.getElementById("album-back-art").style.backgroundImage =
       albumArt.style.backgroundImage;
   } else {
@@ -501,10 +504,15 @@ async function backToLibrary() {
 }
 
 async function editAlbum() {
-  console.log("run");
+  let currAlb = settings.currentAlbum;
+  if (!currAlb) return;
+  if (!currAlb.jsonPath) {
+    // get the uncompressed album
+    await getUncompressedInfo(currAlb);
+  }
   const savedCorrectly = await ipcRenderer.invoke(
     "setJsonToLoad",
-    settings.currentAlbum.jsonPath,
+    currAlb.jsonPath,
   );
 
   if (savedCorrectly) {

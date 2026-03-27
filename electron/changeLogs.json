@@ -58,5 +58,11 @@
     "logs": "Added remove track back to edit window \nMade when a new track is added in the dir to automaticly but it in \nMade possible to change the file and thus the track name in Track List edit \nAdded a glowing effect to the album cover on player container \nMade the cover hide when there is no space for it \nSome bug fixes for the saving system \n Mini player (meta + m) \nFixed a bug that makes an input be constantly active if the user leaves the app with that input being registered, even if the user focus the app again \nMade the code not constantly scan the folders on startup, decreasing the startup time from ~290ms to ~1.5ms, but made the fetching folders from ~290ms to ~640ms but its more reliable \nfixed the settings action context menu, when wrinting the whole func and clicking enter, instead of putting the one that includes the name, puts the func with the same name \nAdded support for pywal \n Added organization to the library view \n Made find tracks (ctrl + f or meta + f)",
     "date": "27/3/2026",
     "done": true
+  },
+  "0.1.101": {
+    "name": "Bully didn't release, but I needed to update",
+    "logs": "Fix a bug that didn't allow to open an album without a cover \n Fixed a gradient error in music editor \n Fixed the setting 'is album' not loading correctly in music editor \n Fixed music editor not loading from meta + e sometimes",
+    "date": "28/3/2026",
+    "done": true
   }
 }

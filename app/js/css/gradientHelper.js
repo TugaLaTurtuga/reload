@@ -90,9 +90,9 @@ async function changeBackGroundColorFromNewAlbum(color) {
     // Assume color is in rgb(r,g,b) or rgb(r, g, b) format
     const match = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
     if (match) {
-      r = Math.max(0, Math.min(255, r));
-      g = Math.max(0, Math.min(255, g));
-      b = Math.max(0, Math.min(255, b));
+      r = Math.max(0, Math.min(255, parseInt(match[1])));
+      g = Math.max(0, Math.min(255, parseInt(match[2])));
+      b = Math.max(0, Math.min(255, parseInt(match[3])));
     }
   }
 
@@ -107,7 +107,7 @@ async function changeBackGroundColorFromNewAlbum(color) {
       ${Math.max(0, Math.min(255, finalB))}
     )`;
   changeBackgroundGradient(color);
-  if (playerContainer) {
+  if (typeof playerContainer !== "undefined" && playerContainer) {
     playerContainer.style.setProperty("--backgroundColor", color);
   }
 }

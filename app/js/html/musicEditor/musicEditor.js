@@ -29,8 +29,6 @@ const tracksContainer = document.getElementById("tracks-container");
 const sortTracksButton = document.getElementById("sort-tracks");
 const saveButton = document.getElementById("save-button");
 const loadButton = document.getElementById("load-button");
-const notification = document.getElementById("notification");
-const background = document.getElementById("app");
 let jsonPath = null;
 
 let settings = {
@@ -131,6 +129,7 @@ async function populateForm() {
   // Colors
   colorInput.value = description?.color || "#AAAAAA";
   copyrightFree.checked = description?.copyrightFree || false;
+  isAlbum.checked = description?.isAlbum || true;
 
   // Clear existing tracks
   tracksContainer.innerHTML = "";
