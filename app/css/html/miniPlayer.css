@@ -68,7 +68,7 @@ root {
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-right: 10vw;
+    width: 100%;
 }
 
 #mini-controls {
@@ -140,7 +140,7 @@ root {
     line-height: 0.8;
 
     margin: 0;
-    max-width: 100%;
+    width: 100% !important;
 
     display: -webkit-box;
     -webkit-line-clamp: 5;
