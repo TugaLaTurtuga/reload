@@ -61,7 +61,7 @@
   },
   "0.1.101": {
     "name": "Bully didn't release, but I needed to update",
-    "logs": "Fix a bug that didn't allow to open an album without a cover \n Fixed a gradient error in music editor \n Fixed the setting 'is album' not loading correctly in music editor \n Fixed music editor not loading from meta + e sometimes",
+    "logs": "Fix a bug that didn't allow to open an album without a cover \n Fixed a gradient error in music editor \n Fixed the setting 'is album' not loading correctly in music editor \n Fixed music editor not loading from meta + e sometimes \n Made some changes to the mini player css",
     "date": "28/3/2026",
     "done": true
   }

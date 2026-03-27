@@ -131,21 +131,24 @@ root {
     width: calc(45vw + 10px) !important;
     height: min(45vw, 80vh) !important;
     justify-content: center;
-    background: transparent;
-    transition: background 0.2s ease;
-}
-
-#mini-player:hover {
     background: color-mix(in srgb, var(--0-color) 50%, transparent);
 }
 
 #track-title {
     font-size: 8vw;
     font-weight: 900;
+    line-height: 0.8;
 
-    line-height: 0.9;
-    margin: none;
-    overflow: visible;
+    margin: 0;
+    max-width: 100%;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 #track-artist,
