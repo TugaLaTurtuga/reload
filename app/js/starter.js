@@ -100,13 +100,6 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
 
 ipcRenderer.on("music-json-updated", updateLibrary);
 
-ipcRenderer.on("muffleAudio", () => {
-  muffleAudio();
-});
-ipcRenderer.on("unmuffleAudio", () => {
-  unmuffleAudio();
-});
-
 ipcRenderer.on("player-command", async (event, command) => {
   await window.handlePlayerCommand(command);
 });
@@ -124,7 +117,6 @@ volumeSlider.addEventListener("input", setVolume);
 backButton.addEventListener("click", backToLibrary);
 editButton.addEventListener("click", editAlbum);
 ipcRenderer.on("edit-album", editAlbum);
-//// TODO: implement the favourite btn, with the favourites going on the scrollable sidebar, rn the '.' in the top-right btns on album
 
 navItems.forEach((item) => {
   item.addEventListener("click", () => switchSection(item.dataset.section));
@@ -137,10 +129,6 @@ window.addEventListener("load", () => {
   setVolume();
   sController.updateSliders();
   document.getElementById("spinner")?.remove();
-
-  ipcRenderer.invoke("getMuffleStatus").then((status) => {
-    if (status) muffleAudio(0);
-  });
 
   loadFavouritesToSidebar();
 });

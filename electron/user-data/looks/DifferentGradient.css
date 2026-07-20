@@ -1,0 +1,12 @@
+:root {
+    --deg: 30deg;
+}
+
+#app {
+    background: linear-gradient(
+        var(--deg),
+        var(--bg-1),
+        var(--backgroundColor),
+        var(--bg-1)
+    );
+}

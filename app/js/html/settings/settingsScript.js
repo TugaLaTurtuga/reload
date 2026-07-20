@@ -342,9 +342,8 @@ function showSection(sectionKey) {
   });
 }
 
-// If you call showSection on start, ensure it runs after DOM loaded:
+// Call showSection on start, ensure it runs after DOM loaded:
 document.addEventListener("DOMContentLoaded", () => {
-  // choose your initial section key here, e.g. "algorithm"
   showSection("algorithm");
 });
 
@@ -355,11 +354,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderSettingsEditor();
   sController.updateSliders();
 
-  changeLogs = (await ipcRenderer.invoke("get-change-logs")) || {};
+  changeLogs = structuredClone(
+    (await ipcRenderer.invoke("get-change-logs")) || {}
+  );
   let version = "";
 
   // Get all version keys, sort descending (latest first)
-  const versions = Object.keys(changeLogs).sort((a, b) => {
+  let versions = Object.keys(changeLogs).sort((a, b) => {
     // Split into numbers and compare
     const parse = (v) => v.split(".").map(Number);
     const [a1, a2, a3] = parse(a);
@@ -369,25 +370,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (a2 !== b2) return b2 - a2;
     return b3 - a3;
   });
+  const { commitCount } = await ipcRenderer.invoke("get-git-info");
 
-  for (const key of versions) {
-    if (changeLogs[key].done) {
-      const changeLogDiv = document.createElement("div");
-      changeLogDiv.classList.add("change-logs-item");
-      changeLogDiv.id = `change-logs-item-${key}`;
-      changeLogDiv.textContent = key;
-      changeLogDiv.onclick = () => {
-        changeChangeLog(key);
-      };
-      changeLogsSidebar.appendChild(changeLogDiv);
+  let key_changes = new Map()
+  for (const _ of versions) {
+    let key = _
+    if (!changeLogs[_].done) {
+      key = `${key}.b.${commitCount}`
+      key_changes.set(_, key)
+    }
 
-      // set version only the first time (latest one)
-      if (version === "") {
-        version = key;
-      }
+    const changeLogDiv = document.createElement("div");
+    changeLogDiv.classList.add("change-logs-item");
+    changeLogDiv.id = `change-logs-item-${key}`;
+    changeLogDiv.textContent = key;
+    changeLogDiv.onclick = () => {
+      changeChangeLog(key);
+    };
+    changeLogsSidebar.appendChild(changeLogDiv);
+
+    if (version === "") {
+      version = key;
     }
   }
 
+  for (const [oldKey, newKey] of key_changes) {
+    changeLogs[newKey] = changeLogs[oldKey];
+    delete changeLogs[oldKey];
+  }
+
+  // set version only the first time (latest one)
   document.getElementById("version").textContent = version;
   changeChangeLog(version);
 });
@@ -446,13 +458,25 @@ function changeChangeLog(key) {
 
     if (changeLogTitle)
       changeLogTitle.textContent = changeLogs[key].name || key;
-    if (changeLogDate) changeLogDate.textContent = changeLogs[key].date || "";
+    if (changeLogDate) {
+      const day = changeLogs[key].date.day
+      const month = changeLogs[key].date.month
+      const year = changeLogs[key].date.year
+      changeLogDate.innerHTML = `${day}/${month}/${year}`
+    }
     if (changeLogContent) {
       changeLogContent.innerHTML = "";
       const logs = changeLogs[key].logs.split("\n");
       logs.forEach((log) => {
         let text = log.trim();
         if (!text) return; // skip empty entries
+        if (text === "---") {
+          spacer = document.createElement("div");
+          spacer.className = "spacer";
+          spacer.style.minHeight = "1.5rem"
+          changeLogContent.appendChild(spacer);
+          return
+        } 
 
         // capitalize first letter
         text = text.charAt(0).toUpperCase() + text.slice(1);

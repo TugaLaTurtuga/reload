@@ -43,8 +43,16 @@ async function updateLibrary() {
     }
 
     if (playingAlbumUpdated) {
+      const currentTrackUpdated =
+        playingAlbumUpdated.tracks?.[settings.currentTrackIndex];
       nowPlayingArtist.textContent =
         playingAlbumUpdated.info.description.author;
+      if (currentTrackUpdated) {
+        nowPlayingTitle.textContent = getTrackName(currentTrackUpdated);
+        totalTimeEl.textContent = currentTrackUpdated.duration
+          ? formatTime(currentTrackUpdated.duration)
+          : "--:--";
+      }
       updateOverflowsOnNowPlaying();
       settings.currentPlayingAlbum = playingAlbumUpdated;
     }
@@ -69,17 +77,28 @@ async function loadLibrary() {
 }
 
 // Render music library
-function renderLibrary() {
+function renderLibrary(searchPlace = null, searchName = null) {
   albumOpened = false;
   albumsSection.innerHTML = "";
   albumsSorted = {};
 
-  const filteredAlbums = [];
-  songs.forEach((album) => {
-    const finderMatch = _getFinderMatch(album);
-    if (!finderMatch.matches) return;
-    filteredAlbums.push({ album, finderMatch });
-  });
+  const filteredAlbums = songs
+    .filter((album) => {
+      const finderMatch = _getFinderMatch(album);
+      if (searchName && searchPlace) {
+        libraryBackButton.style.display = "block";
+      } else {
+        libraryBackButton.style.display = "none";
+      }
+      return (
+        finderMatch.matches &&
+        _matchesLibrarySearch(album, searchPlace, searchName)
+      );
+    })
+    .map((album) => ({
+      album,
+      finderMatch: _getFinderMatch(album),
+    }));
 
   const organizationLevels = _getOrganizationLevels();
   const showOrganizationName = settings.organization.showOrganizationName;
@@ -100,9 +119,40 @@ function renderLibrary() {
       showOrganizationName,
     );
   }
+}
 
-  if (settings.currentAlbum) {
-    openAlbum(settings.currentAlbum);
+function _matchesLibrarySearch(album, searchPlace, searchName) {
+  if (!searchPlace || !searchName) return true;
+  searchPlace = searchPlace.toLowerCase().trim();
+  searchName = searchName.toLowerCase().trim();
+  const description = album.info?.description || {};
+
+  switch (searchPlace) {
+    case "artist":
+    case "author":
+      return (description.author || "").trim().toLowerCase() === searchName;
+    case "genre":
+      return _getAlbumGenres(description.genre).some(
+        (genre) => genre.toLowerCase() === searchName,
+      );
+    case "decade":
+    case "year":
+      return _getAlbumDecade(description.year) === _getAlbumDecade(searchName);
+
+    case "format":
+    case "type": {
+      const format = description.isAlbum ? "albums" : "singles";
+      const singularFormat = description.isAlbum ? "album" : "single";
+      return format === searchName || singularFormat === searchName;
+    }
+    case "name":
+    case "album":
+      return (
+        (description.name || album.name || "").trim().toLowerCase() ===
+        searchName
+      );
+    default:
+      return true;
   }
 }
 
@@ -422,16 +472,42 @@ async function openAlbum(album) {
     document.getElementById("album-back-art").style.backgroundImage = "none";
   }
 
-  albumArt.addEventListener("click", () => {
+  albumArt.onclick = () => {
     setNextTracksFromAlbum(album, 0);
     playTrack(0, album, { pushPrev: true });
-  });
+  };
 
   albumTitle.textContent = album.info.description.name || album.name;
   albumArtist.textContent = album.info.description.author;
   albumYear.textContent = album.info.description.year;
   albumGenre.textContent = album.info.description.genre;
   albumDescription.textContent = album.info.description.description;
+  albumLabel.textContent = `©${album.info.description.label}`;
+
+  let albumDuration = 0.0;
+  album.tracks.forEach((track, index) => {
+    if (typeof track.duration !== "number" || isNaN(track.duration)) {
+      track.duration = 0;
+    }
+    albumDuration += track.duration;
+  });
+
+  albumLength.textContent = albumDuration ? formatTime(albumDuration) : "--:--";
+
+  albumArtist.onclick = () => {
+    backToLibrary(false, true);
+    renderLibrary("artist", albumArtist.textContent);
+  };
+
+  albumYear.onclick = () => {
+    backToLibrary(false, true);
+    renderLibrary("year", albumYear.textContent);
+  };
+
+  albumGenre.onclick = () => {
+    backToLibrary(false, true);
+    renderLibrary("genre", albumGenre.textContent);
+  };
 
   await changeBackGroundColorFromNewAlbum(album.info.description.color);
 
@@ -490,16 +566,23 @@ async function openAlbum(album) {
 }
 
 // Return to library view
-async function backToLibrary() {
+async function backToLibrary(
+  shouldRenderLibrary = true,
+  preserveCurrentAlbum = false,
+) {
   playerContainer.classList.add("hidden");
   libraryContainer.classList.remove("hidden");
   mainContent.scrollTo(0, 0);
   const color = await tryGetComputedStyle("--bg-2");
   changeBackgroundGradient(color);
-  settings.currentAlbum = null;
+  if (!preserveCurrentAlbum) {
+    settings.currentAlbum = null;
+  }
   putAlbumBackArtInPlace(null);
 
-  renderLibrary();
+  if (shouldRenderLibrary) {
+    renderLibrary();
+  }
   return true;
 }
 

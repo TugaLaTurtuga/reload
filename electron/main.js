@@ -8,7 +8,7 @@ const {
   shell,
   screen,
 } = require("electron");
-const { spawn } = require("child_process");
+const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -58,7 +58,6 @@ const miniPlayerWindowPath = path.resolve(
 );
 
 let mainWindow;
-let audioIsMuffled = false;
 
 // Lazy-load wrapper
 let subsonicBackend = null;
@@ -206,11 +205,6 @@ function createWindow() {
 
   mainWindow.loadFile("app/index.html");
 
-  // Handle mainWindow focus events
-  mainWindow.on("focus", () => {
-    setMainWindowMuffle(false);
-  });
-
   // Set app icon
   if (process.platform === "darwin") {
     const macIcon = getMacIconPath();
@@ -238,15 +232,6 @@ function createWindow() {
       options.icon = iconPath;
     }
   }
-
-  mainWindow.on("blur", () => {
-    // Check if focus is moving to one of our external windows
-    setTimeout(() => {
-      setMainWindowMuffle(
-        shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
-      );
-    }, 50); // Small delay to ensure focus has transferred
-  });
 
   mainWindow.on("close", (e) => {
     if (!app.isQuiting) {
@@ -287,26 +272,6 @@ function getOpenedWindowPath(targetWindow) {
   }
 
   return null;
-}
-
-function shouldMuffleForWindow(targetWindow, absolutePath = null) {
-  if (
-    !targetWindow ||
-    targetWindow.isDestroyed() ||
-    targetWindow === mainWindow
-  ) {
-    return false;
-  }
-
-  const windowPath = absolutePath || getOpenedWindowPath(targetWindow);
-  return Boolean(windowPath) && !isMiniPlayerPath(windowPath);
-}
-
-function setMainWindowMuffle(shouldMuffle) {
-  if (!mainWindow || mainWindow.isDestroyed()) return;
-
-  mainWindow.webContents.send(shouldMuffle ? "muffleAudio" : "unmuffleAudio");
-  audioIsMuffled = shouldMuffle;
 }
 
 ipcMain.on("window-minimize", (event) => {
@@ -591,11 +556,87 @@ let albumsPathLoaded = new Set();
 let albumsPath = new Map();
 let nonAlbumsPath = new Set();
 
+function normalizeLibraryPathKey(targetPath) {
+  return typeof targetPath === "string" ? targetPath.toLowerCase() : targetPath;
+}
+
+function canonicalizeExistingPath(targetPath) {
+  if (typeof targetPath !== "string" || targetPath.length === 0) {
+    return targetPath;
+  }
+
+  try {
+    return fs.realpathSync.native(targetPath);
+  } catch {
+    return targetPath;
+  }
+}
+
+function normalizeCachedAlbumPaths(album) {
+  if (!album || typeof album !== "object") return album;
+
+  const normalizedPath = canonicalizeExistingPath(album.path);
+  const normalizedJsonPath = canonicalizeExistingPath(
+    album.jsonPath || path.join(normalizedPath || "", "reload.json"),
+  );
+
+  let refreshedInfo = album.info;
+  if (normalizedJsonPath && fs.existsSync(normalizedJsonPath)) {
+    try {
+      const parsedInfo = JSON.parse(
+        fs.readFileSync(normalizedJsonPath, "utf8"),
+      );
+      if (parsedInfo && typeof parsedInfo === "object") {
+        refreshedInfo = parsedInfo;
+      }
+    } catch (err) {
+      console.error(
+        `Failed to refresh cached album info from ${normalizedJsonPath}:`,
+        err,
+      );
+    }
+  }
+
+  return {
+    ...album,
+    path: normalizedPath,
+    jsonPath: normalizedJsonPath,
+    tracks: Array.isArray(album.tracks)
+      ? album.tracks.map((track) =>
+          track && typeof track === "object"
+            ? { ...track, path: canonicalizeExistingPath(track.path) }
+            : track,
+        )
+      : album.tracks,
+    info:
+      refreshedInfo && typeof refreshedInfo === "object"
+        ? {
+            ...refreshedInfo,
+            description:
+              refreshedInfo.description &&
+              typeof refreshedInfo.description === "object"
+                ? {
+                    ...refreshedInfo.description,
+                    cover: canonicalizeExistingPath(
+                      refreshedInfo.description.cover,
+                    ),
+                  }
+                : refreshedInfo.description,
+          }
+        : refreshedInfo,
+  };
+}
+
 function loadAlbumsPath() {
   if (fs.existsSync(albumsPathData)) {
     try {
       const data = JSON.parse(fs.readFileSync(albumsPathData, "utf8"));
-      albumsPath = new Map(data); // Convert [key,value] pairs → Map
+      albumsPath = new Map(
+        data.map(([folderPath, album]) => [
+          normalizeLibraryPathKey(folderPath),
+          normalizeCachedAlbumPaths(album),
+        ]),
+      );
     } catch (err) {
       console.error("Failed to load albumsPath:", err);
       albumsPath = new Map();
@@ -604,7 +645,7 @@ function loadAlbumsPath() {
   if (fs.existsSync(nonAlbumsPathData)) {
     try {
       const data = JSON.parse(fs.readFileSync(nonAlbumsPathData, "utf8"));
-      nonAlbumsPath = new Set(data); // Convert array → Set
+      nonAlbumsPath = new Set(data.map(normalizeLibraryPathKey));
     } catch (err) {
       console.error("Failed to load nonAlbumsPath:", err);
       nonAlbumsPath = new Set();
@@ -625,14 +666,16 @@ function saveAlbumsPath() {
 }
 
 async function processMusicFolder(folderPath) {
-  folderPath = folderPath.toLowerCase();
-  if (albumsPath.has(folderPath)) {
-    if (!albumsPathLoaded.has(folderPath)) {
-      albums.push(albumsPath.get(folderPath));
-      albumsPathLoaded.add(folderPath);
+  const folderKey = normalizeLibraryPathKey(folderPath);
+  if (albumsPath.has(folderKey)) {
+    if (!albumsPathLoaded.has(folderKey)) {
+      albums.push(albumsPath.get(folderKey));
+      albumsPathLoaded.add(folderKey);
     }
     return;
-  } else if (nonAlbumsPath.has(folderPath)) return;
+  } else if (nonAlbumsPath.has(folderKey)) return;
+
+  folderPath = canonicalizeExistingPath(folderPath);
   const entries = fs.readdirSync(folderPath, { withFileTypes: true });
   const files = entries
     .filter((entry) => entry.isFile())
@@ -654,7 +697,7 @@ async function processMusicFolder(folderPath) {
     ].includes(ext);
   });
   if (audioFiles.length === 0) {
-    nonAlbumsPath.add(folderPath);
+    nonAlbumsPath.add(folderKey);
     return;
   }
 
@@ -879,6 +922,7 @@ async function processMusicFolder(folderPath) {
     .map((track) => {
       const key = clearTitle(track.title);
       const match = trackMap.get(key);
+
       if (match) {
         return {
           title: cleanTrackTitle(match.title),
@@ -926,10 +970,10 @@ async function processMusicFolder(folderPath) {
 
   if (album.tracks.length > 0) {
     albums.push(album);
-    albumsPath.set(folderPath, album);
-    albumsPathLoaded.add(folderPath);
+    albumsPath.set(folderKey, album);
+    albumsPathLoaded.add(folderKey);
   } else {
-    nonAlbumsPath.add(folderPath);
+    nonAlbumsPath.add(folderKey);
   }
 }
 
@@ -1153,29 +1197,13 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 
   win.loadFile(absolutePath);
-  const shouldMuffleThisWindow = shouldMuffleForWindow(win, absolutePath);
-
-  win.on("focus", () => {
-    setMainWindowMuffle(shouldMuffleThisWindow);
-  });
   openedWindows.set(absolutePath, win);
-
-  win.on("blur", () => {
-    // Check if focus is moving to one of our external windows
-    setTimeout(() => {
-      setMainWindowMuffle(
-        shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
-      );
-    }, 50); // Small delay to ensure focus has transferred
-  });
 
   // clean up on close
   win.on("closed", () => {
     openedWindows.delete(absolutePath);
 
-    setMainWindowMuffle(
-      shouldMuffleForWindow(BrowserWindow.getFocusedWindow()),
-    );
+    
   });
 }
 
@@ -1250,10 +1278,6 @@ ipcMain.handle("get-main-reload-html", async () => {
   });
 
   return states;
-});
-
-ipcMain.handle("getMuffleStatus", () => {
-  return audioIsMuffled;
 });
 
 ipcMain.handle("save-file", async (event, absolutePath, data) => {
@@ -1564,6 +1588,9 @@ const pywalThemePath = path.join(os.homedir(), ".cache", "wal", "colors.json");
 // Read current theme
 function loadPywalTheme() {
   try {
+    if (!fs.existsSync(pywalThemePath)) {
+      return null;
+    }
     const data = fs.readFileSync(pywalThemePath, "utf8");
     return JSON.parse(data);
   } catch (err) {
@@ -1574,6 +1601,8 @@ function loadPywalTheme() {
 
 // Watch for Pywal theme changes
 function watchPywalTheme() {
+  if (!fs.existsSync(pywalThemePath)) return;
+  
   // Send theme on startup
   let theme = loadPywalTheme();
   if (theme) {
@@ -1699,3 +1728,17 @@ function setJsonToLoad(json) {
     });
   });
 }
+
+const commitCount = execSync("git rev-list --count HEAD")
+  .toString()
+  .trim();
+
+const shortHash = execSync("git rev-parse --short HEAD")
+  .toString()
+  .trim();
+
+ipcMain.handle("get-git-info", () => ({
+  commitCount,
+  shortHash,
+}));
+

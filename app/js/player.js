@@ -55,14 +55,13 @@ async function getLessCompressedInfo(album, index) {
 }
 
 async function getUncompressedInfo(album, index) {
-  if (album?.info?.trackList) return album; // already uncompressed
   const tries = 10;
   const timeout = 50;
   for (let i = 0; i < tries; i++) {
     try {
       const ready = songsMap && songsMap.size > 0;
       if (ready) {
-        return check(album);
+        return getLatestAlbumInfo(album);
       }
     } catch (err) {
       // songsMap is not defiened for now.
@@ -72,15 +71,57 @@ async function getUncompressedInfo(album, index) {
       await new Promise((resolve) => setTimeout(resolve, timeout));
     }
   }
-  return null; // fallback
+  return album?.info?.trackList ? album : null; // fallback
+}
 
-  function check(album) {
-    // get the uncompressed album
-    const fullAlbum = songsMap.get(album.path);
-    if (fullAlbum) {
-      album = fullAlbum;
-    }
-    return album;
+function getLatestAlbumInfo(album) {
+  if (!album?.path) return album;
+  const fullAlbum = songsMap.get(album.path);
+  return fullAlbum || album;
+}
+
+function getLatestTrackInfo(track) {
+  const latestAlbum = getLatestAlbumInfo(settings.currentPlayingAlbum);
+  const latestTrack = latestAlbum?.tracks?.[settings.currentTrackIndex];
+  if (!latestTrack) return track;
+
+  settings.currentPlayingAlbum = latestAlbum;
+  return latestTrack;
+}
+
+function updateTotalTimeFromTrack(track) {
+  const duration = Number(track?.duration);
+  totalTimeEl.textContent =
+    Number.isFinite(duration) && duration > 0 ? formatTime(duration) : "--:--";
+}
+
+function updateTrackDurationFromLoadedAudio(track) {
+  const duration = Number(audioPlayer.duration);
+  if (!Number.isFinite(duration) || duration <= 0) return;
+
+  track.duration = duration;
+  updateTotalTimeFromTrack(track);
+}
+
+const preloadAudioCache = new Map();
+
+function getTrackCacheKey(track) {
+  return track?.path || "";
+}
+
+function preloadTrackAudio(track, url) {
+  const key = getTrackCacheKey(track);
+  if (!key || !url || preloadAudioCache.has(key)) return;
+
+  const preloadAudio = new Audio();
+  preloadAudio.preload = "auto";
+  preloadAudio.src = url;
+  preloadAudio.load();
+
+  preloadAudioCache.set(key, preloadAudio);
+  if (preloadAudioCache.size > 6) {
+    const oldestKey = preloadAudioCache.keys().next().value;
+    preloadAudioCache.delete(oldestKey);
   }
 }
 
@@ -129,12 +170,19 @@ async function playTrack(
           done = true;
           break;
         case 1: {
-          audioPlayer.currentTime = 0;
-          audioPlayer.play().catch((err) => {
-            console.error("Playback error:", err);
-          });
-          setPlaybackState(true);
-          return; // no need to update anything (as coded for now)
+          settings.currentPlayingAlbum = album;
+          settings.currentTrackIndex = index;
+          loadTrack(
+            album.tracks[index],
+            startTrackFromBeginningOnStartUp,
+            firstLoad,
+          );
+          updateMediaSessionMetadata(
+            album.tracks[index],
+            settings.currentPlayingAlbum.info.description,
+          );
+          saveSettings();
+          return;
         }
         case 2: {
           audioSource = audioSources[2];
@@ -193,11 +241,6 @@ async function playTrack(
   const currTrack = album.tracks[index];
   let alreadyLoadedTrack = false;
 
-  updateMediaSessionMetadata(
-    currTrack,
-    settings.currentPlayingAlbum.info.description,
-  );
-
   for (let i = 0; i < sources.length; ++i) {
     if (sources[i] === 1) {
       if (!sourcesToUpdate[i]) {
@@ -252,12 +295,25 @@ async function playTrack(
   }
 
   getAudioSource();
+  updateMediaSessionMetadata(
+    currTrack,
+    settings.currentPlayingAlbum.info.description,
+  );
   saveSettings();
 }
 
 function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
+  currTrack = getLatestTrackInfo(currTrack);
   audioSource = audioPlayer.querySelector("#curr");
   audioPlayer.src = audioSource.src;
+
+  audioPlayer.addEventListener(
+    "loadedmetadata",
+    function handleLoadedMetadata() {
+      updateTrackDurationFromLoadedAudio(currTrack);
+    },
+    { once: true },
+  );
 
   audioPlayer.pause();
   audioPlayer.currentTime = 0;
@@ -269,19 +325,15 @@ function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
     currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
   }
 
-  audioPlayer.addEventListener("canplay", function handleCanPlay() {
-    audioPlayer.removeEventListener("canplay", handleCanPlay); // cleanup
-    if (!settings.isPlayingMusic && firstLoad) {
-      audioPlayer.pause();
-      setPlaybackState(false, false);
-    } else {
-      audioPlayer.play().catch((err) => {
-        console.error("Playback error:", err);
-      });
-      setPlaybackState(true, false);
-    }
-  });
-
+  if (!settings.isPlayingMusic && firstLoad) {
+    audioPlayer.pause();
+    setPlaybackState(false, false);
+  } else {
+    audioPlayer.play().catch((err) => {
+      console.error("Playback error:", err);
+    });
+    setPlaybackState(true, false);
+  }
   // Update now playing info
   nowPlayingTitle.textContent = getTrackName(currTrack);
   nowPlayingArtist.textContent =
@@ -300,9 +352,7 @@ function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
     nowPlayingArtSmall.style.backgroundImage = "none";
   }
 
-  totalTimeEl.textContent = currTrack.duration
-    ? formatTime(currTrack.duration)
-    : "--:--";
+  updateTotalTimeFromTrack(currTrack);
   initAudioGraph();
 }
 
@@ -347,6 +397,7 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
 
   // Only poke the DOM when the value actually changes.
   if (src.src !== url) src.src = url;
+  preloadTrackAudio(track, url);
 
   src.setAttribute("data-album-path", albumPathAndIndex[0]);
   src.setAttribute("data-index", albumPathAndIndex[1]);
@@ -356,7 +407,6 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
 let audioCtx;
 let sourceNode;
 let filterNode;
-let isMuffled = false;
 
 function initAudioGraph() {
   if (!audioCtx) {
@@ -403,7 +453,7 @@ function getImgBase64AndMimeType(filePath) {
   return [`data:${mime};base64,${base64}`, mime];
 }
 
-function updateMediaSessionMetadata(track, albumDescription) {
+async function updateMediaSessionMetadata(track, albumDescription) {
   if (!("mediaSession" in navigator)) return;
 
   let cover = "";
@@ -418,6 +468,10 @@ function updateMediaSessionMetadata(track, albumDescription) {
     [cover, mimeType] = getImgBase64AndMimeType(albumDescription.cover);
   }
 
+  if (cover?.length > 2048) {
+    cover = await compressCover(cover);
+  }
+
   navigator.mediaSession.metadata = new MediaMetadata({
     title: getTrackName(track, true),
     artist: albumDescription?.author || "",
@@ -429,6 +483,56 @@ function updateMediaSessionMetadata(track, albumDescription) {
         ]
       : [],
   });
+}
+
+async function compressCover(
+  src,
+  {
+    maxSize = 512,
+    maxBytes = 4096 * 1024,
+    initialQuality = 0.85,
+    minQuality = 0.5,
+    qualityStep = 0.05,
+  } = {},
+) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = src;
+
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = reject;
+  });
+
+  // center-crop to square
+  const side = Math.min(img.width, img.height);
+  const sx = (img.width - side) / 2;
+  const sy = (img.height - side) / 2;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = maxSize;
+  canvas.height = maxSize;
+
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+
+  // Compress until under size limit
+  let quality = initialQuality;
+  let blob;
+
+  do {
+    blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality),
+    );
+    quality -= qualityStep;
+  } while (blob && blob.size > maxBytes && quality >= minQuality);
+
+  if (!blob) throw new Error("Image compression failed");
+
+  return URL.createObjectURL(blob);
 }
 
 if ("mediaSession" in navigator) {
@@ -470,36 +574,6 @@ if ("mediaSession" in navigator) {
     }
     audioPlayer.currentTime = details.seekTime;
   });
-}
-
-// Apply muffling effect
-async function muffleAudio(time = 0.5) {
-  if (isMuffled) return;
-  const tries = 10;
-  const timeout = 50;
-  for (let i = 0; i < tries; i++) {
-    if (audioCtx) {
-      const now = audioCtx.currentTime;
-      filterNode.frequency.cancelScheduledValues(now);
-      filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
-      filterNode.frequency.linearRampToValueAtTime(175, now + time);
-      isMuffled = true;
-    }
-
-    if (i < tries - 1) {
-      await new Promise((resolve) => setTimeout(resolve, timeout));
-    }
-  }
-}
-
-// Remove muffling effect
-function unmuffleAudio() {
-  if (!isMuffled || !audioCtx) return;
-  const now = audioCtx.currentTime;
-  filterNode.frequency.cancelScheduledValues(now);
-  filterNode.frequency.setValueAtTime(filterNode.frequency.value, now);
-  filterNode.frequency.linearRampToValueAtTime(20000, now + 1.5);
-  isMuffled = false;
 }
 
 function setPlaybackState(isPlaying, persist = true) {

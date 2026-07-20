@@ -2,67 +2,121 @@
   "0.0.000": {
     "name": "Usable app",
     "logs": "App is now usable, with basic functionality \nThemes window \nSettings window \nEditor window \nFull compatibility with old reload",
-    "date": "30/08/2025",
+    "date": {
+      "day": 30,
+      "month": 8,
+      "year": 2025
+    },
     "done": true
   },
   "0.0.100": {
     "name": "slight optimizations",
     "logs": "more themes added \nbetter tool tip \ntheme item have their theme engraved to the it \ncmd+E to open the editor window \nfont renderer now renders the font weight of 900 \nnew inputs, like n for next track, v for previous track and others \nnow possible to add params to the inputs \ncover ins't fetched every time it reloads, now only the tracks are fetched every time, but now the algorithem uses map insted of 2 for loops \nAdded verions logs",
-    "date": "01/09/2025",
+    "date": {
+      "day": 1,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.0.200": {
     "name": "Change logs and fonts",
     "logs": "Added dates to change logs \nPossible to change fonts in any theme. The fonts are from the user's computer or Rubik, that comes installed \nOverlay blur animates on creation instead of being immediately visible (easear on the eyes, at least for me) \nVisible change logs to user \nPossible to change the library paths, where the tracks are fetched from",
-    "date": "02/09/2025",
+    "date": {
+      "day": 2,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.0.201": {
     "name": "Bug fixes",
     "logs": "Made the volume from settings not just change the slider in the main window, but also the volume of the audio source \nWhen creating a new theme, the sidebar scrolls to the new theme",
-    "date": "02/09/2025",
+    "date": {
+      "day": 2,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.0.202": {
     "name": "Themes changes",
     "logs": "Album color now mixes with the background color and not with a clamp and checking if the theme is white, now it looks better in themes that the bg ins't a neutral color and light themes. \nWhen another reload window is opened, the audio muffles and unmuffles when all external reload windows are closed \nAdded sfx to all external reload windows \nSeperated the light themes from dark themes in theme editor for easers selection. \nAdded names to versions (the 'Themes changes' at the top)",
-    "date": "04/09/2025",
+    "date": {
+      "day": 4,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.0.300": {
     "name": "Changable CSS",
     "logs": "Random bug fixes that I forgor 💀 \n911 happened 24 years ago \nAbility to add custom CSS to all windows (ctrl or cmd + l to see the CSS window that allows you to see the CSS) \nChanges to how music editor items is displayed \nAdded color blend for each theme, making it possible to change the amount of color mixing happening as described on 0.0.102 \nSimplified the colorscheme, from 20vars to 14vars",
-    "date": "11/09/2025",
+    "date": {
+      "day": 11,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.1.000": {
     "name": "Keyboard controls",
     "logs": "bug fixes \ncontroller and only keyboard controls fully compatible with the main reload window and some compatibility with other reload windows, for controller \ncan move cursor with a controller \nAdded controller settings to settings in the settings window (settings) \nfull compatibility with media session \nAdded default user data for looks and shortcuts \nRemoved scrollbars and consolidate shared CSS \nImproved active state styling and modal backdrop",
-    "date": "25/09/2025",
+    "date": {
+      "day": 25,
+      "month": 9,
+      "year": 2025
+    },
     "done": true
   },
   "0.1.100": {
     "name": "keyboards controls settings",
     "logs": "Can add and remove shortcuts in settings \nAble to change, add and remove keybindings in the settings, and not by editing the JSON file manually \nFixed some math problems when moving down on a grid with keys, now it should have the same properties as up \nfixed some css problems in themes \nFixed the light or dark theme btns not change the active state when expected",
-    "date": "01/10/2025",
+    "date": {
+      "day": 1,
+      "month": 10,
+      "year": 2025
+    },
     "done": true
   },
   "0.2.000": {
     "name": "This was meant to just be a algorithm update 🗿",
     "logs": "Made it Possible to play songs without the main reload window opened (this happens when you click the yellow button, that hides the window instead of minimizing it) \nMade favourites, that get added into the sidebar, and can be played from there \nMade it get songs based on user rating in music editor and algorithm settings, for only copyright free songs, how much to prefer an album from a track and some other factors, as prefer author, genre, year or label. \nChanged how the settings in settings windows looks and feels, now using a grid layout \nFixed a bug of the music editor not loading the data correctly to the tracks. \nRemove the add track and remove track buttons from the music editor \nMade the volume icon be more interactive by using 5 svgs instead of two emojis (this ones: 🔊, 🔇) \nFixed a bug where the sfx didn't load \nFixed some problems with sfx not playing as expected \nAdded sfx Volume \nAdded sfx the settings and looks window \nFixed change_log_content (this part from the change logs that you reading) to show everything inside of it \nChanged the date of change_log_date placement to be on the bottom right and the change_log_title to be centered on the top \nAdded app icon \nMade the backend read the metadate for the description (comment), label and copyright \nFixed the light theme not being applied correctly for the first time \nFixed the input not having css in looks \nMade looks be able to have various looks at the same time \nAdded label for inputs in looks \nMade the look color be different if it is on, off or edited and not saved.",
-    "date": "15/10/2025",
+    "date": {
+      "day": 15,
+      "month": 10,
+      "year": 2025
+    },
     "done": true
   },
   "0.3.000": {
     "name": "It was a bad idea to make this release w/ Bully",
     "logs": "Added remove track back to edit window \nMade when a new track is added in the dir to automaticly but it in \nMade possible to change the file and thus the track name in Track List edit \nAdded a glowing effect to the album cover on player container \nMade the cover hide when there is no space for it \nSome bug fixes for the saving system \n Mini player (meta + m) \nFixed a bug that makes an input be constantly active if the user leaves the app with that input being registered, even if the user focus the app again \nMade the code not constantly scan the folders on startup, decreasing the startup time from ~290ms to ~1.5ms, but made the fetching folders from ~290ms to ~640ms but its more reliable \nfixed the settings action context menu, when wrinting the whole func and clicking enter, instead of putting the one that includes the name, puts the func with the same name \nAdded support for pywal \n Added organization to the library view \n Made find tracks (ctrl + f or meta + f)",
-    "date": "27/3/2026",
+    "date": {
+      "day": 27,
+      "month": 3,
+      "year": 2026
+    },
     "done": true
   },
   "0.3.001": {
-    "name": "Bully didn't release, but I needed to update",
+    "name": "Bully released, but I needed to update",
     "logs": "Fix a bug that didn't allow to open an album without a cover \n Fixed a gradient error in music editor \n Fixed the setting 'is album' not loading correctly in music editor \n Fixed music editor not loading from meta + e sometimes \n Made some changes to the mini player css",
-    "date": "28/3/2026",
+    "date": {
+      "day": 28,
+      "month": 3,
+      "year": 2026
+    },
     "done": true
+  },
+  "0.3.100": {
+    "name": "Manditory maintenance update",
+    "logs": "Added 2 new looks:\n DifferentGradient, allows the user to change the gradient as he pleases and AlbumViewer2, that gives a more unique look, using the screen horizontaly to its advantage (just created a new word, yay! :))  \n---\n Fixed a bug with the cover not loading to media player, when its to big\n Made some changes to the player container CSS\n Added a album length viewer and label viewer\n Fixed a bug that the favourites weren't saved\n Now, when you click in an artist name, or genre or year, it searches for that in the library (and goes to the library, of course)\n Fixed a error in the way a recently listened track score was affected (sometimes it reduced almost nothing)\nFixed a bug that the app throwed a error if the user didn't have pywal\n Removed muffle and unmuffling affects (caused too many bugs)",
+    "date": {
+      "day": 15,
+      "month": 7,
+      "year": 2026
+    },
+    "done": false
   }
 }

@@ -3,9 +3,6 @@ async function playRandomSong() {
     -settings.maxSavedTracks,
   );
 
-  const clamper = 1 / Math.pow(settings.previousTracks.length, 4);
-  const reducer = 2;
-
   settings.nextTracks = settings.nextTracks.slice(-settings.maxSavedTracks);
 
   let possibleSongs = songs.flatMap((album) =>
@@ -72,10 +69,10 @@ async function playRandomSong() {
       song.album.info.description.rating * settings.algorithm.ratingImportance;
 
     // Reduce score for recently played songs
-    // grath in some graths/previousTracksReduction.ggb
+    // graph in some graphs/previousTracksReduction.ggb
     for (let i = settings.previousTracks.length - 1; i >= 0; --i) {
       if (settings.previousTracks[i].album.path === song.album.path) {
-        score *= 1 - reducer * clamper * Math.pow(i + 1, 4);
+        score *= 1 - 2 / (i - settings.previousTracks.length - 2);
         break;
       }
     }

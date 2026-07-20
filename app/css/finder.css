@@ -25,6 +25,12 @@
     pointer-events: none;
 }
 
+.finder.initially-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* SHOW */
 .finder.show {
     animation: showFinder 0.4s ease;
@@ -76,11 +82,11 @@
     height: 40px;
     margin-left: 10px;
     margin-right: 10px;
-    fill: color-mix(in srgb, var(--bg-1) 65%, transparent);
+    fill: color-mix(in srgb, var(--bg-1) 80%, transparent);
 }
 
 .finder input {
-    background-color: color-mix(in srgb, var(--bg-1) 65%, transparent);
+    background-color: color-mix(in srgb, var(--bg-1) 80%, transparent);
     border: none;
     outline: none;
     color: var(--textColor);

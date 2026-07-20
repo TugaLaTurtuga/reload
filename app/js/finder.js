@@ -8,7 +8,12 @@ function toggleFinder(fromInput = false) {
     return;
   }
 
-  if (finder.classList.contains("hide")) {
+  const isFinderHidden =
+    finder.classList.contains("hide") ||
+    finder.classList.contains("initially-hidden");
+
+  if (isFinderHidden) {
+    finder.classList.remove("initially-hidden");
     finder.classList.remove("hide");
     finder.classList.add("show");
 

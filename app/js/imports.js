@@ -25,6 +25,7 @@ const navItems = document.querySelectorAll(".nav-item");
 const libraryContainer = document.getElementById("library-container");
 const playerContainer = document.getElementById("player-container");
 const backButton = document.getElementById("back-button");
+const libraryBackButton = document.getElementById("library-header");
 const editButton = document.getElementById("edit-button");
 const albumArt = document.getElementById("album-art");
 const albumTitle = document.getElementById("album-title");
@@ -38,6 +39,8 @@ const mainContent = document.getElementById("main-content");
 const playerControls = document.getElementById("player-controls");
 const finder = document.querySelector(".finder");
 const finderInput = finder.querySelector("input");
+const albumLength = document.getElementById("album-length");
+const albumLabel = document.getElementById("album-label");
 
 // App State
 let songs = []; // the fetched albums/comps/eps/singles
@@ -113,3 +116,7 @@ function getCurrenrVirtualCursorElements() {
 }
 
 const funcsSaveFilePath = path.join(__dirname, "../electron/data/func.json");
+
+document.getElementById("b-button").onclick = () => {
+  openAlbum(settings.currentAlbum);
+};
