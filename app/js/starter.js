@@ -68,7 +68,7 @@ async function updateSettings() {
   // update the tracks name when settings.showFeatures is changed
   if (settings.currentPlayingAlbum && settings.currentTrackIndex > -1) {
     nowPlayingTitle.textContent = getTrackName(
-      settings.currentPlayingAlbum.tracks[settings.currentTrackIndex],
+      getAlbumTrack(settings.currentPlayingAlbum, settings.currentTrackIndex),
     );
     updateOverflowsOnNowPlaying();
   }

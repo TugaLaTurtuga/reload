@@ -42,14 +42,14 @@ async function getLessCompressedInfo(album, index) {
     path: album.path,
     info: {
       description: album.info.description,
+      trackList: [],
     },
-    tracks: [],
   };
 
-  for (let i = 0; i < index.length - 1; i++) {
-    compressedAlbum.tracks.push(null);
+  for (let i = 0; i < index; i++) {
+    compressedAlbum.info.trackList.push(null);
   }
-  compressedAlbum.tracks.push(album.tracks[index]);
+  compressedAlbum.info.trackList.push(getAlbumTrack(album, index));
 
   return compressedAlbum;
 }
@@ -82,7 +82,7 @@ function getLatestAlbumInfo(album) {
 
 function getLatestTrackInfo(track) {
   const latestAlbum = getLatestAlbumInfo(settings.currentPlayingAlbum);
-  const latestTrack = latestAlbum?.tracks?.[settings.currentTrackIndex];
+  const latestTrack = getAlbumTrack(latestAlbum, settings.currentTrackIndex);
   if (!latestTrack) return track;
 
   settings.currentPlayingAlbum = latestAlbum;
@@ -140,7 +140,7 @@ async function playTrack(
 
   album = await getUncompressedInfo(album);
 
-  if (!album?.tracks[index]) return;
+  if (!getAlbumTrack(album, index)) return;
 
   let sourcesToUpdate = [true, true, true];
   let sources = [0, 1, 2];
@@ -173,12 +173,12 @@ async function playTrack(
           settings.currentPlayingAlbum = album;
           settings.currentTrackIndex = index;
           loadTrack(
-            album.tracks[index],
+            getAlbumTrack(album, index),
             startTrackFromBeginningOnStartUp,
             firstLoad,
           );
           updateMediaSessionMetadata(
-            album.tracks[index],
+            getAlbumTrack(album, index),
             settings.currentPlayingAlbum.info.description,
           );
           saveSettings();
@@ -238,7 +238,7 @@ async function playTrack(
       if (activeEl) activeEl.classList.add("active");
     }
   } // no need to remove any track-item active mode if settings.currentAlbum is null
-  const currTrack = album.tracks[index];
+  const currTrack = getAlbumTrack(album, index);
   let alreadyLoadedTrack = false;
 
   for (let i = 0; i < sources.length; ++i) {
@@ -268,7 +268,7 @@ async function playTrack(
         prev.album = await getLessCompressedInfo(prev.album, prev.index);
         albumPathAndIndex[0] = prev.album.path;
         albumPathAndIndex[1] = prev.index;
-        track = prev.album.tracks[prev.index];
+        track = getAlbumTrack(prev.album, prev.index);
         break;
       case 1: // curr
         albumPathAndIndex[0] = album.path;
@@ -282,7 +282,7 @@ async function playTrack(
         next.album = await getLessCompressedInfo(next.album, next.index);
         albumPathAndIndex[0] = next.album.path;
         albumPathAndIndex[1] = next.index;
-        track = next.album.tracks[next.index];
+        track = getAlbumTrack(next.album, next.index);
     }
 
     if (track !== null && track?.path) {
@@ -649,8 +649,8 @@ window.handlePlayerCommand = async function handlePlayerCommand(command) {
 function setNextTracksFromAlbum(album, startIndex) {
   // Build the upcoming queue as all tracks after the selected index
   settings.nextTracks = [];
-  if (!album || !album.tracks) return;
-  for (let i = startIndex + 1; i < album.tracks.length; i++) {
+  if (!album || !getAlbumTrackCount(album)) return;
+  for (let i = startIndex + 1; i < getAlbumTrackCount(album); i++) {
     settings.nextTracks.push({ album: getCompressedInfo(album), index: i });
   }
 }

@@ -463,7 +463,7 @@ ipcMain.handle("get-library", async () => {
     albums = [];
     albumsPathLoaded.clear();
     loadAlbumsPath();
-    // Try to get libraries
+
     libraryPaths = await loadLibraryPaths();
     for (const path of libraryPaths) {
       await scanMusicFolder(path);
@@ -579,6 +579,13 @@ function normalizeCachedAlbumPaths(album) {
   const normalizedJsonPath = canonicalizeExistingPath(
     album.jsonPath || path.join(normalizedPath || "", "reload.json"),
   );
+  const normalizeTrackPath = (trackPath) => {
+    if (!trackPath) return trackPath;
+    const fullTrackPath = path.isAbsolute(trackPath)
+      ? trackPath
+      : path.join(normalizedPath || "", trackPath);
+    return canonicalizeExistingPath(fullTrackPath);
+  };
 
   let refreshedInfo = album.info;
   if (normalizedJsonPath && fs.existsSync(normalizedJsonPath)) {
@@ -597,21 +604,31 @@ function normalizeCachedAlbumPaths(album) {
     }
   }
 
-  return {
+  const cachedTracks = Array.isArray(album.tracks) ? album.tracks : [];
+  const refreshedTrackList = Array.isArray(refreshedInfo?.trackList)
+    ? refreshedInfo.trackList
+    : cachedTracks;
+  const trackList = refreshedTrackList.map((track, index) => {
+    const cachedTrack = cachedTracks[index];
+    const mergedTrack =
+      cachedTrack && typeof cachedTrack === "object"
+        ? { ...cachedTrack, ...track }
+        : track;
+
+    return mergedTrack && typeof mergedTrack === "object"
+      ? { ...mergedTrack, path: normalizeTrackPath(mergedTrack.path) }
+      : mergedTrack;
+  });
+
+  const normalizedAlbum = {
     ...album,
     path: normalizedPath,
     jsonPath: normalizedJsonPath,
-    tracks: Array.isArray(album.tracks)
-      ? album.tracks.map((track) =>
-          track && typeof track === "object"
-            ? { ...track, path: canonicalizeExistingPath(track.path) }
-            : track,
-        )
-      : album.tracks,
     info:
       refreshedInfo && typeof refreshedInfo === "object"
         ? {
             ...refreshedInfo,
+            trackList,
             description:
               refreshedInfo.description &&
               typeof refreshedInfo.description === "object"
@@ -625,6 +642,9 @@ function normalizeCachedAlbumPaths(album) {
           }
         : refreshedInfo,
   };
+
+  delete normalizedAlbum.tracks;
+  return normalizedAlbum;
 }
 
 function loadAlbumsPath() {
@@ -714,7 +734,6 @@ async function processMusicFolder(folderPath) {
       return base.charAt(0).toUpperCase() + base.slice(1);
     })(),
     path: folderPath,
-    tracks: [],
     info: {
       trackList: [],
       description: {
@@ -743,12 +762,42 @@ async function processMusicFolder(folderPath) {
 
   let shouldExtractColor = false;
 
+  async function buildTrackList() {
+    album.info.trackList = await Promise.all(
+      audioFiles.map(async (file) => {
+        const trackPath = path.join(folderPath, file);
+        const fallbackTitle = path.basename(file, path.extname(file)).trim();
+        let title = fallbackTitle;
+
+        try {
+          const metadata = await mm.parseFile(trackPath);
+          if (!metadata.common) {
+            metadata.common = {};
+          }
+
+          metadata.common.title =
+            metadata.common.title?.trim() || fallbackTitle;
+          title = metadata.common.title;
+        } catch (err) {
+          console.warn(`Couldn't read metadata for ${file}:`, err);
+        }
+
+        const { disc, idx, name } = getPlacementInfo(title);
+        title = name
+
+        return {
+          path: file,
+          title,
+          rating: 5,
+          lastModified: fs.statSync(trackPath).mtimeMs,
+        };
+      })
+    );
+  }
+
   if (!fs.existsSync(confPath)) {
     // no json → build new
-    album.info.trackList = audioFiles.map((file) => ({
-      title: path.basename(file, path.extname(file)).trim(),
-      rating: 5,
-    }));
+    await buildTrackList();
 
     const possible_txts = [
       ["Author.txt", "author"],
@@ -798,7 +847,36 @@ async function processMusicFolder(folderPath) {
           ...album.info.description,
           ...parsedData.description,
         };
-        album.info.trackList = parsedData.trackList || album.info.trackList;
+        const savedTrackList = Array.isArray(parsedData.trackList)
+          ? parsedData.trackList
+          : [];
+
+        await buildTrackList();
+        album.info.trackList = album.info.trackList.map((track) => {
+          const savedTrack = savedTrackList.find((item) => {
+            if (!item) return false;
+            const savedPath = item.path
+              ? path.isAbsolute(item.path)
+                ? item.path
+                : path.join(folderPath, item.path)
+              : null;
+            const trackPath = track.path
+              ? path.isAbsolute(track.path)
+                ? track.path
+                : path.join(folderPath, track.path)
+              : null;
+
+            return savedPath === trackPath || item.title === track.title;
+          });
+
+          return savedTrack
+            ? {
+                ...savedTrack,
+                ...track,
+                rating: savedTrack.rating ?? track.rating,
+              }
+            : track;
+        });
       }
 
       // mark for extraction only if color missing/placeholder
@@ -843,11 +921,6 @@ async function processMusicFolder(folderPath) {
     }
   }
 
-  // Utility functions
-  const cleanTrackTitle = (title) => title.replace(/^\d+\s*\.?\s*/, "").trim();
-
-  const clearTitle = (title) => title.toLowerCase().trim();
-
   const sortByTrackNumber = (a, b) => {
     const numA = parseInt(a.title.match(/^\d+/)?.[0] || Infinity, 10);
     const numB = parseInt(b.title.match(/^\d+/)?.[0] || Infinity, 10);
@@ -858,10 +931,21 @@ async function processMusicFolder(folderPath) {
   const ungarnizedTracks = await Promise.all(
     audioFiles.map(async (audioFile) => {
       const trackPath = path.join(folderPath, audioFile);
-      const rawTitle = path.basename(audioFile, path.extname(audioFile));
+      const fallbackTitle = path.basename(
+        audioFile,
+        path.extname(audioFile),
+      ).trim();
+      let title = fallbackTitle;
 
       try {
         const metadata = await mm.parseFile(trackPath);
+        if (!metadata.common) {
+          metadata.common = {};
+        }
+
+        metadata.common.title =
+          metadata.common.title?.trim() || fallbackTitle;
+        title = metadata.common.title;
 
         if (metadata.common && shouldExtractColor) {
           const {
@@ -895,14 +979,14 @@ async function processMusicFolder(folderPath) {
         }
 
         return {
-          title: rawTitle,
+          title,
           path: trackPath,
           duration: metadata.format.duration || 0,
         };
       } catch (err) {
-        console.error(`Error parsing metadata for ${rawTitle}:`, err);
+        console.error(`Error parsing metadata for ${title}:`, err);
         return {
-          title: rawTitle,
+          title: title,
           path: trackPath,
           duration: 0,
           label: null,
@@ -912,51 +996,149 @@ async function processMusicFolder(folderPath) {
     }),
   );
 
+  function getPlacementInfo(title) {
+    // EX: disc-idx <name>
+    // EX: idx <name>
+    // EX: idx. <name>
+    // EX: idx - <name>
+    // EX: <name>
+    title = title.toString();
+    const match = title.match(
+      /^(?:(\d+)-(\d+)|(\d+))\s*\.?\s*-?\s*(.+)$/i
+    );
+
+    if (!match) {
+      return {
+        disc: null,
+        idx: null,
+        name: title.trim(),
+      };
+    }
+
+    return {
+      disc: match[1] ? Number(match[1]) : null,
+      idx: Number(match[2] ?? match[3]),
+      name: match[4].trim(),
+    };
+  }
+
+  function changePlacementInfo(path, disc, idx, title) {
+    const { disc: old_disc, idx: old_idx, name } = getPlacementInfo(title);
+    let new_title = name;
+
+    if (disc !== null || disc !== undefined) {
+      if (idx !== null || idx !== undefined) idx = -1;
+      new_title = `${disc}-${idx} ${name}`;
+    } else if (idx !== null || idx !== undefined) {
+      new_title = `${idx} ${name}`;
+    }
+  }
+
+  function gitMusic(dir, newTrack, oldTrack) {
+    const ext = path.extname(oldTrack.path).replace('.', '')
+    dir = `${dir}/${path.basename(oldTrack.path, path.extname(oldTrack.path)).trim()}`
+    const { disc, idx, name } = getPlacementInfo(oldTrack.title);
+
+    let changedIdx = 0;
+    while (fs.existsSync(`${dir}/${changedIdx}.${ext}`)) {
+      changedIdx++;
+    }
+    fs.rename(oldTrack, `${dir}/${changedIdx}.${ext}`, function (err) {
+      throw err;
+    });
+
+    changePlacementInfo(dir, disc, idx, newTrack.title);
+  }
+
   // Build lookup map for efficient matching
   const trackMap = new Map(
-    ungarnizedTracks.map((t) => [clearTitle(t.title), t]),
+    ungarnizedTracks.map((track) => [
+      getPlacementInfo(track.title).name.toLowerCase(),
+      track,
+    ]),
   );
 
   // Match with trackList
+  const alreadyMatchedTracks = new Map();
   const matchedTracks = album.info.trackList
     .map((track) => {
-      const key = clearTitle(track.title);
+      const { disc, idx, name } = getPlacementInfo(track.title);
+      const key = name.toLowerCase();
       const match = trackMap.get(key);
 
-      if (match) {
-        return {
-          title: cleanTrackTitle(match.title),
-          path: match.path,
-          duration: match.duration,
+      const existingPath = track.path
+        ? path.isAbsolute(track.path)
+          ? track.path
+          : path.join(folderPath, track.path)
+        : null;
+      const pathMatch = existingPath
+        ? ungarnizedTracks.find((item) => item.path === existingPath)
+        : null;
+      const matchedTrack = pathMatch || match;
+
+      if (alreadyMatchedTracks.has(key)) {
+        const otherTrack = alreadyMatchedTracks.get(key);
+        if (track.lastModified > otherTrack.lastModified) {
+          gitMusic(album.path, track, otherTrack);
+        } else {
+          gitMusic(album.path, otherTrack, track);
+        }
+        track = {
+          ...track,
+          path: matchedTrack.path,
+          duration: matchedTrack.duration,
+          disc: disc,
+          index: idx,
+          rating: track.rating ?? 5,
+          lastModified: fs.statSync(matchedTrack.path).mtimeMs,
         };
+        alreadyMatchedTracks.set(key, track)
+        return track
+      } else if (matchedTrack) {
+        track = {
+          ...track,
+
+          path: matchedTrack.path,
+          duration: matchedTrack.duration,
+          disc: disc,
+          index: idx,
+          rating: track.rating ?? 5,
+          lastModified: fs.statSync(matchedTrack.path).mtimeMs,
+        };
+        alreadyMatchedTracks.set(key, track)
+        return track
       }
       return null;
     })
     .filter(Boolean);
 
   // Add missing tracks from trackMap that aren’t in album.info.trackList
-  const missingTracks = [];
   const missingTrackList = [];
   for (const [key, track] of trackMap.entries()) {
-    const exists = album.info.trackList.some(
-      (t) => clearTitle(t.title) === key,
-    );
+    const exists = album.info.trackList.some((existingTrack) => {
+      const existingPath = existingTrack.path
+        ? path.isAbsolute(existingTrack.path)
+          ? existingTrack.path
+          : path.join(folderPath, existingTrack.path)
+        : null;
+
+      return (
+        existingPath === track.path ||
+        getPlacementInfo(existingTrack.title).name.toLowerCase() === key
+      );
+    });
     if (!exists) {
       missingTrackList.push({
-        title: clearTitle(track.title),
-        rating: 5,
-      });
-      missingTracks.push({
-        title: cleanTrackTitle(track.title),
+        title: track.title,
         path: track.path,
         duration: track.duration,
+        rating: 5,
+        lastModified: fs.statSync(track.path).mtimeMs,
       });
     }
   }
 
-  // Combine both
-  album.tracks = [...matchedTracks, ...missingTracks];
-  album.info.trackList = [...album.info.trackList, ...missingTrackList];
+  album.info.trackList = [...matchedTracks, ...missingTrackList];
 
   if (album.info.description.isAlbum === undefined) {
     album.info.description.isAlbum = album.info.trackList.length > 1;
@@ -964,11 +1146,16 @@ async function processMusicFolder(folderPath) {
 
   // Sort both arrays
   album.info.trackList.sort(sortByTrackNumber);
-  album.tracks.sort(sortByTrackNumber);
+
+  try {
+    fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
+  } catch (err) {
+    console.error("Error updating json with track info:", err);
+  }
 
   album.jsonPath = confPath;
 
-  if (album.tracks.length > 0) {
+  if (album.info.trackList.length > 0) {
     albums.push(album);
     albumsPath.set(folderKey, album);
     albumsPathLoaded.add(folderKey);
@@ -1203,7 +1390,7 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   win.on("closed", () => {
     openedWindows.delete(absolutePath);
 
-    
+
   });
 }
 
@@ -1602,7 +1789,7 @@ function loadPywalTheme() {
 // Watch for Pywal theme changes
 function watchPywalTheme() {
   if (!fs.existsSync(pywalThemePath)) return;
-  
+
   // Send theme on startup
   let theme = loadPywalTheme();
   if (theme) {
@@ -1741,4 +1928,3 @@ ipcMain.handle("get-git-info", () => ({
   commitCount,
   shortHash,
 }));
-

@@ -6,7 +6,7 @@ async function playRandomSong() {
   settings.nextTracks = settings.nextTracks.slice(-settings.maxSavedTracks);
 
   let possibleSongs = songs.flatMap((album) =>
-    album.tracks.map((track, index) => ({ album, track, index })),
+    getAlbumTrackList(album).map((track, index) => ({ album, track, index })),
   );
 
   // Filter copyright first
@@ -28,10 +28,10 @@ async function playRandomSong() {
     let score = 1;
     const currentTrack =
       settings.currentPlayingAlbum &&
-      settings.currentPlayingAlbum.tracks &&
-      settings.currentPlayingAlbum.tracks[
-        settings.currentPlayingAlbum.currTrack
-      ];
+      getAlbumTrack(
+        settings.currentPlayingAlbum,
+        settings.currentPlayingAlbum.currTrack,
+      );
 
     // Prefer similar attributes to the currently playing song
     if (currentTrack) {

@@ -149,15 +149,18 @@ async function populateForm() {
   const musicPath = jsonPath.substring(0, jsonPath.lastIndexOf("/")) + "/";
 
   musicData.trackList.forEach((track, index) => {
-    track.path = null;
+    const savedPath = track.path;
+    track.path = savedPath && fs.existsSync(savedPath) ? savedPath : null;
     const possibleTrackPathWithoutExtNames = musicPath + track.title;
 
-    for (let i = 0; i < possibleFileExtNames.length; ++i) {
-      const possibleTrackPath =
-        possibleTrackPathWithoutExtNames + possibleFileExtNames[i];
-      if (fs.existsSync(possibleTrackPath)) {
-        track.path = possibleTrackPath;
-        break;
+    if (!track.path) {
+      for (let i = 0; i < possibleFileExtNames.length; ++i) {
+        const possibleTrackPath =
+          possibleTrackPathWithoutExtNames + possibleFileExtNames[i];
+        if (fs.existsSync(possibleTrackPath)) {
+          track.path = possibleTrackPath;
+          break;
+        }
       }
     }
     if (track.path) addTrackToDOM(track, index);
@@ -170,6 +173,7 @@ function addTrackToDOM(track, index) {
   const trackDiv = document.createElement("div");
   trackDiv.className = "track";
   trackDiv.dataset.index = index;
+  trackDiv.trackData = track;
 
   trackDiv.innerHTML = `
     <input type="text" class="track-title" value="${track.title || ""}" placeholder="Track title">
@@ -263,8 +267,10 @@ function updateTrackData() {
   trackElements.forEach((trackElement) => {
     const titleInput = trackElement.querySelector(".track-title");
     const ratingSelect = trackElement.querySelector(".slider");
+    const track = trackElement.trackData || {};
 
     updatedTracks.push({
+      ...track,
       title: titleInput.value,
       rating: parseInt(ratingSelect.value, 10),
     });

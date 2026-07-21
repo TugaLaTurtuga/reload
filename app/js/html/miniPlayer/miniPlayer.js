@@ -66,7 +66,7 @@ async function init() {
   bindControls();
 
   const album = settings.currentPlayingAlbum;
-  const track = album?.tracks?.[settings.currentTrackIndex] || null;
+  const track = getAlbumTrack(album, settings.currentTrackIndex);
 
   if (!album || !track) {
     document.getElementById("track-title").textContent = "Select a track";

@@ -704,6 +704,17 @@ nav ul {
   transition: background-color 0.1s ease-in; /* this is used when hover ends */
 }
 
+.track-disc {
+  margin: 0px;
+  margin-top: 0;
+
+  text-align-last: center;
+  font-weight: 800;
+  background-color: var(--trackItemOnHover);
+  border-bottom: 2px solid var(--activeColor);
+  padding: 10px;
+}
+
 .odd-color {
   background-color: var(--trackItemOddColor);
 }

@@ -43,8 +43,10 @@ async function updateLibrary() {
     }
 
     if (playingAlbumUpdated) {
-      const currentTrackUpdated =
-        playingAlbumUpdated.tracks?.[settings.currentTrackIndex];
+      const currentTrackUpdated = getAlbumTrack(
+        playingAlbumUpdated,
+        settings.currentTrackIndex,
+      );
       nowPlayingArtist.textContent =
         playingAlbumUpdated.info.description.author;
       if (currentTrackUpdated) {
@@ -174,8 +176,9 @@ function _getFinderMatch(album) {
     containsFinder[1] = true;
   }
 
-  for (let i = 0; i < album.tracks.length; i++) {
-    const track = album.tracks[i];
+  const tracks = getAlbumTrackList(album);
+  for (let i = 0; i < tracks.length; i++) {
+    const track = tracks[i];
     if (getTrackName(track).toLowerCase().includes(search)) {
       containsFinder[2] = true;
       break;
@@ -485,7 +488,7 @@ async function openAlbum(album) {
   albumLabel.textContent = `©${album.info.description.label}`;
 
   let albumDuration = 0.0;
-  album.tracks.forEach((track, index) => {
+  getAlbumTrackList(album).forEach((track, index) => {
     if (typeof track.duration !== "number" || isNaN(track.duration)) {
       track.duration = 0;
     }
@@ -514,20 +517,31 @@ async function openAlbum(album) {
   // Render track list
   trackList.innerHTML = "";
 
-  const albumTrackSize = album.tracks.length;
-  const albumTrackSizeDigits = albumTrackSize.toString().length;
+  const tracks = getAlbumTrackList(album);
+  let currDisc = null;
 
-  album.tracks.forEach((track, index) => {
+  tracks.forEach((track, index) => {
     const trackItem = document.createElement("div");
     trackItem.className = "track-item";
     trackItem.dataset.index = index;
     if (index % 2 === 0) trackItem.classList.add("odd-color");
-    const trackNumber = String(index + 1).padStart(albumTrackSizeDigits, "0");
+
+    let { disc, idx, name } = getTrackInfo(path.basename(track.path, path.extname(track.path)).trim());
+    console.log(disc, idx, name, track.title);
+    if (idx === null) idx = index + 1;
     const durationStr = track.duration ? formatTime(track.duration) : "--:--";
 
+    if (disc !== currDisc && disc !== undefined) {
+      currDisc = disc;
+      const trackDisc = document.createElement("div");
+      trackDisc.className = "track-disc";
+      trackDisc.textContent = `Disc ${disc}`;
+      trackList.appendChild(trackDisc);
+    }
+
     trackItem.innerHTML = `
-      <div class="track-number">${trackNumber}</div>
-      <div class="track-title">${getTrackName(track)}</div>
+      <div class="track-number">${String(idx).padStart(2, "0")}</div>
+      <div class="track-title">${track.title}</div>
       <div class="track-duration">${durationStr}</div>
     `;
 

@@ -87,7 +87,7 @@ git clone https://github.com/TugaLaTurtuga/reload.git
 ### Run
 
 ```bash
-bun start
+bun run
 ```
 
 On first launch, Reload creates user data inside Electron's app data directory and copies the default looks and shortcut files there.
