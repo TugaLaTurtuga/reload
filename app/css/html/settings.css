@@ -16,6 +16,12 @@
     transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
+html,
+body {
+  background: transparent;
+  -webkit-app-region: drag;
+}
+
 .input-wrapper:hover {
   background: var(--trackItemColorOnHover);
   transform: scale(1.05);
@@ -78,6 +84,7 @@ button {
   transition:
     background 0.15s ease-out,
     transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  -webkit-app-region: no-drag;
 }
 
 button:hover {
@@ -94,6 +101,7 @@ button:active {
   aspect-ratio: 8/1;
   font-size: 1.2rem;
   border-radius: 10px 10px 0 0;
+  -webkit-app-region: no-drag;
 }
 
 .save-btn:hover {
@@ -109,6 +117,7 @@ button:active {
   color: var(--textColor);
   font-size: 0.8rem;
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 #change-container {
@@ -119,6 +128,7 @@ button:active {
   border-radius: 0 0 10px 0;
   color: var(--textColor);
   background: var(--sidebarColor);
+  -webkit-app-region: no-drag;
 }
 
 .container-change-btn {
@@ -157,6 +167,10 @@ button:active {
     transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
 }
 
+.library-path {
+  -webkit-app-region: no-drag;
+}
+
 #library-paths-container .library-path:hover {
   background: var(--sliderBgColor);
   transform: scale(1.15);
@@ -170,6 +184,7 @@ button:active {
   border-radius: 0 0 0 10px;
   color: var(--textColor);
   background: var(--sidebarColor);
+  -webkit-app-region: no-drag;
 }
 
 .section-btn {
@@ -236,6 +251,7 @@ button:active {
 
 .input-wrapper {
   margin-bottom: 10px;
+  -webkit-app-region: no-drag;
 }
 
 .shortcuts-div {
@@ -250,6 +266,7 @@ button:active {
   display: block;
   white-space: nowrap;
   border-radius: 10px;
+  -webkit-app-region: no-drag;
 }
 
 .shortcut-div {
@@ -302,6 +319,7 @@ button:active {
   transition:
     background 0.15s ease-out,
     transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  -webkit-app-region: no-drag;
 }
 
 .shortcut-json-item:hover {
@@ -339,6 +357,7 @@ button:active {
   transition:
     background 0.15s ease-out,
     transform 0.2s cubic-bezier(0.1, 0.8, 0.2, 2);
+  -webkit-app-region: no-drag;
 }
 
 .shortcut-json-edit-item:hover {
@@ -364,6 +383,7 @@ button:active {
   max-width: calc(100vh - 10px);
   height: 50vh;
   overflow: hidden;
+  -webkit-app-region: no-drag;
 }
 
 .shortcut-json-edit-vars {

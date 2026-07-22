@@ -5,7 +5,8 @@ html {
   left: 0;
   height: 100%;
   width: 100%;
-  background-color: var(--bg-1);
+  background-color: transparent;
+  backdrop-filter: blur(10px);
   color: var(--textColor);
   overflow: hidden;
 }
@@ -88,7 +89,7 @@ html {
   padding: 10px;
   height: calc(100vh - 20px);
   backdrop-filter: blur(10px);
-  border: 2px solid var(--bg-2);
+  /* border: 2px solid var(--bg-2); */
   display: flex;
   padding: 16px;
   flex-direction: column;
@@ -153,7 +154,7 @@ nav ul {
   width: calc(100vw - 110px);
   background-color: var(--sidebarColor);
   backdrop-filter: blur(10px);
-  border: 2px solid var(--bg-2);
+  /* border: 2px solid var(--bg-2); */
   padding: 10px;
   display: flex;
   align-items: center;
@@ -681,7 +682,7 @@ nav ul {
 }
 
 #track-list {
-  border: var(--bg-2) solid 1px;
+  /* border: var(--bg-2) solid 1px; */
   border-radius: 10px;
   overflow-y: hidden;
   width: 100%;

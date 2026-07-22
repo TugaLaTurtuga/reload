@@ -197,6 +197,7 @@ function createWindow() {
     minWidth: 570,
     minHeight: 100,
     frame: false,
+    transparent: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -1377,6 +1378,8 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
     height: 700,
     minWidth: 800,
     minHeight: 400,
+    transparent: true,
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,

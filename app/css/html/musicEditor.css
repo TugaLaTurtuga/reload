@@ -5,6 +5,11 @@
   initial-value: #333;
 }
 
+html
+body {
+  background-color: transparent;
+}
+
 #app {
   display: block;
   height: 100vh;

@@ -15,6 +15,7 @@
     opacity 0.2s ease,
     transform 0.15s ease;
   z-index: 9999;
+  -webkit-app-region: no-drag;
 }
 .custom-tooltip.show {
   opacity: 1;

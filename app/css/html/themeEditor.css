@@ -10,6 +10,9 @@
 html,
 body {
     height: 100%;
+    background-color: transparent;
+    backdrop-filter: blur(10px);
+    -webkit-app-region: drag;
 }
 
 /* Root mode */
@@ -64,7 +67,13 @@ header h1 {
     gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
+    -webkit-app-region: no-drag;
+    max-width: 540px;
 }
+#row-status {
+    -webkit-app-region: drag;
+}
+
 button,
 select,
 textarea {
@@ -133,6 +142,7 @@ aside {
     grid-template-rows: auto 1fr auto;
     max-height: calc(100vh - 95px);
     gap: 0.75rem;
+    -webkit-app-region: no-drag;
 }
 .themes-list {
     overflow-x: hidden;
@@ -190,6 +200,7 @@ section.editor {
     border-radius: 10px;
     grid-template-rows: auto 1fr auto;
     gap: 0rem;
+    -webkit-app-region: no-drag;
 }
 .vars {
     overflow: auto;

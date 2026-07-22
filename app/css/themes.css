@@ -748,7 +748,23 @@
 }
 
 
-
+/* Pywal mode */
+[theme="pywal"] {
+  --activeColor: #DB283E;
+  --bg-1: #DB283E22;
+  --bg-2: #080C11;
+  --colorBlend: 1;
+  --ControlsBtnsColor: #31468A;
+  --font: Rubik, sans-serif;
+  --sidebarColor: #7A7C8233;
+  --sliderBgColor: #7A7C82;
+  --spinnerColor: #DB283E;
+  --textColor: #cdcdcf;
+  --textSubColor: #cdcdcf;
+  --trackItemColor: #7A7C8277;
+  --trackItemOddColor: #7A7C8255;
+  --trackItemOnHover: #8B7F8577;
+}
 
 
 /* Retro wave mode */
@@ -903,6 +919,44 @@
 }
 
 
+/* Tokyo night light mode */
+[theme="tokyo-night-light"] {
+  --activeColor: #587539;
+  --bg-1: #d5d6db;
+  --bg-2: #cbccd1;
+  --colorBlend: 0.25;
+  --ControlsBtnsColor: #34548a;
+  --font: Rubik, sans-serif;
+  --sidebarColor: #d5d6dbe6;
+  --sliderBgColor: #9699a3;
+  --spinnerColor: #34548a;
+  --textColor: #343b58;
+  --textSubColor: #6b7089;
+  --trackItemColor: #cbccd1;
+  --trackItemOddColor: #d5d6db;
+  --trackItemOnHover: #c0c2c9;
+}
+
+
+/* Tokyo night storm mode */
+[theme="tokyo-night-storm"] {
+  --activeColor: #9ece6a;
+  --bg-1: rgba(36, 40, 59, 0.48);
+  --bg-2: rgba(36, 40, 59, 0.47);
+  --colorBlend: 0.55;
+  --ControlsBtnsColor: #7aa2f7;
+  --font: 'Maple Mono', monospace;
+  --sidebarColor: rgba(41, 46, 66, 0.7);
+  --sliderBgColor: #565f89;
+  --spinnerColor: #7aa2f7;
+  --textColor: #c0caf5;
+  --textSubColor: #7982a9;
+  --trackItemColor: #292e42;
+  --trackItemOddColor: #292e42;
+  --trackItemOnHover: #323952;
+}
+
+
 /* Twilight mode */
 [theme="twilight"] {
   --activeColor: #2badee;
@@ -919,22 +973,4 @@
   --trackItemColor: #222222;
   --trackItemOddColor: #1c1c1c;
   --trackItemOnHover: #2a2a2a;
-}
-
-/* Pywal mode */
-[theme="pywal"] {
-  --activeColor: #DB283E;
-  --bg-1: #DB283E22;
-  --bg-2: #080C11;
-  --colorBlend: 1;
-  --ControlsBtnsColor: #31468A;
-  --font: Rubik, sans-serif;
-  --sidebarColor: #7A7C8233;
-  --sliderBgColor: #7A7C82;
-  --spinnerColor: #DB283E;
-  --textColor: #cdcdcf;
-  --textSubColor: #cdcdcf;
-  --trackItemColor: #7A7C8277;
-  --trackItemOddColor: #7A7C8255;
-  --trackItemOnHover: #8B7F8577;
 }

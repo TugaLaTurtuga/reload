@@ -8,6 +8,7 @@
   background: transparent;
   backdrop-filter: none;
   transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 .overlay:hover {
@@ -25,6 +26,7 @@
   border-radius: 10px;
   padding: 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  -webkit-app-region: no-drag;
 }
 
 .modal .modal-title {

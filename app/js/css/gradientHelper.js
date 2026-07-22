@@ -101,10 +101,11 @@ async function changeBackGroundColorFromNewAlbum(color) {
   const finalG = Math.round(bg2[1] * (1 - colorgepper) + g * colorgepper);
   const finalB = Math.round(bg2[2] * (1 - colorgepper) + b * colorgepper);
 
-  color = `rgb(
+  color = `rgba(
       ${Math.max(0, Math.min(255, finalR))},
       ${Math.max(0, Math.min(255, finalG))},
-      ${Math.max(0, Math.min(255, finalB))}
+      ${Math.max(0, Math.min(255, finalB))},
+      ${bg2[3]}
     )`;
   changeBackgroundGradient(color);
   if (typeof playerContainer !== "undefined" && playerContainer) {
