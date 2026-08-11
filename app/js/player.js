@@ -330,7 +330,7 @@ function loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad) {
     setPlaybackState(false, false);
   } else {
     audioPlayer.play().catch((err) => {
-      console.error("Playback error:", err);
+      console.error("Playback error:", err, "\nFOR:", currTrack.path);
     });
     setPlaybackState(true, false);
   }
@@ -368,6 +368,10 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
     case "mov":
     case "aac":
       src.type = "audio/mp4";
+      break;
+    case "aif":
+    case "aiff":
+      src.type = "audio/aiff";
       break;
     case "wav":
       src.type = "audio/wav";

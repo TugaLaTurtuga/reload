@@ -709,6 +709,8 @@ async function processMusicFolder(folderPath) {
       ".mp3",
       ".wav",
       ".aac",
+      ".aif",
+      ".aiff",
       ".alac",
       ".flac",
       ".ogg",
@@ -1615,6 +1617,7 @@ function deleteConfPath(folderPath, confFileName) {
 
 const looksDir = path.join(userDataPath, "looks");
 const shortcutsDir = path.join(userDataPath, "shortcuts");
+const settingsDir = path.join(userDataPath, "settings");
 
 ipcMain.handle("get-all-user-looks", async () => {
   try {
@@ -1640,6 +1643,27 @@ ipcMain.handle("get-all-user-looks", async () => {
   } catch (err) {
     console.error("Failed to load user looks:", err);
     return [];
+  }
+});
+
+const lookFile = path.join(settingsDir, "looks.css");
+
+ipcMain.handle("get-look", async () => {
+  try {
+    await fs.promises.mkdir(settingsDir, { recursive: true });
+
+    try {
+      const file = await fs.promises.readFile(lookFile, "utf8");
+      return lookFile
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err;
+
+      await fs.promises.writeFile(lookFile, "", "utf8");
+      return lookFile;
+    }
+  } catch (err) {
+    console.error("Failed to get look:", err);
+    return "";
   }
 });
 

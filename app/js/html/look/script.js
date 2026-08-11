@@ -1,3 +1,5 @@
+const { ipcMain } = require("electron/main");
+
 let htmls = [null, null];
 let settings = {
   theme: { dark: "", light: "light" }, // app's theme
@@ -78,43 +80,45 @@ function mergeCssVarMaps(maps) {
   return merged;
 }
 
-function combineLooksIntoBase() {
-  let newRoot = ":root {\n";
-  let oldRootNames = new Map();
-  let updatedCss = "";
-  for (let i = 0; i < selectedLooks.length; i++) {
-    const rootLook = selectedLooks[i][0];
-    console.log(selectedLooks[i]);
-    const look = selectedLooks[i][1];
-    const lookName = selectedLooks[i][2];
-    if (rootLook) {
-      let thisRoot = ":root {\n";
-      for (const [name, value] of rootLook.entries()) {
-        if (!oldRootNames.has(name)) {
-          newRoot += `  ${name}: ${value};\n`;
-          oldRootNames.set(name, value);
-        }
-        thisRoot += `  ${name}: ${value};\n`;
-      }
-      updatedCss += `\n\n/* _-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name: ${lookName} */\n${look.replace(/:root\s*{[^}]*}/, "")}\n`;
-    } else {
-      updatedCss += `\n\n/* _-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name: ${lookName} */\n${look}\n`;
-    }
-  }
 
-  newRoot += "}\n";
-  updatedCss = newRoot.trim() + updatedCss;
-
-  // save to file
+async function combineLooksIntoBase() {
   try {
+    // Get the actual look.css path from the main process
+    const mainLookPath = await ipcRenderer.invoke("get-look");
+
+    if (!mainLookPath) {
+      console.error("get-look did not return a CSS path");
+      return false;
+    }
+
+    // Create @import statements for every selected look.
+    // Use absolute file URLs so CSS can resolve them correctly.
+    const imports = selectedLooks
+      .map((selected) => {
+        const lookPath = selected[2];
+
+        if (!lookPath) return "";
+
+        // Convert absolute filesystem path to a valid file:// URL.
+        const cssUrl = require("url").pathToFileURL(lookPath).href;
+
+        return `@import url("${cssUrl}");`;
+      })
+      .filter(Boolean)
+      .join("\n");
+
+    const updatedCss = imports ? `${imports}\n` : "";
+
     fs.writeFileSync(mainLookPath, updatedCss, "utf-8");
-    console.log(`CSS updated and saved to ${mainLookPath}`);
+
+    console.log(`CSS imports updated in ${mainLookPath}`);
     return true;
   } catch (err) {
-    console.error(`Failed to write CSS to ${mainLookPath}:`, err);
+    console.error("Failed to update main look CSS:", err);
     return false;
   }
 }
+
 
 async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
   try {
@@ -139,6 +143,14 @@ async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
     console.error("Error loading settings:", error);
   }
   console.log("Settings loaded");
+  updateTheme();
+}
+
+function updateTheme() {
+  let link = document.getElementById("themes-stylesheet");
+  // Force reload by appending timestamp query
+  link.href = `css/themes.css?ts=${Date.now()}`;
+
   document.body.setAttribute("theme", settings.theme[settings.themeMode]);
 }
 
@@ -164,12 +176,12 @@ async function loadLooks() {
   grid.innerHTML = '<div class="empty">Loading looks...</div>';
 
   let looks = [];
+
   try {
     if (ipcRenderer && ipcRenderer.invoke) {
       looks = await ipcRenderer.invoke("get-all-user-looks");
     } else {
       console.warn("ipcRenderer not available — running demo fallback");
-      // demo: two simple looks — one as path, one as raw css
       looks = [];
     }
   } catch (err) {
@@ -187,51 +199,110 @@ async function loadLooks() {
   grid.innerHTML = "";
 
   // normalize to objects: { name, css, path }
-  looks = looks.map((item, idx) => {
-    return { name: item.split("/").pop(), css: String(item), path: item };
+  looks = looks.map((item) => {
+    const lookPath = String(item);
+
+    return {
+      name: path.basename(lookPath),
+      css: lookPath,
+      path: lookPath,
+    };
   });
 
-  // Extract css/look.css content
+  // Reset selected looks before rebuilding them
+  selectedLooks = [];
+
+  // Read the main look.css and extract @import paths
   const lookNames = new Set();
+
   try {
-    if (fs.existsSync(mainLookPath)) {
+    const mainLookPath = await ipcRenderer.invoke("get-look");
+
+    if (mainLookPath && fs.existsSync(mainLookPath)) {
       const css = fs.readFileSync(mainLookPath, "utf8");
 
-      // Match all look names in that comment format
-      const nameRe =
-        /\/\*\s*_-PROGRAMING IS SO MUCH FUN! I wanna kms when I look at this, but this is a fire name:\s*([^*]+)\*\//g;
+      /*
+       * Matches:
+       *
+       * @import url("file:///C:/path/to/look.css");
+       * @import url('file:///C:/path/to/look.css');
+       * @import url(file:///C:/path/to/look.css);
+       *
+       * Also accepts normal absolute paths if present.
+       */
+      const importRe =
+        /@import\s+url\(\s*["']?([^"')]+)["']?\s*\)\s*;/gi;
+
       let match;
       let foundAny = false;
 
-      const defaultLook = looks.find((look) => look.name === "default.css");
+      const defaultLook = looks.find(
+        (look) => look.name.toLowerCase() === "default.css",
+      );
 
-      // Loop through all matches
-      while ((match = nameRe.exec(css)) !== null) {
+      while ((match = importRe.exec(css)) !== null) {
         foundAny = true;
-        const lookPath = match[1].trim();
 
-        if (defaultLook?.path === lookPath) continue;
+        let lookPath = match[1].trim();
 
-        const lookName = lookPath.split("/").pop();
+        // Convert file:// URL back into an absolute filesystem path
+        if (lookPath.startsWith("file://")) {
+          try {
+            lookPath = require("url").fileURLToPath(lookPath);
+          } catch (err) {
+            console.warn("Failed to convert CSS import URL:", lookPath, err);
+            continue;
+          }
+        }
+
+        // Normalize the path
+        lookPath = path.normalize(lookPath);
+
+        // Ignore default.css if it is explicitly handled as the fallback
+        if (
+          defaultLook &&
+          path.normalize(defaultLook.path) === lookPath
+        ) {
+          continue;
+        }
+
+        const lookName = path.basename(lookPath);
+
         lookNames.add(lookName);
 
         if (fs.existsSync(lookPath)) {
           const lookCssContent = fs.readFileSync(lookPath, "utf8");
           const lookCssOptions = getRootFromCSS(lookCssContent);
-          selectedLooks.push([lookCssOptions, lookCssContent, lookPath]);
+
+          selectedLooks.push([
+            lookCssOptions,
+            lookCssContent,
+            lookPath,
+          ]);
         } else {
           console.warn(`⚠️ Look path not found: ${lookPath}`);
         }
       }
 
-      // If no matches found, use default look
+      // If there are no imports, use default.css
       if (!foundAny && defaultLook) {
         lookNames.add(defaultLook.name);
-        selectedLooks.push([new Map(), "", defaultLook.path]);
+
+        const defaultCssContent = fs.existsSync(defaultLook.path)
+          ? fs.readFileSync(defaultLook.path, "utf8")
+          : "";
+
+        const defaultCssOptions = getRootFromCSS(defaultCssContent);
+
+        selectedLooks.push([
+          defaultCssOptions,
+          defaultCssContent,
+          defaultLook.path,
+        ]);
       }
     }
   } catch (err) {
-    console.error("Failed to read css/look.css file:", err);
+    console.error("Failed to read main look CSS:", err);
   }
 
   // create one iframe per look
@@ -249,64 +320,88 @@ async function loadLooks() {
     const valueChanger = document.createElement("div");
     valueChanger.className = "look-values";
 
-    // Extract CSS content from look.css file
+    // Extract CSS content from the individual look file
     let lookCssContent = "";
 
     try {
-      if (fs.existsSync(look.css)) {
-        lookCssContent = fs.readFileSync(look.css, "utf8");
+      if (fs.existsSync(look.path)) {
+        lookCssContent = fs.readFileSync(look.path, "utf8");
       }
     } catch (err) {
       console.error("Failed to read look.css file:", err);
     }
 
     let lookCssOptions = getRootFromCSS(lookCssContent);
-    const lookIndex = selectedLooks.findIndex((sel) => sel[2] === look.path);
+
+    const lookIndex = selectedLooks.findIndex(
+      (sel) => path.normalize(sel[2]) === path.normalize(look.path),
+    );
+
     if (lookIndex !== -1 || lookNames.has(look.name)) {
       const isDifferent =
         lookIndex !== -1 &&
-        !mapsAreEqual(selectedLooks[lookIndex][0], lookCssOptions) &&
+        !mapsAreEqual(
+          selectedLooks[lookIndex][0],
+          lookCssOptions,
+        ) &&
         lookCssOptions !== "" &&
         lookCssOptions !== null &&
         lookCssOptions !== undefined;
+
       header.style.color = isDifferent
         ? "var(--ControlsBtnsColor)"
         : "var(--activeColor)";
     }
 
-    header.addEventListener("click", () => {
-      const lookIndex = selectedLooks.findIndex((sel) => sel[2] === look.path);
+    header.addEventListener("click", async () => {
+      const normalizedLookPath = path.normalize(look.path);
+
+      const lookIndex = selectedLooks.findIndex(
+        (sel) => path.normalize(sel[2]) === normalizedLookPath,
+      );
 
       if (
         header.style.color === "var(--activeColor)" ||
         header.style.color === "var(--ControlsBtnsColor)"
       ) {
+        // Deselect
         header.style.color = "";
-        if (lookIndex !== -1) selectedLooks.splice(lookIndex, 1);
+
+        if (lookIndex !== -1) {
+          selectedLooks.splice(lookIndex, 1);
+        }
       } else {
-        selectedLooks.push([lookCssOptions, lookCssContent, look.path]);
+        // Select
+        selectedLooks.push([
+          lookCssOptions,
+          lookCssContent,
+          look.path,
+        ]);
+
         header.style.color = "var(--activeColor)";
       }
 
-      combineLooksIntoBase();
-      ipcRenderer.invoke("save-settings", {}); // reloads all windows
+      await combineLooksIntoBase();
+      await ipcRenderer.invoke("save-settings", {});
     });
 
     const frames = [];
 
-    for (let i = 0; i < htmls.length; i++) {
+    for (let frameIndex = 0; frameIndex < htmls.length; frameIndex++) {
       frames.push(document.createElement("iframe"));
-      populateIframe(i);
+      populateIframe(frameIndex);
 
-      frames[i].style.minWidth = `${(1 / htmls.length) * 100 * 2}%`;
-      frames[i].style.marginLeft = `calc(${-i} * ${(1 / htmls.length) * 100}%)`;
-      framesDiv.appendChild(frames[i]);
+      frames[frameIndex].style.minWidth =
+        `${(1 / htmls.length) * 100 * 2}%`;
+
+      frames[frameIndex].style.marginLeft =
+        `calc(${-frameIndex} * ${(1 / htmls.length) * 100}%)`;
+
+      framesDiv.appendChild(frames[frameIndex]);
     }
 
     if (lookCssOptions) {
-      // iterate over Map entries
       for (const [name, data] of lookCssOptions.entries()) {
-        // add input fields for each option
         const label = document.createElement("label");
 
         label.textContent = `${name
@@ -320,23 +415,30 @@ async function loadLooks() {
         input.type = "text";
         input.value = data;
 
-        input.addEventListener("input", () => {
-          // update Map
+        input.addEventListener("input", async () => {
+          // Update Map
           lookCssOptions.set(name, input.value);
 
-          // rebuild CSS content and save
-          let updatedCss = updateCSSContent(
+          // Rebuild the individual look CSS and save it
+          const updatedCss = updateCSSContent(
             look,
             lookCssContent,
             lookCssOptions,
           );
-          look.css = updatedCss;
-          looks[i].css = updatedCss;
+
           lookCssContent = updatedCss;
+
+          // Keep the look object pointing to the actual file path
+          look.css = look.path;
+          looks[i].css = look.path;
+
+          // Re-read options
           lookCssOptions = getRootFromCSS(lookCssContent);
 
           const lookIndexOnInput = selectedLooks.findIndex(
-            (sel) => sel[2] === look.path,
+            (sel) =>
+              path.normalize(sel[2]) ===
+              path.normalize(look.path),
           );
 
           if (lookIndexOnInput !== -1 || lookNames.has(look.name)) {
@@ -349,28 +451,43 @@ async function loadLooks() {
               lookCssOptions !== "" &&
               lookCssOptions !== null &&
               lookCssOptions !== undefined;
-            console.log(selectedLooks[lookIndexOnInput][0], lookCssOptions);
+
             header.style.color = isDifferent
               ? "var(--ControlsBtnsColor)"
               : "var(--activeColor)";
           }
 
-          // 🔥 live-update all iframes for this look
+          // Update selected look's CSS map/content
+          if (lookIndexOnInput !== -1) {
+            selectedLooks[lookIndexOnInput][0] = lookCssOptions;
+            selectedLooks[lookIndexOnInput][1] = lookCssContent;
+          }
+
+          // Live-update all iframes for this look
           frames.forEach((frame) => {
             try {
               const doc = frame.contentDocument;
               if (!doc) return;
-              let styleEl = doc.getElementById("user-look-style");
+
+              let styleEl =
+                doc.getElementById("user-look-style");
+
               if (!styleEl) {
                 styleEl = doc.createElement("style");
                 styleEl.id = "user-look-style";
                 doc.head.appendChild(styleEl);
               }
+
               styleEl.textContent = updatedCss;
             } catch (e) {
               console.warn("iframe update failed:", e);
             }
           });
+
+          // Rebuild the main @import file if this look is selected
+          if (lookIndexOnInput !== -1) {
+            await combineLooksIntoBase();
+          }
         });
 
         const valueDiv = document.createElement("div");
@@ -389,16 +506,15 @@ async function loadLooks() {
     async function populateIframe(frame) {
       let modified = htmls[frame];
 
-      // regex to detect an existing user-look link
-      const userLookRegex = /<link[^>]*id=["']user-look["'][^>]*>/i;
+      // Remove an existing user-look link
+      const userLookRegex =
+        /<link[^>]*id=["']user-look["'][^>]*>/i;
 
       if (userLookRegex.test(modified)) {
-        // replace existing user-look
         modified = modified.replace(userLookRegex, "");
       }
 
       try {
-        // write HTML into iframe
         frames[frame].srcdoc = modified;
 
         frames[frame].addEventListener(
@@ -407,16 +523,21 @@ async function loadLooks() {
             try {
               frames[
                 frame
-              ].contentWindow.document.documentElement.dataset.lookIndex = i;
+              ].contentWindow.document.documentElement.dataset.lookIndex =
+                i;
 
               const doc = frames[frame].contentDocument;
+
               if (doc) {
-                let styleEl = doc.getElementById("user-look-style");
+                let styleEl =
+                  doc.getElementById("user-look-style");
+
                 if (!styleEl) {
                   styleEl = doc.createElement("style");
                   styleEl.id = "user-look-style";
                   doc.head.appendChild(styleEl);
                 }
+
                 styleEl.textContent = lookCssContent;
               }
             } catch (e) {
@@ -463,3 +584,4 @@ openLooksFolderBtn.addEventListener("click", async () => {
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
   location.reload();
 });
+

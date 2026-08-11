@@ -577,25 +577,6 @@
 }
 
 
-/* Nigger color mode */
-[theme="nigger-color"] {
-  --activeColor: #000000;
-  --bg-1: #000000;
-  --bg-2: #000000;
-  --colorBlend: 0.5;
-  --ControlsBtnsColor: rgba(0, 0, 0, 0);
-  --font: Menlo, system-ui;
-  --sidebarColor: #f50000;
-  --sliderBgColor: #3a3a3a;
-  --spinnerColor: #a277ff;
-  --textColor: #eaeaea;
-  --textSubColor: #b3b3b3;
-  --trackItemColor: #222222;
-  --trackItemOddColor: #1c1c1c;
-  --trackItemOnHover: #2a2a2a;
-}
-
-
 /* Night owl mode */
 [theme="night-owl"] {
   --activeColor: #7fdbca;

@@ -92,35 +92,43 @@ async function loadSettings(onlyNewchanges = false) {
   } catch (error) {
     console.error("Error loading settings:", error);
   }
+
+  setLook();
+  updateTheme();
 }
 
-function setLook() {
-  let userLookCSS = document.getElementById("user-look");
-  if (!userLookCSS) {
-    userLookCSS = document.createElement("link");
-    userLookCSS.id = "user-look";
-    userLookCSS.rel = "stylesheet";
-    document.head.appendChild(userLookCSS);
+async function setLook() {
+  try {
+    const lookPath = await ipcRenderer.invoke("get-look");
+
+    if (!lookPath) {
+      console.warn("get-look did not return a CSS path");
+      return;
+    }
+
+    // Convert the absolute filesystem path to a file:// URL
+    const cssUrl = require("url").pathToFileURL(lookPath).href;
+
+    // Don't add it twice
+    let link = document.getElementById("main-look-css");
+
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "main-look-css";
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+
+    link.href = `${cssUrl}?ts=${Date.now()}`;
+
+    console.log("Loaded look CSS:", cssUrl);
+  } catch (err) {
+    console.error("Failed to load look CSS:", err);
   }
-
-  userLookCSS.href = `../css/look.css?ts=${Date.now()}`;
-
-  let themeCSS = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  themeCSS.href = `../css/themes.css?ts=${Date.now()}`;
-
-  document.body.setAttribute(
-    "theme",
-    themeSettings.theme[themeSettings.themeMode],
-  );
 }
 
 async function saveSettings() {
   await ipcRenderer.invoke("save-settings", settings);
-}
-
-function updateSettings() {
-  setLook();
 }
 
 // Event listeners
@@ -129,10 +137,17 @@ window.addEventListener("beforeunload", async (e) => {
   await saveSettings();
 });
 
+function updateTheme() {
+  let link = document.getElementById("themes-stylesheet");
+  // Force reload by appending timestamp query
+  link.href = `../css/themes.css?ts=${Date.now()}`;
+
+  document.body.setAttribute("theme", themeSettings.theme[themeSettings.themeMode]);
+}
+
 // this saves correctly on exit.
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
   await loadSettings(true);
-  updateSettings();
 
   let link = document.getElementById("themes-stylesheet");
   // Force reload by appending timestamp query
@@ -350,7 +365,6 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadSettings();
   updateChangeContainer();
-  updateSettings();
   renderSettingsEditor();
   sController.updateSliders();
 
