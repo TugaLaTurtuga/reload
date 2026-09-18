@@ -61,12 +61,7 @@ async function loadSettings() {
   }
 
   userLookCSS.href = `../css/look.css?ts=${Date.now()}`;
-
-  let themeCSS = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  themeCSS.href = `../css/themes.css?ts=${Date.now()}`;
-
-  document.body.setAttribute("theme", settings.theme[settings.themeMode]);
+  updateTheme()
 }
 
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {

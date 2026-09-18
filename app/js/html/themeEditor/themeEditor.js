@@ -94,7 +94,7 @@ async function setLook() {
 }
 
 // ---------- Utilities ----------
-const CSS_URL = "../css/themes.css";
+let CSS_URL = "";
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
@@ -624,6 +624,11 @@ function updateCSS() {
 
 // ---------- Loading / Saving ----------
 async function loadFromURL(url = CSS_URL) {
+  if (url === "") {
+    CSS_URL = await _getThemesPath();
+    url = CSS_URL;
+  }
+
   setStatus(`Fetching ${url}…`);
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -657,14 +662,13 @@ function downloadCSS() {
 }
 
 async function saveToDisk() {
-  const css = serializeThemesCSS();
+  const css = serializeThemesCSS().toString();
   try {
     // Save to CSS_URL using Electron's IPC if available
     if (ipcRenderer && ipcRenderer.invoke) {
       if (
         await ipcRenderer.invoke(
-          "save-file",
-          path.join(__dirname, CSS_URL),
+          "save-theme",
           css,
         )
       ) {

@@ -146,14 +146,6 @@ async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
   updateTheme();
 }
 
-function updateTheme() {
-  let link = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  link.href = `css/themes.css?ts=${Date.now()}`;
-
-  document.body.setAttribute("theme", settings.theme[settings.themeMode]);
-}
-
 // helper regex to find the toolTip link
 const toolTipRegex = /<link[^>]*href=(['"])css\/toolTip\.css\1[^>]*>/i;
 

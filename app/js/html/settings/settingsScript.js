@@ -94,7 +94,7 @@ async function loadSettings(onlyNewchanges = false) {
   }
 
   setLook();
-  updateTheme();
+  await updateTheme(themeSettings.theme[themeSettings.themeMode]);
 }
 
 async function setLook() {
@@ -136,14 +136,6 @@ window.addEventListener("beforeunload", async (e) => {
   await loadSettings(true);
   await saveSettings();
 });
-
-function updateTheme() {
-  let link = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  link.href = `../css/themes.css?ts=${Date.now()}`;
-
-  document.body.setAttribute("theme", themeSettings.theme[themeSettings.themeMode]);
-}
 
 // this saves correctly on exit.
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {

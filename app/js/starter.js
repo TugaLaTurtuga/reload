@@ -22,7 +22,7 @@ async function loadSettings(onlyNewchanges = false, updatedSettings = {}) {
   setVolume();
   setLook();
   sController.updateSliders();
-  updateTheme();
+  await updateTheme();
   ipcRenderer.invoke("clean-new-settings");
 }
 
@@ -56,14 +56,6 @@ async function setLook() {
   }
 }
 
-function updateTheme() {
-  let link = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  link.href = `css/themes.css?ts=${Date.now()}`;
-
-  document.body.setAttribute("theme", settings.theme[settings.themeMode]);
-}
-
 function getTrackName(track, overrideFeatures = false) {
   if (settings.showFeatures && !overrideFeatures) return track.title.trim();
   else return track.title.replace(/(\(|\[)(feat|ft|with).*$/i, "").trim();
@@ -81,7 +73,7 @@ async function saveSettings() {
 }
 
 async function updateSettings() {
-  updateTheme();
+  await updateTheme();
 
   // update the tracks name when settings.showFeatures is changed
   if (settings.currentPlayingAlbum && settings.currentTrackIndex > -1) {

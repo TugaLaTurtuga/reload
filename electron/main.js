@@ -57,6 +57,12 @@ const miniPlayerWindowPath = path.resolve(
   path.join(__dirname, "../app/html/miniPlayer.html"),
 );
 
+const settingsDir = path.join(userDataPath, "settings");
+const lookFile = path.join(settingsDir, "looks.css");
+const themesFile = path.join(settingsDir, "themes.css");
+const looksDir = path.join(userDataPath, "looks");
+const shortcutsDir = path.join(userDataPath, "shortcuts");
+
 let mainWindow;
 
 // Lazy-load wrapper
@@ -250,6 +256,7 @@ function createWindow() {
       }
     }
   });
+
 }
 
 function sendPlayerCommand(command) {
@@ -1615,10 +1622,6 @@ function deleteConfPath(folderPath, confFileName) {
   }
 }
 
-const looksDir = path.join(userDataPath, "looks");
-const shortcutsDir = path.join(userDataPath, "shortcuts");
-const settingsDir = path.join(userDataPath, "settings");
-
 ipcMain.handle("get-all-user-looks", async () => {
   try {
     // ensure directory exists
@@ -1645,8 +1648,6 @@ ipcMain.handle("get-all-user-looks", async () => {
     return [];
   }
 });
-
-const lookFile = path.join(settingsDir, "looks.css");
 
 ipcMain.handle("get-look", async () => {
   try {
@@ -1713,6 +1714,35 @@ ipcMain.handle("get-current-shortcut", async () => {
       }
     }
     console.error("Failed to load user looks:", err);
+    return false;
+  }
+});
+
+ipcMain.handle("get-theme-path", () => {
+  if (!fs.existsSync(themesFile)) {
+    const defaultThemesFile = path.join(__dirname, "user-data/themes.css");
+
+    if (fs.existsSync(defaultThemesFile)) {
+      fs.copyFileSync(defaultThemesFile, themesFile);
+    }
+  }
+  return themesFile;
+});
+
+ipcMain.handle("save-theme", async (event, newCSS) => {
+  if (!fs.existsSync(themesFile)) {
+    const defaultThemesFile = path.join(__dirname, "user-data/themes.css");
+
+    if (fs.existsSync(defaultThemesFile)) {
+      fs.copyFileSync(defaultThemesFile, themesFile);
+    }
+  }
+
+  try {
+    fs.writeFileSync(themesFile, newCSS, "utf8");
+    return true;
+  } catch (error) {
+    console.error("Error saving file:", error);
     return false;
   }
 });
@@ -1845,9 +1875,8 @@ function extractVarFromBlock(block, varName) {
 }
 
 function transformPywalTheme(theme) {
-  const themeCSSPath = path.join(__dirname, "../app/css/themes.css");
 
-  fs.readFile(themeCSSPath, "utf8", (err, css) => {
+  fs.readFile(themesFile, "utf8", (err, css) => {
     if (err) {
       console.error("Failed to read theme CSS:", err);
       return;
@@ -1893,7 +1922,7 @@ function transformPywalTheme(theme) {
     const finalCSS = cssWithoutOld + "\n\n" + newPywalBlock + "\n";
 
     // --- 4. Save back to file ---
-    fs.writeFile(themeCSSPath, finalCSS, (err) => {
+    fs.writeFile(themesFile, finalCSS, (err) => {
       if (err) {
         console.error("Failed to write theme CSS:", err);
       }
