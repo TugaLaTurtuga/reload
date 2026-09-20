@@ -225,9 +225,14 @@ function serializeThemesCSS(allThemesToSerialize = themes) {
 }
 
 function getCSSVarInRGB(value) {
-  // If it's already rgb()
-  if (value && value.startsWith("rgb")) {
-    const match = value.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+  value = value?.trim();
+
+  // rgb() / rgba()
+  if (value && /^rgba?\s*\(/i.test(value)) {
+    const match = value.match(
+      /rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)/i
+    );
+
     if (match) {
       return [
         parseInt(match[1], 10),
@@ -237,15 +242,37 @@ function getCSSVarInRGB(value) {
     }
   }
 
-  // If it's hex (#rrggbb or #rgb)
+  // Hex
   if (value && value.startsWith("#")) {
+    // #rrggbbaa
+    if (value.length === 9) {
+      return [
+        parseInt(value.slice(1, 3), 16),
+        parseInt(value.slice(3, 5), 16),
+        parseInt(value.slice(5, 7), 16),
+      ];
+    }
+
+    // #rrggbb
     if (value.length === 7) {
       return [
-        parseInt(value.substr(1, 2), 16),
-        parseInt(value.substr(3, 2), 16),
-        parseInt(value.substr(5, 2), 16),
+        parseInt(value.slice(1, 3), 16),
+        parseInt(value.slice(3, 5), 16),
+        parseInt(value.slice(5, 7), 16),
       ];
-    } else if (value.length === 4) {
+    }
+
+    // #rgba
+    if (value.length === 5) {
+      return [
+        parseInt(value[1] + value[1], 16),
+        parseInt(value[2] + value[2], 16),
+        parseInt(value[3] + value[3], 16),
+      ];
+    }
+
+    // #rgb
+    if (value.length === 4) {
       return [
         parseInt(value[1] + value[1], 16),
         parseInt(value[2] + value[2], 16),

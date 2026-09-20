@@ -12,6 +12,7 @@ const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const crypto = require("crypto");
 const mm = require("music-metadata");
 const ColorThief = require("colorthief");
 const { getFonts } = require("font-list");
@@ -703,6 +704,8 @@ async function processMusicFolder(folderPath) {
     return;
   } else if (nonAlbumsPath.has(folderKey)) return;
 
+  let mtCovers = [];
+
   folderPath = canonicalizeExistingPath(folderPath);
   const entries = fs.readdirSync(folderPath, { withFileTypes: true });
   const files = entries
@@ -901,36 +904,7 @@ async function processMusicFolder(folderPath) {
       shouldExtractColor = true;
     }
   }
-
-  if (fs.existsSync(album.info.description.cover) && shouldExtractColor) {
-    album.info.description.color = await getImgColor(
-      album.info.description.cover,
-    );
-    album.info.description.palette = await getImgPalette(
-      album.info.description.cover,
-    );
-    try {
-      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
-    } catch (err) {
-      console.error("Error updating json with color:", err);
-    }
-  } else {
-    album.info.description.cover = lookForCover(folderPath, files);
-    if (album.info.description.cover) {
-      album.info.description.color = await getImgColor(
-        album.info.description.cover,
-      );
-      album.info.description.palette = await getImgPalette(
-        album.info.description.cover,
-      );
-      try {
-        fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
-      } catch (err) {
-        console.error("Error updating json with color:", err);
-      }
-    }
-  }
-
+ 
   const sortByTrackNumber = (a, b) => {
     const numA = parseInt(a.title.match(/^\d+/)?.[0] || Infinity, 10);
     const numB = parseInt(b.title.match(/^\d+/)?.[0] || Infinity, 10);
@@ -956,6 +930,18 @@ async function processMusicFolder(folderPath) {
         metadata.common.title =
           metadata.common.title?.trim() || fallbackTitle;
         title = metadata.common.title;
+
+        if (
+          (!album.info.description.cover ||
+            !fs.existsSync(album.info.description.cover)) &&
+          metadata.common?.picture
+        ) {
+          if (Array.isArray(metadata.common.picture)) {
+            mtCovers.push(...metadata.common.picture);
+          } else {
+            mtCovers.push(metadata.common.picture);
+          }
+        }
 
         if (metadata.common && shouldExtractColor) {
           const {
@@ -1157,6 +1143,96 @@ async function processMusicFolder(folderPath) {
   // Sort both arrays
   album.info.trackList.sort(sortByTrackNumber);
 
+  // Cover
+  if (
+    !album.info.description.cover ||
+    !fs.existsSync(album.info.description.cover)
+  ) {
+    album.info.description.cover = lookForCover(folderPath, files);
+  }
+
+  if (
+    (!album.info.description.cover ||
+      !fs.existsSync(album.info.description.cover)) &&
+    mtCovers.length !== 0
+  ) {
+    const coversOrganized = [];
+
+    for (const picture of mtCovers) {
+      if (!picture || !picture.data) continue;
+      let existing = coversOrganized.find(
+        (item) =>
+          item.cover.format === picture.format &&
+          item.cover.data?.length === picture.data.length &&
+          Buffer.from(item.cover.data).equals(Buffer.from(picture.data)),
+      );
+
+      if (existing) {
+        existing.amount++;
+      } else {
+        coversOrganized.push({
+          cover: picture,
+          amount: 1,
+        });
+      }
+    }
+
+    // Pick the cover occurring in the most tracks
+    let bestBet = null;
+
+    for (const item of coversOrganized) {
+      if (!bestBet || item.amount > bestBet.amount) {
+        bestBet = item;
+      }
+    }
+
+    if (bestBet) {
+      const picture = bestBet.cover;
+
+      // music-metadata normally gives formats such as image/jpeg or image/png
+      const format = (picture.format || "image/jpeg").toLowerCase();
+
+      const extensionMap = {
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+        "image/bmp": "bmp",
+        "image/tiff": "tiff",
+        "image/avif": "avif",
+      };
+
+      const ext =
+        extensionMap[format] ||
+        format.split("/")[1]?.split("+")[0] ||
+        "jpg";
+
+      const coverPath = path.join(folderPath, `cover.${ext}`);
+
+      try {
+        fs.writeFileSync(coverPath, Buffer.from(picture.data));
+        album.info.description.cover = coverPath;
+        shouldExtractColor = true;
+      } catch (err) {
+        console.error("Error saving extracted cover:", err);
+      }
+    }
+  }
+
+  if (
+    album.info.description.cover &&
+    fs.existsSync(album.info.description.cover) &&
+    shouldExtractColor
+  ) {
+    album.info.description.color = await getImgColor(
+      album.info.description.cover,
+    );
+    album.info.description.palette = await getImgPalette(
+      album.info.description.cover,
+    );
+  }
+
   try {
     fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
   } catch (err) {
@@ -1330,11 +1406,72 @@ ipcMain.handle("player-prev", () => {
   return sendPlayerCommand("prev");
 });
 
-ipcMain.handle("decode-m4p", async (event, filePath) => {
+ipcMain.handle("decode-aif", async (event, filePath) => {
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch (e) {
+    stat = { mtimeMs: 0 };
+  }
+  const hash = crypto
+    .createHash("md5")
+    .update(filePath + String(stat.mtimeMs))
+    .digest("hex");
   const tempOutputPath = path.join(
     app.getPath("temp"),
-    `decoded-${Date.now()}.m4a`,
+    `decoded-${hash}.wav`,
   );
+
+  if (fs.existsSync(tempOutputPath)) {
+    return tempOutputPath;
+  }
+
+  return new Promise((resolve, reject) => {
+    const process = spawn("ffmpeg", [
+      "-i",
+      filePath,
+      "-vn", // No video
+      "-y", // Overwrite output file
+      tempOutputPath,
+    ]);
+
+    let stderr = "";
+
+    process.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    process.on("close", (code) => {
+      if (code === 0) {
+        resolve(tempOutputPath);
+      } else {
+        console.error(`FFmpeg exited with code ${code}`);
+        console.error("Full stderr:", stderr);
+        reject(new Error(`FFmpeg conversion failed with code ${code}`));
+      }
+    });
+  });
+});
+
+ipcMain.handle("decode-m4p", async (event, filePath) => {
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch (e) {
+    stat = { mtimeMs: 0 };
+  }
+  const hash = crypto
+    .createHash("md5")
+    .update(filePath + String(stat.mtimeMs))
+    .digest("hex");
+  const tempOutputPath = path.join(
+    app.getPath("temp"),
+    `decoded-${hash}.m4a`,
+  );
+
+  if (fs.existsSync(tempOutputPath)) {
+    return tempOutputPath;
+  }
 
   return new Promise((resolve, reject) => {
     const process = spawn("ffmpeg", [

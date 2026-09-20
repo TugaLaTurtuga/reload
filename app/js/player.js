@@ -104,6 +104,8 @@ function updateTrackDurationFromLoadedAudio(track) {
 }
 
 const preloadAudioCache = new Map();
+const _decodedAudioCache = new Map();
+let _decodedM4pCache = _decodedAudioCache;
 
 function getTrackCacheKey(track) {
   return track?.path || "";
@@ -252,7 +254,8 @@ async function playTrack(
     }
   }
 
-  for (let i = 0; i < sourcesToUpdate.length; ++i) {
+  const updateOrder = [1, 0, 2];
+  for (const i of updateOrder) {
     sourceUpdate = sourcesToUpdate[sources[i]];
     if (!sourceUpdate) continue; // skips.
 
@@ -287,9 +290,10 @@ async function playTrack(
 
     if (track !== null && track?.path) {
       // load track to audioSource
-      loadTrackToAudioSource(track, albumPathAndIndex, audioSources[i]);
+      await loadTrackToAudioSource(track, albumPathAndIndex, audioSources[i]);
       if (track === currTrack && !alreadyLoadedTrack) {
         loadTrack(currTrack, startTrackFromBeginningOnStartUp, firstLoad);
+        alreadyLoadedTrack = true;
       }
     }
   }
@@ -370,8 +374,23 @@ async function loadTrackToAudioSource(track, albumPathAndIndex, src) {
       src.type = "audio/mp4";
       break;
     case "aif":
-    case "aiff":
-      src.type = "audio/aiff";
+    case "aiff": {
+      src.type = "audio/wav";
+      let decoded = _decodedAudioCache.get(track.path);
+      if (!decoded) {
+        try {
+          decoded = await ipcRenderer.invoke("decode-aif", track.path);
+          _decodedAudioCache.set(track.path, decoded);
+        } catch (err) {
+          console.error("Error decoding aif file:", err);
+          return;
+        }
+      }
+      url = decoded;
+      break;
+    }
+    case "flac":
+      src.type = "audio/flac";
       break;
     case "wav":
       src.type = "audio/wav";
