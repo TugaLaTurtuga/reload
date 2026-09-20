@@ -131,6 +131,10 @@ async function saveSettings() {
   await ipcRenderer.invoke("save-settings", settings);
 }
 
+async function resetSettings() {
+  await ipcRenderer.invoke("reset-settings");
+}
+
 // Event listeners
 window.addEventListener("beforeunload", async (e) => {
   await loadSettings(true);
@@ -244,6 +248,16 @@ function renderSettingsEditor() {
     saveSettings();
   });
   settingsContainer.appendChild(saveBtn);
+
+  // --- Reset button ---
+  const resetBtn = document.createElement("button");
+  resetBtn.textContent = "Reset settings";
+  resetBtn.classList.add("reset-btn");
+  resetBtn.addEventListener("click", () => {
+    playSoundAffect("buy");
+    resetSettings();
+  });
+  settingsContainer.appendChild(resetBtn);
 }
 
 function createInput(path) {

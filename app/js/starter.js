@@ -110,6 +110,8 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
 
 ipcRenderer.on("music-json-updated", updateLibrary);
 
+ipcRenderer.on("get-default-settings", async () => {saveSettings()});
+
 ipcRenderer.on("player-command", async (event, command) => {
   await window.handlePlayerCommand(command);
 });

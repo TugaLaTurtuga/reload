@@ -21,28 +21,33 @@ const { mouse, Button } = nut;
 
 app.setName("TugaLaTurtuga/reload");
 const userDataPath = path.join(app.getPath("userData"), "user-data");
-if (!fs.existsSync(userDataPath)) {
-  const defaultUserDataPath = path.join(__dirname, "user-data");
-  fs.mkdirSync(userDataPath, { recursive: true });
 
-  // Copy contents from defaultUserDataPath to userDataPath if it exists
-  if (fs.existsSync(defaultUserDataPath)) {
-    const copyRecursively = (src, dest) => {
-      const entries = fs.readdirSync(src, { withFileTypes: true });
-      for (const entry of entries) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
+async function setDefaultConfig() {
+  if (!fs.existsSync(userDataPath)) {
+    const defaultUserDataPath = path.join(__dirname, "user-data");
+    fs.mkdirSync(userDataPath, { recursive: true });
 
-        if (entry.isDirectory()) {
-          fs.mkdirSync(destPath, { recursive: true });
-          copyRecursively(srcPath, destPath);
-        } else {
-          fs.copyFileSync(srcPath, destPath);
+    // Copy contents from defaultUserDataPath to userDataPath if it exists
+    if (fs.existsSync(defaultUserDataPath)) {
+      const copyRecursively = (src, dest) => {
+        const entries = fs.readdirSync(src, { withFileTypes: true });
+       for (const entry of entries) {
+          const srcPath = path.join(src, entry.name);
+          const destPath = path.join(dest, entry.name);
+
+          if (entry.isDirectory()) {
+            fs.mkdirSync(destPath, { recursive: true });
+            copyRecursively(srcPath, destPath);
+          } else {
+            fs.copyFileSync(srcPath, destPath);
+          }
         }
-      }
-    };
+      };
 
-    copyRecursively(defaultUserDataPath, userDataPath);
+      copyRecursively(defaultUserDataPath, userDataPath);
+    }
+
+    mainWindow.webContents.send("get-default-settings");
   }
 }
 
@@ -1292,6 +1297,15 @@ ipcMain.handle("save-settings", (event, unsavedSettings) => {
   saveSettings(unsavedSettings);
 });
 
+ipcMain.handle("reset-settings", (event) => {
+  // delete everything inside user-data and add the default one
+  fs.rm(userDataPath, { recursive: true, force: true }, (err) => {
+    if (err) throw err;
+  });
+  setDefaultConfig();
+
+});
+
 function saveSettings(unsavedSettings, fromsystemTheme = false) {
   try {
     let settings = {};
@@ -1816,6 +1830,8 @@ ipcMain.handle("open-shortcuts-dir", async () => {
 });
 
 ipcMain.handle("get-all-shortcuts", async () => {
+  if (!fs.existsSync(shortcutsDir)) return [];
+
   try {
     const files = await fs.promises.readdir(shortcutsDir);
     return files
@@ -1831,7 +1847,8 @@ ipcMain.handle("get-current-shortcut", async () => {
   const currTxt = path.join(shortcutsDir, "curr.txt");
 
   try {
-    let contentOfCurrTxt = await fs.promises.readFile(currTxt, "utf8");
+    let contentOfCurrTxt;
+    if (fs.existsSync(currTxt)) contentOfCurrTxt = await fs.promises.readFile(currTxt, "utf8");
     if (!contentOfCurrTxt || contentOfCurrTxt.trim().length === 0) {
       contentOfCurrTxt = "default.json";
     }
@@ -2121,3 +2138,6 @@ ipcMain.handle("get-git-info", () => ({
   commitCount,
   shortHash,
 }));
+
+setDefaultConfig();
+

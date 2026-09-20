@@ -8,7 +8,7 @@ async function _getThemesPath() {
     return themePath;
 }
 
-async function updateTheme(theme = "") {
+async function updateTheme(theme = settings.theme[settings.themeMode]) {
   const themePath = await _getThemesPath()
 
   // Convert the absolute filesystem path to a file:// URL
@@ -27,11 +27,6 @@ async function updateTheme(theme = "") {
 
   // Force reload by appending timestamp query
   link.href = `${themePath}?ts=${Date.now()}`;
-
-  if (theme === "") {
-    document.body.setAttribute("theme", settings.theme[settings.themeMode]);
-  } else {
-    document.body.setAttribute("theme", theme);
-  }
+  document.body.setAttribute("theme", theme);
 }
 
