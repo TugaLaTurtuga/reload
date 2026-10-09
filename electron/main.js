@@ -1649,24 +1649,27 @@ ipcMain.handle("reload-main-page", () => {
 });
 
 function rgbToHex(rgb) {
-  let r, g, b;
-  if (Array.isArray(rgb)) {
-    [r, g, b] = rgb;
-  } else {
-    rbgSlipt = rgb.split(","); // these might have 4 values (rgba) (python code, again)
-    for (let i = 0; i < rbgSlipt.length; i++) {
-      switch (i) {
-        case 0:
-          r = parseInt(rbgSlipt[i].trim());
-          break;
-        case 1:
-          g = parseInt(rbgSlipt[i].trim());
-          break;
-        case 2:
-          b = parseInt(rbgSlipt[i].trim(), 10);
-          break;
-        default:
-          break;
+  let { _r: r, _g: g, _b: b } = rgb;
+
+  if (r === undefined || r === null) {
+    if (Array.isArray(rgb)) {
+      [r, g, b] = rgb;
+    } else {
+      rbgSlipt = rgb.split(","); // these might have 4 values (rgba) (python code, again)
+      for (let i = 0; i < rbgSlipt.length; i++) {
+        switch (i) {
+          case 0:
+            r = parseInt(rbgSlipt[i].trim());
+            break;
+          case 1:
+            g = parseInt(rbgSlipt[i].trim());
+            break;
+          case 2:
+            b = parseInt(rbgSlipt[i].trim(), 10);
+            break;
+          default:
+            break;
+        }
       }
     }
   }

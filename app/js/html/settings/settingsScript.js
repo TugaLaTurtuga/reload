@@ -144,10 +144,6 @@ window.addEventListener("beforeunload", async (e) => {
 // this saves correctly on exit.
 ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
   await loadSettings(true);
-
-  let link = document.getElementById("themes-stylesheet");
-  // Force reload by appending timestamp query
-  link.href = `../css/themes.css?ts=${Date.now()}`;
 });
 
 // helpers: get / set by path (path is an array of keys)
