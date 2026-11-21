@@ -58,6 +58,7 @@ let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const albumsPathData = path.join(userDataPath, "albumsPath.json");
 const nonAlbumsPathData = path.join(userDataPath, "nonAlbumsPath.json");
+const subsonicSettingsPath = path.join(userDataPath, "subsonicSettings.json");
 const openedWindows = new Map();
 const miniPlayerWindowPath = path.resolve(
   path.join(__dirname, "../app/html/miniPlayer.html"),
@@ -78,7 +79,10 @@ async function getSubsonicBackend() {
 
   // Load only when needed
   const { startSubsonicBackend } = require("./subsonic-backend.js");
-  subsonicBackend = startSubsonicBackend();
+  subsonicBackend = startSubsonicBackend({
+    userDataPath,
+    subsonicSettingsPath,
+  });
   return subsonicBackend;
 }
 
@@ -315,6 +319,7 @@ app.whenReady().then(() => {
   getSystemTheme();
   createWindow();
   createAppMenu();
+  getSubsonicBackend();
 });
 
 app.on("window-all-closed", () => {
@@ -1649,24 +1654,27 @@ ipcMain.handle("reload-main-page", () => {
 });
 
 function rgbToHex(rgb) {
-  let r, g, b;
-  if (Array.isArray(rgb)) {
-    [r, g, b] = rgb;
-  } else {
-    rbgSlipt = rgb.split(","); // these might have 4 values (rgba) (python code, again)
-    for (let i = 0; i < rbgSlipt.length; i++) {
-      switch (i) {
-        case 0:
-          r = parseInt(rbgSlipt[i].trim());
-          break;
-        case 1:
-          g = parseInt(rbgSlipt[i].trim());
-          break;
-        case 2:
-          b = parseInt(rbgSlipt[i].trim(), 10);
-          break;
-        default:
-          break;
+  let { _r: r, _g: g, _b: b } = rgb;
+
+  if (r === undefined || r === null) {
+    if (Array.isArray(rgb)) {
+      [r, g, b] = rgb;
+    } else {
+      rbgSlipt = rgb.split(","); // these might have 4 values (rgba) (python code, again)
+      for (let i = 0; i < rbgSlipt.length; i++) {
+        switch (i) {
+          case 0:
+            r = parseInt(rbgSlipt[i].trim());
+            break;
+          case 1:
+            g = parseInt(rbgSlipt[i].trim());
+            break;
+          case 2:
+            b = parseInt(rbgSlipt[i].trim(), 10);
+            break;
+          default:
+            break;
+        }
       }
     }
   }
