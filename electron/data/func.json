@@ -15,7 +15,7 @@
     "changeBackGroundColorFromNewAlbum": "color",
     "changeBackgroundGradient": "color",
     "updateTracks": "trackList",
-    "updateLibrary": "",
+    "updateLibrary": "updatedAlbums",
     "loadLibrary": "",
     "renderLibrary": "searchPlace, searchName",
     "_matchesLibrarySearch": "album, searchPlace, searchName",

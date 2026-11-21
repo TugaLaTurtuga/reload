@@ -130,6 +130,22 @@ describe("Main Process - IPC Handlers & Listeners", () => {
     });
   });
 
+  test("rescan-library sends refreshed albums without reloading the window", async () => {
+    const handler = _ipcHandlers.get("rescan-library");
+    const albums = await handler(mockEvent);
+
+    assert.ok(Array.isArray(albums));
+    assert.strictEqual(mockEvent.sender === _state.getMainWindow().webContents, true);
+    assert.strictEqual(_state.getMainWindow().reloaded, undefined);
+    assert.ok(
+      _state
+        .getMainWindow()
+        .webContents
+        ._getSentMessages()
+        .some(({ channel }) => channel === "library-rescanned"),
+    );
+  });
+
   describe("Settings & Configuration IPC Handlers", () => {
     test("get-settings and save-settings round-trip configuration", async () => {
       const getHandler = _ipcHandlers.get("get-settings");
