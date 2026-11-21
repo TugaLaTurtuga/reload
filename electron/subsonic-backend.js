@@ -915,6 +915,7 @@ module.exports = {
   startSubsonicBackend,
   loadSubsonicSettings,
   resolveSubsonicSettingsPath,
+  resolveUserDataDir,
   setUserDataPath,
   setSubsonicSettingsPath,
   getDownloadDestination,
@@ -925,4 +926,7 @@ module.exports = {
   listAllAlbumsAndSingles,
   DownloadManager,
   globalDownloadManager,
+  buildAuthParams,
+  buildQueryString,
+  sanitizePathSegment,
 };

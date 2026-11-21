@@ -1,27 +1,80 @@
 inp = new InputManager();
 
-// Minimal safe defaults
+// Default inputs matching default.json
 const DEFAULT_INPUTS = {
   opts: { logKeyPress: false, gamepadDeadzone: 0.1 },
   keyboard: {
-    whenPressed: {},
+    whenPressed: {
+      " ": "togglePlayPause()",
+      "b": "clickVirtualCursor(0)",
+      "d": "clickVirtualCursor(0)",
+      "k": "clickVirtualCursor(0)",
+      "f10": "toggleMute()",
+      "v": "playPrevious()",
+      "n": "playNext()",
+      "ArrowLeft": "moveVirtualCursor(-1, 0)",
+      "ArrowRight": "moveVirtualCursor(1, 0)",
+      "ArrowUp": "moveVirtualCursor(0, 1)",
+      "ArrowDown": "moveVirtualCursor(0, -1)",
+      "s": "moveVirtualCursor(-1, 0)",
+      "f": "moveVirtualCursor(1, 0)",
+      "j": "moveVirtualCursor(0, 1)",
+      "l": "moveVirtualCursor(0, -1)",
+      "enter": "clickVirtualCursor(0)",
+      "backspace": "goBack()",
+      "escape": "backToLibrary()",
+      "home": "backToLibrary()",
+      "meta + f": "toggleFinder()",
+      "ctrl + f": "toggleFinder()"
+    },
     whenUnpressed: {},
-    whenDown: {},
-    whenUp: {},
-    whenUnpressed: {},
+    whenDown: {
+      "f11": "addVolume(-.02)",
+      "f12": "addVolume(.02)",
+      "g": "addVolume(-.02)",
+      "h": "addVolume(.02)",
+      "<": "addProgress(-2)",
+      ">": "addProgress(2)"
+    },
+    whenUp: {}
   },
   gamepad: {
-    whenPressed: {},
-    whenUnpressed: {},
-    whenDown: {},
-    whenUp: {},
+    whenPressed: {
+      "17": "togglePlayPause()",
+      "10": "togglePlayPause()",
+      "3": "openAlbum(settings.currentPlayingAlbum)",
+      "8": "toggleMute()",
+      "4": "playPrevious()",
+      "5": "playNext()",
+      "14": "moveVirtualCursor(-1, 0)",
+      "15": "moveVirtualCursor(1, 0)",
+      "12": "moveVirtualCursor(0, 1)",
+      "13": "moveVirtualCursor(0, -1)",
+      "1": "goBack()",
+      "6": "goBack()",
+      "7": "goBack()",
+      "16": "backToLibrary()",
+      "9": "openExternalHtml('html/settings.html')",
+      "0": "stickyClickVirtualCursor(0, true)"
+    },
+    whenUnpressed: {
+      "0": "stickyClickVirtualCursor(0, false)"
+    },
+    whenDown: {
+      "axes[0]": "moveCursor(value.x, value.y)",
+      "axes[1]": "scroll(value.x, value.y)"
+    },
+    whenUp: {}
   },
   mouse: {
-    whenPressed: {},
+    whenPressed: {
+      "3": "goBack()",
+      "4": "goForward()"
+    },
     whenUnpressed: {},
     whenDown: {},
-    whenUp: {},
-  },
+    whenUp: {}
+  }
 };
 
 // ---------------- Safe JSON load ----------------
@@ -56,21 +109,24 @@ function deepMerge(target, src) {
 
 let inputs = DEFAULT_INPUTS;
 async function loadInputs() {
-  const shortcutPath = await ipcRenderer.invoke("get-current-shortcut"); // returns a path
-  if (!shortcutPath) {
-    console.warn("No shortcut path returned, using defaults");
-    return false;
+  let loaded = false;
+  try {
+    const shortcutPath = await ipcRenderer.invoke("get-current-shortcut");
+    if (shortcutPath) {
+      inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
+      if (inputs && inputs.keyboard && Object.keys(inputs.keyboard.whenPressed || {}).length > 0) {
+        loaded = true;
+      }
+    }
+  } catch (err) {
+    console.warn("loadInputs: error reading shortcut, falling back to defaults", err);
   }
 
-  inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
-  if (inputs === DEFAULT_INPUTS) {
-    // the shortcutPath is invalid or empty
-    const shortcuts = await ipcRenderer.invoke("get-all-shortcuts");
-    await ipcRenderer.invoke("set-current-shortcut", shortcuts[0]);
-    inputs = await safeReadJSON(shortcutPath, DEFAULT_INPUTS);
+  if (!loaded) {
+    inputs = deepMerge(DEFAULT_INPUTS, {});
   }
 
-  inp.logKeyPress = inputs.opts.logKeyPress;
+  inp.logKeyPress = inputs.opts ? Boolean(inputs.opts.logKeyPress) : false;
 
   normalizedInputs = {
     opts: inputs.opts || {},
@@ -79,7 +135,7 @@ async function loadInputs() {
     gamepad: (() => {
       const p = preprocessInputType(inputs.gamepad, true);
       p.deadzone =
-        typeof inputs.gamepad.deadzone === "number"
+        typeof inputs.gamepad?.deadzone === "number"
           ? inputs.gamepad.deadzone
           : 0.1;
       return p;
@@ -312,6 +368,7 @@ function processType(typeName, typeDesc) {
     let input = key === "Space" ? " " : key;
     const prev = Boolean(keyState.get(`${typeName}:${key}`));
     const { active, value } = getActiveForKey(typeName, input, axes, deadzone);
+    if (inp.logKeyPress && active) console.log(input, active, value);
 
     const D = typeDesc.modes; // descriptors per mode
     if (D.whenPressed && active && !prev)
@@ -343,8 +400,8 @@ function updateInputs() {
 }
 
 async function startInputs() {
-  const success = await loadInputs();
-  if (success) updateInputs();
+  await loadInputs();
+  updateInputs();
 }
 
 // Start the loop

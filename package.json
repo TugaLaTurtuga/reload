@@ -5,7 +5,8 @@
   "description": "Music player for your organized music collection, SYBAU",
   "main": "electron/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",

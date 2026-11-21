@@ -1,13 +1,138 @@
-const {
-  app,
-  BrowserWindow,
-  ipcMain,
-  Menu,
-  nativeTheme,
-  dialog,
-  shell,
-  screen,
-} = require("electron");
+let electron = null;
+try {
+  electron = require("electron");
+} catch {}
+
+const isElectronApp =
+  typeof electron === "object" && electron !== null && Boolean(electron.app);
+
+const app = isElectronApp
+  ? electron.app
+  : {
+      setName: () => {},
+      getPath: (name) => path.join(os.tmpdir(), "reload-test", name || "userData"),
+      on: () => {},
+      whenReady: () => Promise.resolve(),
+      quit: () => {},
+      dock: { setIcon: () => {} },
+      isQuiting: false,
+    };
+
+const BrowserWindow = isElectronApp
+  ? electron.BrowserWindow
+  : class {
+      constructor(opts = {}) {
+        this.opts = opts;
+        this.webContents = {
+          send: () => {},
+          executeJavaScript: async () => "",
+          toggleDevTools: () => {},
+          on: () => {},
+        };
+      }
+      loadFile() {}
+      on() {}
+      hide() {}
+      show() {}
+      focus() {
+        this.focused = true;
+      }
+      close() {
+        this.destroyed = true;
+        this.emit("closed");
+      }
+      on(event, handler) {
+        if (!this._events) this._events = {};
+        if (!this._events[event]) this._events[event] = [];
+        this._events[event].push(handler);
+      }
+      emit(event, ...args) {
+        if (this._events && this._events[event]) {
+          this._events[event].forEach((h) => h(...args));
+        }
+      }
+      isMaximized() { return false; }
+      maximize() {}
+      unmaximize() {}
+      isDestroyed() { return false; }
+      isVisible() { return true; }
+      getBounds() { return { x: 0, y: 0, width: 800, height: 600 }; }
+      static fromWebContents() { return new BrowserWindow(); }
+      static getFocusedWindow() { return null; }
+      static getAllWindows() { return []; }
+    };
+
+const rawIpcMain = isElectronApp
+  ? electron.ipcMain
+  : {
+      handle: () => {},
+      on: () => {},
+      removeHandler: () => {},
+    };
+
+const ipcHandlers = new Map();
+const ipcListeners = new Map();
+
+const ipcMain = {
+  handle: (channel, handler) => {
+    ipcHandlers.set(channel, handler);
+    if (rawIpcMain && typeof rawIpcMain.handle === "function") {
+      try {
+        rawIpcMain.handle(channel, handler);
+      } catch {}
+    }
+  },
+  on: (channel, listener) => {
+    ipcListeners.set(channel, listener);
+    if (rawIpcMain && typeof rawIpcMain.on === "function") {
+      try {
+        rawIpcMain.on(channel, listener);
+      } catch {}
+    }
+  },
+  removeHandler: (channel) => {
+    ipcHandlers.delete(channel);
+    if (rawIpcMain && typeof rawIpcMain.removeHandler === "function") {
+      try {
+        rawIpcMain.removeHandler(channel);
+      } catch {}
+    }
+  },
+};
+
+const Menu = isElectronApp
+  ? electron.Menu
+  : {
+      buildFromTemplate: (t) => t,
+      setApplicationMenu: () => {},
+    };
+
+const nativeTheme = isElectronApp
+  ? electron.nativeTheme
+  : {
+      shouldUseDarkColors: false,
+      themeSource: "system",
+      on: () => {},
+    };
+
+const dialog = isElectronApp
+  ? electron.dialog
+  : {
+      showOpenDialog: async () => ({ canceled: true, filePaths: [] }),
+    };
+
+const shell = isElectronApp
+  ? electron.shell
+  : {
+      openPath: async () => {},
+    };
+
+const screen = isElectronApp
+  ? electron.screen
+  : {
+      getCursorScreenPoint: () => ({ x: 0, y: 0 }),
+    };
+
 const { spawn, execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -19,34 +144,43 @@ const { getFonts } = require("font-list");
 const nut = require("@nut-tree-fork/nut-js");
 const { mouse, Button } = nut;
 
-app.setName("TugaLaTurtuga/reload");
+if (app && typeof app.setName === "function") {
+  app.setName("TugaLaTurtuga/reload");
+}
 const userDataPath = path.join(app.getPath("userData"), "user-data");
 
 async function setDefaultConfig() {
-  if (!fs.existsSync(userDataPath)) {
-    const defaultUserDataPath = path.join(__dirname, "user-data");
+  const isNewUserData = !fs.existsSync(userDataPath);
+  if (isNewUserData) {
     fs.mkdirSync(userDataPath, { recursive: true });
+  }
 
-    // Copy contents from defaultUserDataPath to userDataPath if it exists
-    if (fs.existsSync(defaultUserDataPath)) {
-      const copyRecursively = (src, dest) => {
-        const entries = fs.readdirSync(src, { withFileTypes: true });
-       for (const entry of entries) {
-          const srcPath = path.join(src, entry.name);
-          const destPath = path.join(dest, entry.name);
+  const defaultUserDataPath = path.join(__dirname, "user-data");
+  // Copy missing contents from defaultUserDataPath to userDataPath if it exists
+  if (fs.existsSync(defaultUserDataPath)) {
+    const copyRecursivelyIfMissing = (src, dest) => {
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
 
-          if (entry.isDirectory()) {
+        if (entry.isDirectory()) {
+          if (!fs.existsSync(destPath)) {
             fs.mkdirSync(destPath, { recursive: true });
-            copyRecursively(srcPath, destPath);
-          } else {
+          }
+          copyRecursivelyIfMissing(srcPath, destPath);
+        } else {
+          if (!fs.existsSync(destPath)) {
             fs.copyFileSync(srcPath, destPath);
           }
         }
-      };
+      }
+    };
 
-      copyRecursively(defaultUserDataPath, userDataPath);
-    }
+    copyRecursivelyIfMissing(defaultUserDataPath, userDataPath);
+  }
 
+  if (isNewUserData && mainWindow && mainWindow.webContents) {
     mainWindow.webContents.send("get-default-settings");
   }
 }
@@ -311,26 +445,37 @@ ipcMain.on("window-close", () => {
   app.quit();
 });
 
-app.on("before-quit", () => {
-  app.isQuiting = true;
-});
+if (app && typeof app.on === "function") {
+  app.on("before-quit", () => {
+    app.isQuiting = true;
+  });
+}
 
-app.whenReady().then(() => {
-  getSystemTheme();
-  createWindow();
-  createAppMenu();
-  getSubsonicBackend();
-});
+if (
+  app &&
+  typeof app.whenReady === "function" &&
+  isElectronApp &&
+  process.env.NODE_ENV !== "test"
+) {
+  app.whenReady().then(() => {
+    getSystemTheme();
+    createWindow();
+    createAppMenu();
+    getSubsonicBackend();
+  });
+}
 
-app.on("window-all-closed", () => {
-  /*
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-  */
+if (app && typeof app.on === "function") {
+  app.on("window-all-closed", () => {
+    /*
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+    */
 
-  app.quit(); // plain better + IT'S MY FUCKING APP
-});
+    app.quit(); // plain better + IT'S MY FUCKING APP
+  });
+}
 
 ipcMain.handle("click-cursor", async (event, button) => {
   let btnEnum;
@@ -704,6 +849,60 @@ function saveAlbumsPath() {
   }
 }
 
+function getPlacementInfo(title) {
+  // EX: disc-idx <name>
+  // EX: idx <name>
+  // EX: idx. <name>
+  // EX: idx - <name>
+  // EX: <name>
+  title = title.toString();
+  const match = title.match(
+    /^(?:(\d+)-(\d+)|(\d+))\s*\.?\s*-?\s*(.+)$/i
+  );
+
+  if (!match) {
+    return {
+      disc: null,
+      idx: null,
+      name: title.trim(),
+    };
+  }
+
+  return {
+    disc: match[1] ? Number(match[1]) : null,
+    idx: Number(match[2] ?? match[3]),
+    name: match[4].trim(),
+  };
+}
+
+function changePlacementInfo(path, disc, idx, title) {
+  const { disc: old_disc, idx: old_idx, name } = getPlacementInfo(title);
+  let new_title = name;
+
+  if (disc !== null || disc !== undefined) {
+    if (idx !== null || idx !== undefined) idx = -1;
+    new_title = `${disc}-${idx} ${name}`;
+  } else if (idx !== null || idx !== undefined) {
+    new_title = `${idx} ${name}`;
+  }
+}
+
+function gitMusic(dir, newTrack, oldTrack) {
+  const ext = path.extname(oldTrack.path).replace('.', '')
+  dir = `${dir}/${path.basename(oldTrack.path, path.extname(oldTrack.path)).trim()}`
+  const { disc, idx, name } = getPlacementInfo(oldTrack.title);
+
+  let changedIdx = 0;
+  while (fs.existsSync(`${dir}/${changedIdx}.${ext}`)) {
+    changedIdx++;
+  }
+  fs.rename(oldTrack, `${dir}/${changedIdx}.${ext}`, function (err) {
+    throw err;
+  });
+
+  changePlacementInfo(dir, disc, idx, newTrack.title);
+}
+
 async function processMusicFolder(folderPath) {
   const folderKey = normalizeLibraryPathKey(folderPath);
   if (albumsPath.has(folderKey)) {
@@ -1002,60 +1201,6 @@ async function processMusicFolder(folderPath) {
     }),
   );
 
-  function getPlacementInfo(title) {
-    // EX: disc-idx <name>
-    // EX: idx <name>
-    // EX: idx. <name>
-    // EX: idx - <name>
-    // EX: <name>
-    title = title.toString();
-    const match = title.match(
-      /^(?:(\d+)-(\d+)|(\d+))\s*\.?\s*-?\s*(.+)$/i
-    );
-
-    if (!match) {
-      return {
-        disc: null,
-        idx: null,
-        name: title.trim(),
-      };
-    }
-
-    return {
-      disc: match[1] ? Number(match[1]) : null,
-      idx: Number(match[2] ?? match[3]),
-      name: match[4].trim(),
-    };
-  }
-
-  function changePlacementInfo(path, disc, idx, title) {
-    const { disc: old_disc, idx: old_idx, name } = getPlacementInfo(title);
-    let new_title = name;
-
-    if (disc !== null || disc !== undefined) {
-      if (idx !== null || idx !== undefined) idx = -1;
-      new_title = `${disc}-${idx} ${name}`;
-    } else if (idx !== null || idx !== undefined) {
-      new_title = `${idx} ${name}`;
-    }
-  }
-
-  function gitMusic(dir, newTrack, oldTrack) {
-    const ext = path.extname(oldTrack.path).replace('.', '')
-    dir = `${dir}/${path.basename(oldTrack.path, path.extname(oldTrack.path)).trim()}`
-    const { disc, idx, name } = getPlacementInfo(oldTrack.title);
-
-    let changedIdx = 0;
-    while (fs.existsSync(`${dir}/${changedIdx}.${ext}`)) {
-      changedIdx++;
-    }
-    fs.rename(oldTrack, `${dir}/${changedIdx}.${ext}`, function (err) {
-      throw err;
-    });
-
-    changePlacementInfo(dir, disc, idx, newTrack.title);
-  }
-
   // Build lookup map for efficient matching
   const trackMap = new Map(
     ungarnizedTracks.map((track) => [
@@ -1304,11 +1449,12 @@ ipcMain.handle("save-settings", (event, unsavedSettings) => {
 
 ipcMain.handle("reset-settings", (event) => {
   // delete everything inside user-data and add the default one
-  fs.rm(userDataPath, { recursive: true, force: true }, (err) => {
-    if (err) throw err;
-  });
+  try {
+    fs.rmSync(userDataPath, { recursive: true, force: true });
+  } catch (err) {
+    console.error("Failed to reset settings:", err);
+  }
   setDefaultConfig();
-
 });
 
 function saveSettings(unsavedSettings, fromsystemTheme = false) {
@@ -1362,9 +1508,14 @@ function saveSettings(unsavedSettings, fromsystemTheme = false) {
 
     return true;
   } catch (error) {
-    if (error.message.startsWith("Unexpected end of JSON input")) {
-      fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 4), "utf8");
-      saveSettings(unsavedSettings, fromsystemTheme);
+    if (
+      error instanceof SyntaxError ||
+      error.message.startsWith("Unexpected end of JSON input")
+    ) {
+      try {
+        fs.writeFileSync(settingsFilePath, JSON.stringify({}, null, 4), "utf8");
+        return saveSettings(unsavedSettings, fromsystemTheme);
+      } catch {}
     }
     console.error("Error saving last played info:", error);
     return false;
@@ -1562,6 +1713,29 @@ function openExternal(absolutePath, onlyOpenOnce = false) {
   });
 }
 
+function toggleHidden(html, id, shouldHide) {
+  const regex = new RegExp(`<div id="${id}"([^>]*)>`);
+  return html.replace(regex, (match, attrs) => {
+    const classMatch = attrs.match(/class="([^"]*)"/);
+    if (classMatch) {
+      let classes = classMatch[1].trim().split(/\s+/).filter(Boolean);
+      if (shouldHide) {
+        if (!classes.includes("hidden")) classes.push("hidden");
+      } else {
+        classes = classes.filter((c) => c !== "hidden");
+      }
+      return `<div id="${id}"${attrs.replace(
+        /class="[^"]*"/,
+        `class="${classes.join(" ")}"`,
+      )}>`;
+    } else {
+      return shouldHide
+        ? `<div id="${id}"${attrs} class="hidden">`
+        : `<div id="${id}"${attrs}>`;
+    }
+  });
+}
+
 ipcMain.handle("get-main-reload-html", async () => {
   if (!mainWindow || mainWindow.isDestroyed()) return [null, null];
 
@@ -1569,30 +1743,6 @@ ipcMain.handle("get-main-reload-html", async () => {
   const state = await mainWindow.webContents.executeJavaScript(
     "document.documentElement.outerHTML",
   );
-
-  // helper: safely add/remove "hidden" class
-  function toggleHidden(html, id, shouldHide) {
-    const regex = new RegExp(`<div id="${id}"([^>]*)>`);
-    return html.replace(regex, (match, attrs) => {
-      const classMatch = attrs.match(/class="([^"]*)"/);
-      if (classMatch) {
-        let classes = classMatch[1].trim().split(/\s+/).filter(Boolean);
-        if (shouldHide) {
-          if (!classes.includes("hidden")) classes.push("hidden");
-        } else {
-          classes = classes.filter((c) => c !== "hidden");
-        }
-        return `<div id="${id}"${attrs.replace(
-          /class="[^"]*"/,
-          `class="${classes.join(" ")}"`,
-        )}>`;
-      } else {
-        return shouldHide
-          ? `<div id="${id}"${attrs} class="hidden">`
-          : `<div id="${id}"${attrs}>`;
-      }
-    });
-  }
 
   const states = [];
 
@@ -1838,7 +1988,23 @@ ipcMain.handle("open-shortcuts-dir", async () => {
 });
 
 ipcMain.handle("get-all-shortcuts", async () => {
-  if (!fs.existsSync(shortcutsDir)) return [];
+  const defaultShortcutsDir = path.join(__dirname, "user-data/shortcuts");
+  if (!fs.existsSync(shortcutsDir)) {
+    fs.mkdirSync(shortcutsDir, { recursive: true });
+  }
+  if (fs.existsSync(defaultShortcutsDir)) {
+    try {
+      const defaultFiles = await fs.promises.readdir(defaultShortcutsDir);
+      for (const file of defaultFiles) {
+        const dest = path.join(shortcutsDir, file);
+        if (!fs.existsSync(dest)) {
+          await fs.promises.copyFile(path.join(defaultShortcutsDir, file), dest);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to copy default shortcuts:", e);
+    }
+  }
 
   try {
     const files = await fs.promises.readdir(shortcutsDir);
@@ -1846,12 +2012,30 @@ ipcMain.handle("get-all-shortcuts", async () => {
       .filter((file) => file.toLowerCase().endsWith(".json"))
       .map((file) => path.join(shortcutsDir, file));
   } catch (err) {
-    console.error("Failed to load user looks:", err);
+    console.error("Failed to load user shortcuts:", err);
     return [];
   }
 });
 
 ipcMain.handle("get-current-shortcut", async () => {
+  const defaultShortcutsDir = path.join(__dirname, "user-data/shortcuts");
+  if (!fs.existsSync(shortcutsDir)) {
+    fs.mkdirSync(shortcutsDir, { recursive: true });
+  }
+  if (fs.existsSync(defaultShortcutsDir)) {
+    try {
+      const defaultFiles = await fs.promises.readdir(defaultShortcutsDir);
+      for (const file of defaultFiles) {
+        const dest = path.join(shortcutsDir, file);
+        if (!fs.existsSync(dest)) {
+          await fs.promises.copyFile(path.join(defaultShortcutsDir, file), dest);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to copy default shortcuts:", e);
+    }
+  }
+
   const currTxt = path.join(shortcutsDir, "curr.txt");
 
   try {
@@ -1875,7 +2059,7 @@ ipcMain.handle("get-current-shortcut", async () => {
         return false;
       }
     }
-    console.error("Failed to load user looks:", err);
+    console.error("Failed to load user shortcuts:", err);
     return false;
   }
 });
@@ -2092,12 +2276,25 @@ function transformPywalTheme(theme) {
   });
 }
 
-app.whenReady().then(() => {
-  // Watch the theme file after window is ready
-  mainWindow.webContents.on("did-finish-load", () => {
-    watchPywalTheme();
+if (
+  app &&
+  typeof app.whenReady === "function" &&
+  isElectronApp &&
+  process.env.NODE_ENV !== "test"
+) {
+  app.whenReady().then(() => {
+    // Watch the theme file after window is ready
+    if (
+      mainWindow &&
+      mainWindow.webContents &&
+      typeof mainWindow.webContents.on === "function"
+    ) {
+      mainWindow.webContents.on("did-finish-load", () => {
+        watchPywalTheme();
+      });
+    }
   });
-});
+}
 
 ipcMain.handle("getJsonToLoad", () => {
   return getJsonToLoad();
@@ -2134,18 +2331,102 @@ function setJsonToLoad(json) {
   });
 }
 
-const commitCount = execSync("git rev-list --count HEAD")
-  .toString()
-  .trim();
-
-const shortHash = execSync("git rev-parse --short HEAD")
-  .toString()
-  .trim();
+let commitCount = "0";
+let shortHash = "head";
+try {
+  commitCount = execSync("git rev-list --count HEAD")
+    .toString()
+    .trim();
+  shortHash = execSync("git rev-parse --short HEAD")
+    .toString()
+    .trim();
+} catch {}
 
 ipcMain.handle("get-git-info", () => ({
   commitCount,
   shortHash,
 }));
 
-setDefaultConfig();
+if (process.env.NODE_ENV !== "test" && isElectronApp) {
+  setDefaultConfig();
+}
+
+module.exports = {
+  setDefaultConfig,
+  getSubsonicBackend,
+  createAppMenu,
+  getMacIconPath,
+  createWindow,
+  sendPlayerCommand,
+  isMiniPlayerPath,
+  getOpenedWindowPath,
+  toScreenCoords,
+  loadLibraryPaths,
+  normalizeLibraryPathKey,
+  canonicalizeExistingPath,
+  normalizeCachedAlbumPaths,
+  loadAlbumsPath,
+  saveAlbumsPath,
+  processMusicFolder,
+  scanMusicFolder,
+  getSystemTheme,
+  saveSettings,
+  openExternal,
+  toggleHidden,
+  rgbToHex,
+  lookForCover,
+  getImgColor,
+  getImgPalette,
+  deleteConfPath,
+  loadPywalTheme,
+  watchPywalTheme,
+  extractVarFromBlock,
+  transformPywalTheme,
+  getJsonToLoad,
+  setJsonToLoad,
+  getPlacementInfo,
+  changePlacementInfo,
+  gitMusic,
+  _state: {
+    getUserDataPath: () => userDataPath,
+    getSettingsFilePath: () => settingsFilePath,
+    getLibraryFilePath: () => libraryFilePath,
+    getJsonToLoadPath: () => jsonToLoadPath,
+    getThemesFile: () => themesFile,
+    getLookFile: () => lookFile,
+    getShortcutsDir: () => shortcutsDir,
+    getLooksDir: () => looksDir,
+    getChangeLogsPath: () => changeLogsPath,
+    getAlbumsPathData: () => albumsPathData,
+    getNonAlbumsPathData: () => nonAlbumsPathData,
+    getLibraryPaths: () => libraryPaths,
+    setLibraryPaths: (p) => {
+      libraryPaths = p;
+    },
+    getAlbums: () => albums,
+    setAlbums: (a) => {
+      albums = a;
+    },
+    getAlbumsPath: () => albumsPath,
+    setAlbumsPath: (m) => {
+      albumsPath = m;
+    },
+    getNonAlbumsPath: () => nonAlbumsPath,
+    setNonAlbumsPath: (s) => {
+      nonAlbumsPath = s;
+    },
+    getAlbumsPathLoaded: () => albumsPathLoaded,
+    getOpenedWindows: () => openedWindows,
+    getMainWindow: () => mainWindow,
+    setMainWindow: (win) => {
+      mainWindow = win;
+    },
+    getSubsonicBackendInstance: () => subsonicBackend,
+    setSubsonicBackendInstance: (inst) => {
+      subsonicBackend = inst;
+    },
+  },
+  _ipcHandlers: ipcHandlers,
+  _ipcListeners: ipcListeners,
+};
 

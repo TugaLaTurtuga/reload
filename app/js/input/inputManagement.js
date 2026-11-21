@@ -34,7 +34,13 @@ class InputManager {
     this.simClickIndex = {};
     this.nonDefaultKeys = [];
     this.logKeyPress = false;
+    // Track mouse position for GetMousePosition
+    this.mousePos = { x: 0, y: 0 };
 
+    // Update mouse position on movement
+    document.addEventListener("mousemove", (e) => {
+      this.mousePos = { x: e.clientX, y: e.clientY };
+    });
     this._setupEventListeners();
     this._startGamepadLoop();
 
@@ -50,6 +56,7 @@ class InputManager {
 
     this.isUsingInputBox = false;
   }
+
 
   // Set up event listeners for tracking keyboard & mouse inputs
   _setupEventListeners() {
@@ -195,7 +202,8 @@ class InputManager {
 
   // Get current mouse position
   GetMousePosition() {
-    return [cursor.offsetLeft + 15, cursor.offsetTop + 15];
+    // Return the latest mouse coordinates tracked via mousemove events
+    return [this.mousePos.x, this.mousePos.y];
   }
 
   // Get gamepad axis values
