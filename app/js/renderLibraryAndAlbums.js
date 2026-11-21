@@ -21,10 +21,11 @@ function updateTracks(trackList) {
   }
 }
 
-async function updateLibrary() {
+async function updateLibrary(updatedAlbums = null) {
   try {
-    // Reload the library
-    songs = await ipcRenderer.invoke("rescan-library");
+    // A background startup rescan sends its completed data directly. Other
+    // callers can still request a rescan through IPC.
+    songs = updatedAlbums || (await ipcRenderer.invoke("rescan-library"));
     songsMap = new Map(songs.map((song) => [song.path, song]));
     renderLibrary();
 

@@ -110,6 +110,12 @@ ipcRenderer.on("settings-updated", async (event, updatedSettings) => {
 
 ipcRenderer.on("music-json-updated", updateLibrary);
 
+// Startup returns cached reload.json data first, then this event replaces it
+// with the completed background rescan without reloading the window.
+ipcRenderer.on("library-rescanned", (event, updatedAlbums) => {
+  updateLibrary(updatedAlbums);
+});
+
 ipcRenderer.on("get-default-settings", async () => {saveSettings()});
 
 ipcRenderer.on("player-command", async (event, command) => {
