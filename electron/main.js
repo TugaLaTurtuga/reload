@@ -58,6 +58,7 @@ let libraryPaths = [path.join(app.getPath("documents"), "reload")];
 const changeLogsPath = path.join(__dirname, "changeLogs.json");
 const albumsPathData = path.join(userDataPath, "albumsPath.json");
 const nonAlbumsPathData = path.join(userDataPath, "nonAlbumsPath.json");
+const subsonicSettingsPath = path.join(userDataPath, "subsonicSettings.json");
 const openedWindows = new Map();
 const miniPlayerWindowPath = path.resolve(
   path.join(__dirname, "../app/html/miniPlayer.html"),
@@ -78,7 +79,10 @@ async function getSubsonicBackend() {
 
   // Load only when needed
   const { startSubsonicBackend } = require("./subsonic-backend.js");
-  subsonicBackend = startSubsonicBackend();
+  subsonicBackend = startSubsonicBackend({
+    userDataPath,
+    subsonicSettingsPath,
+  });
   return subsonicBackend;
 }
 
@@ -315,6 +319,7 @@ app.whenReady().then(() => {
   getSystemTheme();
   createWindow();
   createAppMenu();
+  getSubsonicBackend();
 });
 
 app.on("window-all-closed", () => {
