@@ -780,10 +780,17 @@ function normalizeCachedAlbumPaths(album) {
   );
   const normalizeTrackPath = (trackPath) => {
     if (!trackPath) return trackPath;
-    const fullTrackPath = path.isAbsolute(trackPath)
+    // Cached reload.json entries do not need a realpath syscall per track.
+    // Resolve relative paths only; the background scan validates them later.
+    return path.isAbsolute(trackPath)
       ? trackPath
       : path.join(normalizedPath || "", trackPath);
-    return canonicalizeExistingPath(fullTrackPath);
+  };
+  const normalizeCachedPath = (filePath) => {
+    if (!filePath) return filePath;
+    return path.isAbsolute(filePath)
+      ? filePath
+      : path.join(normalizedPath || "", filePath);
   };
 
   let refreshedInfo = album.info;
@@ -833,9 +840,7 @@ function normalizeCachedAlbumPaths(album) {
               typeof refreshedInfo.description === "object"
                 ? {
                     ...refreshedInfo.description,
-                    cover: canonicalizeExistingPath(
-                      refreshedInfo.description.cover,
-                    ),
+                    cover: normalizeCachedPath(refreshedInfo.description.cover),
                   }
                 : refreshedInfo.description,
           }
@@ -938,7 +943,7 @@ function gitMusic(dir, newTrack, oldTrack) {
   changePlacementInfo(dir, disc, idx, newTrack.title);
 }
 
-async function processMusicFolder(folderPath) {
+async function processMusicFolder(folderPath, directoryEntries = null) {
   const folderKey = normalizeLibraryPathKey(folderPath);
   if (albumsPath.has(folderKey)) {
     if (!albumsPathLoaded.has(folderKey)) {
@@ -951,7 +956,8 @@ async function processMusicFolder(folderPath) {
   let mtCovers = [];
 
   folderPath = canonicalizeExistingPath(folderPath);
-  const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+  const entries =
+    directoryEntries || fs.readdirSync(folderPath, { withFileTypes: true });
   const files = entries
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name);
@@ -1019,42 +1025,8 @@ async function processMusicFolder(folderPath) {
 
   let shouldExtractColor = false;
 
-  async function buildTrackList() {
-    album.info.trackList = await Promise.all(
-      audioFiles.map(async (file) => {
-        const trackPath = path.join(folderPath, file);
-        const fallbackTitle = path.basename(file, path.extname(file)).trim();
-        let title = fallbackTitle;
-
-        try {
-          const metadata = await mm.parseFile(trackPath);
-          if (!metadata.common) {
-            metadata.common = {};
-          }
-
-          metadata.common.title =
-            metadata.common.title?.trim() || fallbackTitle;
-          title = metadata.common.title;
-        } catch (err) {
-          console.warn(`Couldn't read metadata for ${file}:`, err);
-        }
-
-        const { disc, idx, name } = getPlacementInfo(title);
-        title = name
-
-        return {
-          path: file,
-          title,
-          rating: 5,
-          lastModified: fs.statSync(trackPath).mtimeMs,
-        };
-      })
-    );
-  }
-
   if (!fs.existsSync(confPath)) {
-    // no json → build new
-    await buildTrackList();
+    // New albums are built from the single metadata pass below.
 
     const possible_txts = [
       ["Author.txt", "author"],
@@ -1088,11 +1060,6 @@ async function processMusicFolder(folderPath) {
     }
     shouldExtractColor = true; // the python code might be shit.
 
-    try {
-      fs.writeFileSync(confPath, JSON.stringify(album.info, null, 4), "utf8");
-    } catch (err) {
-      console.error("Error creating json:", err);
-    }
   } else {
     // json exists → load it
     try {
@@ -1108,32 +1075,9 @@ async function processMusicFolder(folderPath) {
           ? parsedData.trackList
           : [];
 
-        await buildTrackList();
-        album.info.trackList = album.info.trackList.map((track) => {
-          const savedTrack = savedTrackList.find((item) => {
-            if (!item) return false;
-            const savedPath = item.path
-              ? path.isAbsolute(item.path)
-                ? item.path
-                : path.join(folderPath, item.path)
-              : null;
-            const trackPath = track.path
-              ? path.isAbsolute(track.path)
-                ? track.path
-                : path.join(folderPath, track.path)
-              : null;
-
-            return savedPath === trackPath || item.title === track.title;
-          });
-
-          return savedTrack
-            ? {
-                ...savedTrack,
-                ...track,
-                rating: savedTrack.rating ?? track.rating,
-              }
-            : track;
-        });
+        // Keep the saved values until the single metadata pass below updates
+        // paths, titles, durations, and modification timestamps.
+        album.info.trackList = savedTrackList;
       }
 
       // mark for extraction only if color missing/placeholder
@@ -1222,6 +1166,7 @@ async function processMusicFolder(folderPath) {
           title,
           path: trackPath,
           duration: metadata.format.duration || 0,
+          lastModified: fs.statSync(trackPath).mtimeMs,
         };
       } catch (err) {
         console.error(`Error parsing metadata for ${title}:`, err);
@@ -1229,6 +1174,7 @@ async function processMusicFolder(folderPath) {
           title: title,
           path: trackPath,
           duration: 0,
+          lastModified: fs.statSync(trackPath).mtimeMs,
           label: null,
           copyright: null,
         };
@@ -1242,6 +1188,9 @@ async function processMusicFolder(folderPath) {
       getPlacementInfo(track.title).name.toLowerCase(),
       track,
     ]),
+  );
+  const trackByPath = new Map(
+    ungarnizedTracks.map((track) => [track.path, track]),
   );
 
   // Match with trackList
@@ -1257,9 +1206,7 @@ async function processMusicFolder(folderPath) {
           ? track.path
           : path.join(folderPath, track.path)
         : null;
-      const pathMatch = existingPath
-        ? ungarnizedTracks.find((item) => item.path === existingPath)
-        : null;
+      const pathMatch = existingPath ? trackByPath.get(existingPath) : null;
       const matchedTrack = pathMatch || match;
 
       if (alreadyMatchedTracks.has(key)) {
@@ -1276,7 +1223,7 @@ async function processMusicFolder(folderPath) {
           disc: disc,
           index: idx,
           rating: track.rating ?? 5,
-          lastModified: fs.statSync(matchedTrack.path).mtimeMs,
+          lastModified: matchedTrack.lastModified,
         };
         alreadyMatchedTracks.set(key, track)
         return track
@@ -1289,7 +1236,7 @@ async function processMusicFolder(folderPath) {
           disc: disc,
           index: idx,
           rating: track.rating ?? 5,
-          lastModified: fs.statSync(matchedTrack.path).mtimeMs,
+          lastModified: matchedTrack.lastModified,
         };
         alreadyMatchedTracks.set(key, track)
         return track
@@ -1299,27 +1246,31 @@ async function processMusicFolder(folderPath) {
     .filter(Boolean);
 
   // Add missing tracks from trackMap that aren’t in album.info.trackList
+  const savedTrackPaths = new Set(
+    album.info.trackList
+      .map((track) => {
+        if (!track?.path) return null;
+        return path.isAbsolute(track.path)
+          ? track.path
+          : path.join(folderPath, track.path);
+      })
+      .filter(Boolean),
+  );
+  const savedTrackNames = new Set(
+    album.info.trackList
+      .filter((track) => track?.title)
+      .map((track) => getPlacementInfo(track.title).name.toLowerCase()),
+  );
   const missingTrackList = [];
   for (const [key, track] of trackMap.entries()) {
-    const exists = album.info.trackList.some((existingTrack) => {
-      const existingPath = existingTrack.path
-        ? path.isAbsolute(existingTrack.path)
-          ? existingTrack.path
-          : path.join(folderPath, existingTrack.path)
-        : null;
-
-      return (
-        existingPath === track.path ||
-        getPlacementInfo(existingTrack.title).name.toLowerCase() === key
-      );
-    });
+    const exists = savedTrackPaths.has(track.path) || savedTrackNames.has(key);
     if (!exists) {
       missingTrackList.push({
         title: track.title,
         path: track.path,
         duration: track.duration,
         rating: 5,
-        lastModified: fs.statSync(track.path).mtimeMs,
+        lastModified: track.lastModified,
       });
     }
   }
@@ -1443,10 +1394,9 @@ async function processMusicFolder(folderPath) {
 async function scanMusicFolder(rootPath) {
   async function processFolder(folderPath) {
     try {
-      await processMusicFolder(folderPath);
-      const dirs = fs
-        .readdirSync(folderPath, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory());
+      const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+      await processMusicFolder(folderPath, entries);
+      const dirs = entries.filter((entry) => entry.isDirectory());
 
       // Recurse into subdirectories
       for (const dir of dirs) {
