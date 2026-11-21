@@ -1,7 +1,7 @@
 {
   "name": "TugaLaTurtuga/reload",
   "productName": "Reload",
-  "version": "1.0.0",
+  "version": "0.4.100",
   "description": "Music player for your organized music collection, SYBAU",
   "main": "dist/electron/main.js",
   "scripts": {

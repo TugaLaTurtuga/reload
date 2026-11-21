@@ -117,6 +117,17 @@
       "month": 8,
       "year": 2026
     },
-    "done": false
+    "done": true
+  },
+  "0.4.100": {
+    "name": "Some optimizations && bug fixes",
+    "logs": "Changed the backend from .js to .ts\n Fixed the inputs not working \n Fixed the settings window not loading the theme correctly\n Added a experimental subsonic backend (still not assessable thru the GUI and only downloads the music)\n Made some optmizations to loading and scanning folders\n Made on the start to first load the albums, then scan the folders (without reloading the window)",
+    "date": {
+      "day": 21,
+      "month": 11,
+      "year": 2026
+    },
+    "done": true
   }
+
 }
